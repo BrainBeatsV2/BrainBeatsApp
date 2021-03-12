@@ -1,0 +1,18 @@
+{
+  "name": "brainbeatsback",
+  "version": "1.0.0",
+  "description": "The backend for the brain beats webapp",
+  "main": "server.js",
+  "scripts": {
+    "start": "nodemon server.js"
+  },
+  "author": "Joshua Neumann",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "mongoose": "^5.11.17",
+    "nodemon": "^2.0.7"
+  }
+}
