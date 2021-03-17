@@ -3,23 +3,26 @@ Welcome to Brain Beats V2
 
 ## Usage
 
-### Development
+### Setup
 ```
-git clone https://github.com/BrainBeatsV2/BrainBeats_0.1/
-cd BrainBeats_0.1
-docker build -t brain-beats-app .
-docker run -p 3000:3000 brain-beats-app
+sudo apt install docker
+sudo apt install docker-compose
+sudo apt install nodejs
+sudo apt install npm
 ```
-Runs on port 3000 and within terminal. 
 
-### Production
+### Docker
 ```
 git clone https://github.com/BrainBeatsV2/BrainBeats_0.1/
 cd BrainBeats_0.1
-docker build -t brain-beats-app .
-docker run -p 80:3000 -d brain-beats-app
+docker-compose build
+docker-compose up -d
 ```
-Runs on port 80 and in background. 
+Runs on port 3000 and in background. 
+Terminate by:
+```
+docker-compose down
+```
 
 ### Node (deprecated)
 ```
