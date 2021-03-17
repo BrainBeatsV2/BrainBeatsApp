@@ -20,8 +20,8 @@ services:
             MONGO_USERNAME: username
             MONGO_PASSWORD: password
             MONGO_HOSTNAME: db
-            MONGO_PORT: $MONGO_PORT
-            MONGO_DB: $MONGO_DB
+            MONGO_PORT: 27017
+            MONGO_DB: bbdb
 
     db:
         image: mongo:4.1.8-xenial
