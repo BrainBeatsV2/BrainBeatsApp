@@ -11,5 +11,5 @@ else
     # command
 fi
 
-docker-compose -f /var/www/html/BrainBeats/BrainBeats_0.1/docker-compose.yml build
+docker-compose build
 
