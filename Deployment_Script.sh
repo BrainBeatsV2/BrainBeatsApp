@@ -4,7 +4,7 @@
 git pull
 
 if [ -x "$(command -v docker)" ]; then
-    echo "Update docker"
+    echo "Docker Installed"
     # command
 else
     echo "Install docker"
