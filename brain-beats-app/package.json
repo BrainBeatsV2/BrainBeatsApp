@@ -1,0 +1,10 @@
+{
+    "name": "brain-beats-app",
+    "version": "1.0.0",
+    "author": "Brain Beats Team",
+    "description": "Brain Beats V2",
+    "main": "main.js",
+    "scripts": {
+        "start": "electron ."
+    }
+}
