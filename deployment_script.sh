@@ -3,6 +3,9 @@
 
 git pull
 
+apt install docker -y
+apt install docker-compose -y
+
 if [ -x "$(command -v docker)" ]; then
     echo "Docker Installed"
     # command
