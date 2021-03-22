@@ -7,8 +7,6 @@ Welcome to Brain Beats V2
 ```
 sudo apt install docker
 sudo apt install docker-compose
-sudo apt install nodejs
-sudo apt install npm
 ```
 
 ### Docker
@@ -26,6 +24,8 @@ docker-compose down
 
 ### Node (deprecated)
 ```
+sudo apt install nodejs
+sudo apt install npm
 git clone https://github.com/BrainBeatsV2/BrainBeats_0.1/
 cd BrainBeats_0.1
 npm init
