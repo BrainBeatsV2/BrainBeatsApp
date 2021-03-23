@@ -15,18 +15,19 @@ db.createUser(
 
 db.users.insertOne(
     {
-        "name": "harry", 
+        "firstName": "harry", 
+        "lastName": "sauers", 
         "email": "harry@hsauers.net", 
-        "id": 123, 
-        "password": "fakepass"
+        "username": "hsauers", 
+        "password": "fakepass", 
+        "favoritesList": [], 
+        "createdAt": new Date("2016-05-18T16:00:00Z")
     }
 );
 
 db.midi.insertOne(
     {
-        "id": 123, 
-        "user_id": 123, 
-        "model_id": 1, 
+        "username": 123, 
         "name": "fakepass", 
         "midi_data": "fakedata", 
         "privacy": "datatype?", 
@@ -36,7 +37,6 @@ db.midi.insertOne(
 
 db.model.insertOne(
     {
-        "id": 123, 
         "name": "fakepass", 
         "model_data": "fakedata"
     }
