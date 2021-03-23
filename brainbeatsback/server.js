@@ -31,12 +31,9 @@ app.get('/users', (req, res) => {
         if (err) {
             console.log(err);
         } else {
-            console.log(data);
             res.send(data);
         }
     });
-    
-    conn.disconnect();
 })
 
 app.listen(PORT, () => console.log("Running on"), PORT);
