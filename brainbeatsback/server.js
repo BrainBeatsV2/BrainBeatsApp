@@ -21,21 +21,22 @@ app.get('/', (req, res) => {
     res.send("hello world");
 })
 
-app.get('/db', (req, res) => {
+app.get('/users', (req, res) => {
     var conn = getConnection();
     var db = conn.db;
     
     var users = db.collection("users").find().toArray();
     
     db.collection("users").find().toArray(function (err, data) {
-      if (err) {
-        console.log(err);
-      } else {
-        console.log(data);
-        res.send(data);
-      }
+        if (err) {
+            console.log(err);
+        } else {
+            console.log(data);
+            res.send(data);
+        }
     });
     
+    conn.disconnect();
 })
 
 app.listen(PORT, () => console.log("Running on"), PORT);
