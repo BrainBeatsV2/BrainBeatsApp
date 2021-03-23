@@ -4,27 +4,25 @@ services:
         build:
             context: brainbeatsfront
             dockerfile: Dockerfile
-        image: nodejs
         container_name: front
         restart: unless-stopped
         networks:
             - app-network
         ports:
-            - "3000:5000"
+            - "3000:3000"
         command:
-            serve -s build
-            
+            npm run start
+    
     back:
         build:
             context: brainbeatsback
             dockerfile: Dockerfile
-        image: nodejs
         container_name: back
         restart: unless-stopped
         networks:
             - app-network
         ports:
-            - "4000:3000"
+            - "4000:4000"
         command:
             npm run start
             
@@ -36,7 +34,6 @@ services:
             MONGO_HOSTNAME: db
             MONGO_PORT: 27017
             MONGO_DB: main
-
     db:
         image: mongo:4.1.8-xenial
         container_name: db
@@ -49,7 +46,7 @@ services:
             - ./setup:/docker-entrypoint-initdb.d
             # - dbdata:/data/db
         networks:
-            - app-network 
+            - app-network
             
 networks:
     app-network:
