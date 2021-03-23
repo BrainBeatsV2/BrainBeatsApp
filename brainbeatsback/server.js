@@ -7,35 +7,35 @@ var username = process.env.MONGO_USERNAME;
 var password = process.env.MONGO_PASSWORD;
 var host = process.env.MONGO_HOSTNAME;
 var port = process.env.MONGO_PORT;
-var db = process.env.MONGO_DB ;
+var dbName = process.env.MONGO_DB ;
 
-var mongo_uri = 'mongodb://' + username + ':' + password + '@' + host + ':' + port + '/' + db;
+var mongo_uri = 'mongodb://' + username + ':' + password + '@' + host + ':' + port + '/' + dbName;
 
-var db;
-function connectToDB() {
+function getConnection() {
     mongoose.connect(mongo_uri, { useNewUrlParser: true });
-    db =  mongoose.connection;
-    db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+    var conn =  mongoose.connection;
+    return conn;
 }
-
-setTimeout(connectToDB, 5000);
 
 app.get('/', (req, res) => {
     res.send("hello world");
 })
 
 app.get('/db', (req, res) => {
-    var users = db.collection("users").find({}).toArray();
-    var midi = db.collection("midi").find({}).toArray();
-    var model = db.collection("model").find({}).toArray();
-
-    var data = {
-        "users": users, 
-        "midi": midi, 
-        "model": model,
-    }
-
-    res.send(data);
+    var conn = getConnection();
+    var db = conn.db;
+    
+    var users = db.collection("users").find().toArray();
+    
+    db.collection("users").find().toArray(function (err, data) {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(data);
+        res.send(data);
+      }
+    });
+    
 })
 
 app.listen(PORT, () => console.log("Running on"), PORT);
