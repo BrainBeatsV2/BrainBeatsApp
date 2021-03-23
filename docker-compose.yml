@@ -1,11 +1,11 @@
 version: '3'
 services:
-    nodejs:
+    front:
         build:
             context: brainbeatsfront
             dockerfile: Dockerfile
         image: nodejs
-        container_name: nodejs
+        container_name: front
         restart: unless-stopped
         networks:
             - app-network
@@ -13,6 +13,20 @@ services:
             - "3000:5000"
         command:
             serve -s build
+            
+    back:
+        build:
+            context: brainbeatsback
+            dockerfile: Dockerfile
+        image: nodejs
+        container_name: back
+        restart: unless-stopped
+        networks:
+            - app-network
+        ports:
+            - "4000:3000"
+        command:
+            npm run start
             
         depends_on:
             - db
@@ -33,7 +47,7 @@ services:
             MONGO_INITDB_DATABASE: main
         volumes:
             - ./setup:/docker-entrypoint-initdb.d
-            - dbdata:/data/db
+            # - dbdata:/data/db
         networks:
             - app-network 
             
