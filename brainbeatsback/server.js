@@ -1,15 +1,26 @@
-const express = require('express')
-const app = express()
-const mongoose = require('mongoose')
-const dotenv = require('dotenv')
-const PORT = 4000
+const express = require('express');
+const app = express();
+const mongoose = require('mongoose');
+const PORT = 4000;
 
-dotenv.config()
+var username = process.env.MONGO_USERNAME;
+var password = process.env.MONGO_PASSWORD;
+var host = process.env.MONGO_HOSTNAME;
+var port = process.env.MONGO_PORT;
+var db = process.env.MONGO_DB ;
 
-mongoose.connect('mongodb://<MONGO_USERNAME>:<MONGO_PASSWORD>@<MONGO_HOSTNAME>:<MONGO_PORT>/<MONGO_DB>', () =>console.log("DB Connected Successfully"));
+var mongo_uri = 'mongodb://' + username + ':' + password + '@' + host + ':' + port + '/' + db;
+
+function connectToDB() {
+    mongoose.connect(mongo_uri, { useNewUrlParser: true });
+    var db =  mongoose.connection;
+    db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+}
+
+setTimeout(connectToDB, 5000);
 
 app.get('/', (req, res) => {
-    res.send("hello world")
+    res.send("hello world");
 })
 
 app.listen(PORT, () => console.log("Running on"), PORT);

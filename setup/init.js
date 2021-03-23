@@ -1,5 +1,18 @@
 var db = connect("mongodb://localhost:27017/main");
 
+db.createUser(
+    {
+        "user": "root", 
+        "pwd": "toor", 
+        "roles": [
+            {
+                "role": "readWrite", 
+                "db": "main"
+            }
+        ], 
+    }
+);
+
 db.users.insertOne(
     {
         "name": "harry", 
