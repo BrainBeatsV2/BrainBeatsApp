@@ -26,11 +26,11 @@ const User = require('./schemas/user');
 const Midi = require('./schemas/midi');
 const Model = require('./schemas/model');
 
-app.get('/', (req, res) => {
+app.get('/api', (req, res) => {
     res.send("hello world");
 })
 
-app.get('/users', (req, res) => {
+app.get('/api/users', (req, res) => {
     var conn = getConnection();
     var db = conn.db;
         
@@ -51,7 +51,7 @@ app.get('/users', (req, res) => {
         Response- 200 OK
     * You MUST supply the exact Content-Type above, or it won't work. 
 */
-app.post('/requestreset', function(req, res) {
+app.post('/api/requestreset', function(req, res) {
     var body = req.body;
 
     var email = body.email;
@@ -94,7 +94,7 @@ app.post('/requestreset', function(req, res) {
         Response- 200 OK
     * You MUST supply the exact Content-Type above, or it won't work. 
 */
-app.post('/resetpassword', function(req, res) {
+app.post('/api/resetpassword', function(req, res) {
     var body = req.body;
     var email = body.email; 
     var token = body.token;
