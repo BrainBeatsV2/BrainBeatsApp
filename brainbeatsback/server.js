@@ -33,9 +33,7 @@ app.get('/', (req, res) => {
 app.get('/users', (req, res) => {
     var conn = getConnection();
     var db = conn.db;
-    
-    var users = db.collection("users").find().toArray();
-    
+        
     db.collection("users").find().toArray(function (err, data) {
         if (err) {
             console.log(err);
