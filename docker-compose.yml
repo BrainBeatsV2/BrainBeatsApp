@@ -1,0 +1,45 @@
+version: '3'
+services:
+    nodejs:
+        build:
+            context: brainbeatsfront
+            dockerfile: Dockerfile
+        image: nodejs
+        container_name: nodejs
+        restart: unless-stopped
+        networks:
+            - app-network
+        ports:
+            - "3000:5000"
+        command:
+            serve -s build
+            
+        depends_on:
+            - db
+        environment:
+            MONGO_USERNAME: root
+            MONGO_PASSWORD: toor
+            MONGO_HOSTNAME: db
+            MONGO_PORT: 27017
+            MONGO_DB: main
+
+    db:
+        image: mongo:4.1.8-xenial
+        container_name: db
+        restart: unless-stopped
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: root
+            MONGO_INITDB_ROOT_PASSWORD: toor
+            MONGO_INITDB_DATABASE: main
+        volumes:
+            - ./setup:/docker-entrypoint-initdb.d
+            - dbdata:/data/db
+        networks:
+            - app-network 
+            
+networks:
+    app-network:
+        driver: bridge
+        
+volumes:
+  dbdata:
