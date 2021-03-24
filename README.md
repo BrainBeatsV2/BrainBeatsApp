@@ -21,14 +21,3 @@ Terminate by:
 ```
 docker-compose down
 ```
-
-### Node (deprecated)
-```
-sudo apt install nodejs
-sudo apt install npm
-git clone https://github.com/BrainBeatsV2/BrainBeats_0.1/
-cd BrainBeats_0.1
-npm init
-npm install
-npm start
-```
