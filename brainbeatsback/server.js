@@ -61,31 +61,30 @@ app.post('/requestreset', function(req, res) {
     var conn = getConnection();
     var db = conn.db;
 
-    db.collection("users").findOne({"email": email}, function (err, data) {
-        if (err) {
-            console.log(err);
-            res.status(401).send("Account does not exist.")
-        } else if (data == null) {
-            res.status(401).send("Account does not exist.")
+    User.findOne({"email": email}).then(function(doc) {
+        if (doc == null) {
+            res.status(404).send("Account does not exist.")
         } else {
             res.status(200).send("Please check your email for a password reset link.");
 
             // generate token
             function genNumber() {
-                return Math.round(Math.random()*9+1);
+                return Math.round(Math.random()*9);
             }
             var token = genNumber() + "" + genNumber() + "" + genNumber() + "" + genNumber();
             console.log(token);
 
+            console.log(doc);
+
             // write token to db
-            
+            doc.token = token;
+            doc.tokenExpires = Date.now() + 86400 * 1000;
+            doc.save();
 
             // send email
-            
-
-        }
+            // @TODO
+        }   
     });
-    
 })
 
 
