@@ -47,6 +47,7 @@ services:
             MONGO_HOSTNAME: db
             MONGO_PORT: 27017
             MONGO_DB: main
+            SENDGRID_API_KEY: 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
             
 networks:
     app-network:

@@ -80,9 +80,66 @@ app.post('/requestreset', function(req, res) {
             doc.save();
 
             // send email
-            // @TODO
+            var email_text = "Your password reset token is: " + token;
+            // sendMail(doc.email, "hsauers@knights.ucf.edu", "Reset your Password", email_text, email_text)
         }   
     });
 })
 
+/*
+    Example: 
+        POST localhost:4000/resetpassword
+        Headers- Content-Type: application/json; charset=utf-8
+        Body- {"email": "harry@hsauers.net", "token": "1234", "new_password": "Passwd123!"}
+        Response- 200 OK
+    * You MUST supply the exact Content-Type above, or it won't work. 
+*/
+app.post('/resetpassword', function(req, res) {
+    var body = req.body;
+    var email = body.email; 
+    var token = body.token;
+    var new_password = body.new_password;
+
+    var conn = getConnection();
+
+    User.findOne({"email": email}).then(function(doc) {
+        if (doc == null) {
+            res.status(404).send("Account does not exist.")
+        } else if (doc.token != token) {
+            res.status(401).send("Token does not match.");
+        } else if (doc.tokenExpires < Date.now()) {
+            res.status(401).send("Token expired.");
+        } else {
+            doc.password = new_password;
+            doc.token = "";
+            doc.tokenExpires = Date.now();
+            doc.save();
+            res.status(200).send("Password successfully reset.");
+        }
+    });
+})
+
+// start app
 app.listen(PORT, () => console.log("Running on"), PORT);
+
+
+/* Send Mail functionality - using SendGrid */
+
+const sgMail = require('@sendgrid/mail')
+sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+
+function sendMail(to, from, subject, text, html) {
+    var msg = {
+        to: to, 
+        from: from, 
+        subject: subject, 
+        text: text, 
+        html: html
+    }
+    sgMail.send(msg).then(() => {
+        console.log('Email sent')
+    })
+    .catch((error) => {
+        console.error(error)
+    })
+}
