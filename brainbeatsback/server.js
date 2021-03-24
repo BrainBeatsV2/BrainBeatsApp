@@ -81,7 +81,7 @@ app.post('/requestreset', function(req, res) {
 
             // send email
             var email_text = "Your password reset token is: " + token;
-            // sendMail(doc.email, "hsauers@knights.ucf.edu", "Reset your Password", email_text, email_text)
+            sendMail(doc.email, "hsauers@knights.ucf.edu", "Reset your Password", email_text, email_text)
         }   
     });
 })
