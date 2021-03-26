@@ -119,14 +119,33 @@ app.post('/resetpassword', function(req, res) {
     });
 })
 
+/*
+    Validates user's username and password 
+    Will likely return a JWT token depending on which authorization route we go
+*/
 app.post('/api/login', function (req, res) {
     var body = req.body;
+    var username = body.username;
+    var password = body.password;
 
     var conn = getConnection();
 
-    
+    const user = await User.findOne({"username": username}).lean()
+
+    if (!user) {
+        return res.status(400).send("Invalid username or password");
+    }
+
+    if (user.password !== password) {
+        return res.status(400).send("Invalid username or password")
+    }
+
 });
 
+/*
+    Checks if username or email are already registered to another user if not saves
+    information for new user
+*/
 app.post('/api/register', function (req, res) {
     var conn = getConnection();
     var body = req.body;
