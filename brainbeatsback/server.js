@@ -119,6 +119,61 @@ app.post('/resetpassword', function(req, res) {
     });
 })
 
+app.post('/api/login', function (req, res) {
+    var body = req.body;
+
+    var conn = getConnection();
+
+    
+});
+
+app.post('/api/register', function (req, res) {
+    var conn = getConnection();
+    var body = req.body;
+    var firstName = body.firstName;
+    var lastName = body.lastName;
+    var email = body.email;
+    var username = body.username;
+    var password = body.password;
+
+    // First checks if Username or Email is already being used then saves as new user
+    User.findOne({
+        $or: [{
+            "email": email
+        }, {
+            "username": username
+        }]
+    }).then(user => {
+        if (user) {
+            let errors = {};
+            if (user.username === username) {
+                errors.username = "Username taken";
+            } else {
+                errors.email = "Email already in use";
+            }
+            // mongoose validation error
+            return res.status(400).json(errors);
+        } else {
+            const postUser = new User({
+                "username": username,
+                "email": email,
+                "password": password,
+                "firstName": firstName,
+                "lastName": lastName
+            });
+
+            postUser.save();
+        }
+    })
+    .catch(err => {
+        // Default 500 server error
+        return res.status(500).json({
+            error: err
+        });
+    });
+
+});
+
 // start app
 app.listen(PORT, () => console.log("Running on"), PORT);
 
