@@ -133,7 +133,9 @@ app.get('/api/models', function(req, res) {
         if (doc == null) {
             res.status(404).send("No models found.");
         } else {
-            res.status(200).send(doc);
+            var data = []
+            doc.forEach(model => data.push(model.name));
+            res.status(200).send(data);
         }
     });
 })
