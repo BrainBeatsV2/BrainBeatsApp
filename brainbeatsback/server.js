@@ -45,7 +45,7 @@ app.get('/api/users', (req, res) => {
 
 /*
     Example: 
-        POST localhost:4000/requestreset
+        POST localhost:4000/api/requestreset
         Headers- Content-Type: application/json; charset=utf-8
         Body- {"email": "harry@hsauers.net"}
         Response- 200 OK
@@ -61,7 +61,7 @@ app.post('/api/requestreset', function(req, res) {
 
     User.findOne({"email": email}).then(function(doc) {
         if (doc == null) {
-            res.status(404).send("Account does not exist.")
+            res.status(404).send("Account does not exist.");
         } else {
             res.status(200).send("Please check your email for a password reset link.");
 
@@ -81,14 +81,14 @@ app.post('/api/requestreset', function(req, res) {
 
             // send email
             var email_text = "Your password reset token is: " + token;
-            sendMail(doc.email, "hsauers@knights.ucf.edu", "Reset your Password", email_text, email_text)
+            sendMail(doc.email, "hsauers@knights.ucf.edu", "Reset your Password", email_text, email_text);
         }   
     });
 })
 
 /*
     Example: 
-        POST localhost:4000/resetpassword
+        POST localhost:4000/api/resetpassword
         Headers- Content-Type: application/json; charset=utf-8
         Body- {"email": "harry@hsauers.net", "token": "1234", "new_password": "Passwd123!"}
         Response- 200 OK
@@ -104,7 +104,7 @@ app.post('/api/resetpassword', function(req, res) {
 
     User.findOne({"email": email}).then(function(doc) {
         if (doc == null) {
-            res.status(404).send("Account does not exist.")
+            res.status(404).send("Account does not exist.");
         } else if (doc.token != token) {
             res.status(401).send("Token does not match.");
         } else if (doc.tokenExpires < Date.now()) {
@@ -118,6 +118,47 @@ app.post('/api/resetpassword', function(req, res) {
         }
     });
 })
+
+/*
+    Example: 
+        GET localhost:4000/api/models
+        Headers- Content-Type: application/json; charset=utf-8
+        Response- 200 OK
+    * You MUST supply the exact Content-Type above, or it won't work. 
+*/
+app.get('/api/models', function(req, res) {
+    var conn = getConnection();
+
+    Model.find().then(function(doc) {
+        if (doc == null) {
+            res.status(404).send("No models found.");
+        } else {
+            res.status(200).send(doc);
+        }
+    });
+})
+
+/*
+    Example: 
+        GET localhost:4000/api/models/MODEL_NAME
+        Headers- Content-Type: application/json; charset=utf-8
+        Response- 200 OK
+    * You MUST supply the exact Content-Type above, or it won't work. 
+*/
+app.get('/api/models/:model_name', function(req, res) {
+    var conn = getConnection();
+
+    var model_name = req.params.model_name;
+
+    Model.findOne({"name": model_name}).then(function(doc) {
+        if (doc == null) {
+            res.status(404).send("Model does not exist.");
+        } else {
+            res.status(200).send(doc);
+        }
+    });
+})
+
 
 // start app
 app.listen(PORT, () => console.log("Running on"), PORT);
