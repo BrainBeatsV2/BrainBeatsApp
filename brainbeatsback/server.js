@@ -197,13 +197,101 @@ app.post('/api/midis', async function(req, res) {
     var email = body.email;
     var password = body.password;
 
-    // if credentials not valid
+    // check credentials
     User.findOne({"email": email}).then(function(doc) {
         if (doc == null || doc.password != password) {
             res.status(401).send("Incorrect account credentials.");
         } else {
             // send all midi data
             Midi.find({"user_email": email}).then(function(doc) {
+                res.status(200).send(doc);
+            });
+        }
+    });
+})
+
+/*
+    Example: 
+        GET localhost:4000/api/midis/create
+        Headers- Content-Type: application/json; charset=utf-8
+        Body- {"email": "harry@hsauers.net", "password": "Passwd123!", 
+                "midi_name": "midi_name1", "midi_data", "12345", 
+                "midi_privacy": "private", "midi_notes": "lorem ipsum"}
+        Response- 200 OK
+    * You MUST supply the exact Content-Type above, or it won't work. 
+    * Note the user's account info in the body. 
+*/
+app.post('/api/midis/create', async function(req, res) {
+    var body = req.body;
+    var email = body.email;
+    var password = body.password;
+
+    // midi-specific vars
+    var midi_name = body.midi_name;
+    var midi_data = body.midi_data;
+    var midi_model_id = body.midi_model_id;
+    var midi_privacy = body.midi_privacy;
+    var midi_notes = body.midi_notes;
+
+    // validate input
+    if (midi_name == null || midi_name == "") {
+        res.status(400).send("midi_name missing!")
+    }
+    if (midi_data == null || midi_data == "") {
+        res.status(400).send("midi_data missing!")
+    }
+    if (midi_model_id == null || midi_model_id == "") {
+        res.status(400).send("midi_model_id missing!")
+    }
+    if (midi_privacy == null || midi_privacy == "") {
+        midi_privacy = "private";
+    }
+
+    // check credentials
+    User.findOne({"email": email}).then(function(doc) {
+        if (doc == null || doc.password != password) {
+            res.status(401).send("Incorrect account credentials.");
+        } else {
+            // create new midi
+            var newMidi = Midi({
+                "user_email": email, 
+                "name": midi_name, 
+                "midi_data": midi_data, 
+                "model_id": midi_model_id, 
+                "privacy": midi_privacy, 
+                "notes": midi_notes, 
+            });
+
+            newMidi.save();
+            res.status(200).send("MIDI uploaded successfully!");
+        }
+    });
+})
+
+
+/*
+    Example: 
+        GET localhost:4000/api/midis/606e1726f9d7edf2fe715ee6
+        Headers- Content-Type: application/json; charset=utf-8
+        Body- {"email": "harry@hsauers.net", "password": "Passwd123!"}
+        Response- 200 OK
+    * You MUST supply the exact Content-Type above, or it won't work. 
+    * Note the user's account info in the body. 
+*/
+app.post('/api/midis/:midi_id', async function(req, res) {
+    var body = req.body;
+    var email = body.email;
+    var password = body.password;
+
+    var midi_id = req.params.midi_id;
+
+    // check credentials
+    User.findOne({"email": email}).then(function(doc) {
+        if (doc == null || doc.password != password) {
+            res.status(401).send("Incorrect account credentials.");
+        } else {
+            // send midi data
+            Midi.findOne({"user_email": email, "_id": midi_id}).then(function(doc) {
                 res.status(200).send(doc);
             });
         }
