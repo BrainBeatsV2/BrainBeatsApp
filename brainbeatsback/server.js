@@ -6,13 +6,13 @@ app.use(bodyParser.json());
 
 const PORT = 4000;
 
-var username = process.env.MONGO_USERNAME;
-var password = process.env.MONGO_PASSWORD;
+var mongo_username = process.env.MONGO_USERNAME;
+var mongo_password = process.env.MONGO_PASSWORD;
 var host = process.env.MONGO_HOSTNAME;
 var port = process.env.MONGO_PORT;
 var dbName = process.env.MONGO_DB ;
 
-var mongo_uri = 'mongodb://' + username + ':' + password + '@' + host + ':' + port + '/' + dbName;
+var mongo_uri = 'mongodb://' + mongo_username + ':' + mongo_password + '@' + host + ':' + port + '/' + dbName;
 
 function getConnection() {
     mongoose.connect(mongo_uri, { useNewUrlParser: true });
@@ -181,6 +181,36 @@ app.get('/api/models/:model_name', function(req, res) {
 })
 
 
+/*
+    Example: 
+        GET localhost:4000/api/midis
+        Headers- Content-Type: application/json; charset=utf-8
+        Body- {"email": "harry@hsauers.net", "password": "Passwd123!"}
+        Response- 200 OK
+    * You MUST supply the exact Content-Type above, or it won't work. 
+    * Note the user's account info in the body. 
+    * 
+    * @TODO - this feels bad. I don't like the various nested levels. fix it at some point. 
+*/
+app.post('/api/midis', async function(req, res) {
+    var body = req.body;
+    var email = body.email;
+    var password = body.password;
+
+    // if credentials not valid
+    User.findOne({"email": email}).then(function(doc) {
+        if (doc == null || doc.password != password) {
+            res.status(401).send("Incorrect account credentials.");
+        } else {
+            // send all midi data
+            Midi.find({"user_email": email}).then(function(doc) {
+                res.status(200).send(doc);
+            });
+        }
+    });
+})
+
+
 // start app
 app.listen(PORT, () => console.log("Running on"), PORT);
 
@@ -204,4 +234,19 @@ function sendMail(to, from, subject, text, html) {
     .catch((error) => {
         console.error(error)
     })
+}
+
+/* Authentication functionality @TODO not working */
+function checkAuth(email, password) {
+    var conn = getConnection();
+
+    User.findOne({"email": email}).then(function(doc) {
+        if (doc == null) {
+            return false;
+        } else if (doc.password != password) {
+            return false;
+        } else {
+            return true;
+        }
+    });
 }
