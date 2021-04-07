@@ -70,9 +70,6 @@ app.post('/api/requestreset', function(req, res) {
                 return Math.round(Math.random()*9);
             }
             var token = genNumber() + "" + genNumber() + "" + genNumber() + "" + genNumber();
-            console.log(token);
-
-            console.log(doc);
 
             // write token to db
             doc.token = token;
@@ -276,7 +273,7 @@ app.post('/api/midis/create', async function(req, res) {
         Body- {"email": "harry@hsauers.net", "password": "Passwd123!"}
         Response- 200 OK
     * You MUST supply the exact Content-Type above, or it won't work. 
-    * Note the user's account info in the body. 
+    * User account info not needed if MIDI is public
 */
 app.post('/api/midis/:midi_id', async function(req, res) {
     var body = req.body;
@@ -285,16 +282,22 @@ app.post('/api/midis/:midi_id', async function(req, res) {
 
     var midi_id = req.params.midi_id;
 
-    // check credentials
-    User.findOne({"email": email}).then(function(doc) {
-        if (doc == null || doc.password != password) {
-            res.status(401).send("Incorrect account credentials.");
-        } else {
+    // fetch midi
+    Midi.findOne({"_id": midi_id}).then(function(midi_doc) {
+        if (midi_doc.privacy != "private") {
             // send midi data
-            Midi.findOne({"user_email": email, "_id": midi_id}).then(function(doc) {
-                res.status(200).send(doc);
+            res.status(200).send(midi_doc);
+        } else {
+            User.findOne({"email": email}).then(function(doc) {
+                if (doc == null || doc.password != password || midi_doc.user_email != email) {
+                    res.status(401).send("Incorrect account credentials.");
+                } else {
+                    // send midi data
+                    res.status(200).send(midi_doc);
+                }
             });
         }
+        
     });
 })
 
