@@ -261,7 +261,8 @@ app.post('/api/midis/create', async function(req, res) {
 
             newMidi.save();
             res.status(200).send({
-                "message": "MIDI uploaded successfully!"
+                "message": "MIDI uploaded successfully!", 
+                "id": newMidi._id
             });
         }
     });
