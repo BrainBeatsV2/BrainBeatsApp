@@ -117,6 +117,79 @@ app.post('/api/resetpassword', function(req, res) {
 })
 
 /*
+    Validates user's username and password 
+    Will likely return a JWT token depending on which authorization route we go
+*/
+app.post('/api/login', function (req, res) {
+    var body = req.body;
+    var username = body.username;
+    var password = body.password;
+
+    var conn = getConnection();
+
+    const user = await User.findOne({"username": username}).lean()
+
+    if (!user) {
+        return res.status(400).send("Invalid username or password");
+    }
+
+    if (user.password !== password) {
+        return res.status(400).send("Invalid username or password")
+    }
+
+});
+
+/*
+    Checks if username or email are already registered to another user if not saves
+    information for new user
+*/
+app.post('/api/register', function (req, res) {
+    var conn = getConnection();
+    var body = req.body;
+    var firstName = body.firstName;
+    var lastName = body.lastName;
+    var email = body.email;
+    var username = body.username;
+    var password = body.password;
+
+    // First checks if Username or Email is already being used then saves as new user
+    User.findOne({
+        $or: [{
+            "email": email
+        }, {
+            "username": username
+        }]
+    }).then(user => {
+        if (user) {
+            let errors = {};
+            if (user.username === username) {
+                errors.username = "Username taken";
+            } else {
+                errors.email = "Email already in use";
+            }
+            // mongoose validation error
+            return res.status(400).json(errors);
+        } else {
+            const postUser = new User({
+                "username": username,
+                "email": email,
+                "password": password,
+                "firstName": firstName,
+                "lastName": lastName
+            });
+
+            postUser.save();
+        }
+    })
+    .catch(err => {
+        // Default 500 server error
+        return res.status(500).json({
+            error: err
+        });
+    });
+
+});
+
     Example: 
         GET localhost:4000/api/models
         Headers- Content-Type: application/json; charset=utf-8
@@ -303,7 +376,6 @@ app.post('/api/midis/:midi_id', async function(req, res) {
         
     });
 })
-
 
 // start app
 app.listen(PORT, () => console.log("Running on"), PORT);
