@@ -127,16 +127,14 @@ app.post('/api/login', function (req, res) {
 
     var conn = getConnection();
 
-    const user = await User.findOne({"username": username}).lean()
-
-    if (!user) {
-        return res.status(400).send("Invalid username or password");
-    }
-
-    if (user.password !== password) {
-        return res.status(400).send("Invalid username or password")
-    }
-
+    User.findOne({"username": username}).then(function(doc) {
+        if (doc == null) {
+            res.status(400).send("Invalid username or password");    
+        }
+        else if (doc.password != password) {
+            res.status(400).send("Invalid username or password")
+        }
+    });
 });
 
 /*
@@ -190,6 +188,7 @@ app.post('/api/register', function (req, res) {
 
 });
 
+/*
     Example: 
         GET localhost:4000/api/models
         Headers- Content-Type: application/json; charset=utf-8
