@@ -11,8 +11,8 @@ sudo apt install docker-compose
 
 ### Docker
 ```
-git clone https://github.com/BrainBeatsV2/BrainBeats_0.1/
-cd BrainBeats_0.1
+git clone https://github.com/BrainBeatsV2/BrainBeatsApp/
+cd BrainBeatsApp
 docker-compose build
 docker-compose up -d
 ```
