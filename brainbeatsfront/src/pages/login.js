@@ -64,11 +64,11 @@ class Login extends Component {
 				}
 			}
 
-			let res = await axios.post('http://brainbeats.dev/api/login', options, {
+			axios.post('http://brainbeats.dev/api/login', options, {
 
-		    username: this.state.username,
-		    password: this.state.password
-		  });
+		   		 username: this.state.username,
+		   		 password: this.state.password
+		 	 });
 		}
 
 
