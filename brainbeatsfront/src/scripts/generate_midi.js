@@ -1,29 +1,7 @@
-// module.exports.exports = {
-//   parseCSV: parseCSV() {
-//   }
-
-// eegData = parseCSV('/eeg_data.csv');
-// console.log('Finished parsing');
-// console.log(eegData);
 const csv = require('csvtojson')
-
-
 generateMidi('/eeg_data.csv', 100);
 
 async function parseCSV(filePath) {
-  // var fs = require('fs');
-  // var csv = require('csv-parser');
-  // var data = [];
-
-  // fs.readFileSync('eeg_data.csv')
-  //   .pipe(csv())
-  //   .on('data', (row) => {
-  //     console.log(row)
-  //     data.push(row)
-  //   })
-  //   .on('end', function () {
-  //     console.log('CSV file has been read')
-  //   })
   const csvFilePath = 'eeg_data.csv'
   const array = await csv().fromFile(csvFilePath);
 
@@ -31,13 +9,11 @@ async function parseCSV(filePath) {
 };
 
 async function generateMidi(filePath, time) {
-
   eegData = await parseCSV(filePath)
   console.log('Finished parsing. Here is the data')
-  // let average = (array) => array.reduce((a, b) => a + b) / array.length;
-
   console.log(eegData)
-  // 
+
+  // let average = (array) => array.reduce((a, b) => a + b) / array.length;  
   deltaAvg = average(eegData[0].Delta)
   thetaAvg = average(eegData[0])
   alphaAvg = average(eegData[0])
