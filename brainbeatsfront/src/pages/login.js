@@ -12,6 +12,10 @@ class Login extends Component {
 	  this.onShowRegister = this.onShowRegister.bind(this);
 	  this.onShowLogin = this.onShowLogin.bind(this);
 	  this.onShowResetPassword = this.onShowResetPassword.bind(this);
+	  const register = document.getElementById('registerform');
+	  register.addEventListener('submit', registerUser);
+	  const login = document.getElementById('loginform');
+	  login.addEventListener('submit', loginUser);
 	}
 	onShowRegister() {
 		this.setState({
@@ -40,17 +44,16 @@ class Login extends Component {
 		  });
 	  }
 	
-	const register = document.getElementById('registerform');
-		register.addEventListener('submit', registerUser);
+	
 
 		async function registerUser(event)
 		{
-			event.preventDefault()
-			const username = document.getElementById('username').value
-			const password = document.getElementById('password').value
-			const firstName = document.getElementById('firstName').value
-			const lastName = document.getElementById('lastName').value
-			const email = document.getElementById('email').value
+			event.preventDefault();
+			const username = document.getElementById('username').value;
+			const password = document.getElementById('password').value;
+			const firstName = document.getElementById('firstName').value;
+			const lastName = document.getElementById('lastName').value;
+			const email = document.getElementById('email').value;
 
 			const result = await fetch('/api/register', 
 			{
@@ -70,14 +73,13 @@ class Login extends Component {
 			})
 		}
 
-		const login = document.getElementById('loginform');
-		login.addEventListener('submit', loginUser);
+		
 
 		async function loginUser(event)
 		{
-			event.preventDefault()
-			const username = document.getElementById('username').value
-			const password = document.getElementById('password').value
+			event.preventDefault();
+			const username = document.getElementById('username').value;
+			const password = document.getElementById('password').value;
 
 			const result = await fetch('/api/login', 
 			{
