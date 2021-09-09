@@ -10,7 +10,8 @@ class Login extends Component {
 		showResetPassword: false,
 		showVerify: false,
 		username: '',
-		password: ''
+		password: '',
+		email: ''
 	  };
 	  this.onShowRegister = this.onShowRegister.bind(this);
 	  this.onShowLogin = this.onShowLogin.bind(this);
@@ -23,7 +24,8 @@ class Login extends Component {
 			showResetPassword:false,
 			showVerify: false,
 			username: '',
-			password: ''
+			password: '',
+			email: ''
 		  });
 	  }
 	  onShowLogin() {
@@ -33,7 +35,8 @@ class Login extends Component {
 			showResetPassword:false,
 			showVerify: false,
 			username: '',
-			password: ''
+			password: '',
+			email: ''
 		  });
 	  }
 	  onShowResetPassword() {
@@ -43,7 +46,8 @@ class Login extends Component {
 			showResetPassword:true,
 			showVerify: false,
 			username: '',
-			password: ''
+			password: '',
+			email: ''
 		  });
 	  }
 
@@ -53,6 +57,10 @@ class Login extends Component {
 
 		handlePassword = event => {
 			this.setState({password: event.target.value});
+		}
+
+		handlePassword = event => {
+			this.setState({email: event.target.value});
 		}
 
 		handleLogin = event =>{
@@ -65,10 +73,25 @@ class Login extends Component {
 			}
 
 			axios.post('http://brainbeats.dev/api/login', options, {
+		    username: this.state.username,
+		    password: this.state.password
+		  });
+		}
 
-		   		 username: this.state.username,
-		   		 password: this.state.password
-		 	 });
+		handleRegister = event =>{
+			event.preventDefault();
+
+			const options = {
+				headers: {
+					'Content-type': 'application/json; charset=utf-8'
+				}
+			}
+
+			axios.post('http://brainbeats.dev/api/register', options, {
+		    username: this.state.username,
+		    password: this.state.password,
+				email: this.state.email
+		  });
 		}
 
 
@@ -119,20 +142,20 @@ class Login extends Component {
 
 					 </form>
 
-					 <form id="registerform" action="" method="post" class="login100-form validate-form" style={{display: this.state.showRegister ? 'block' : 'none' }}>
+					 <form id="registerform" action="" method="post" class="login100-form validate-form" style={{display: this.state.showRegister ? 'block' : 'none' }} onSubmit={this.handleLogin}>
 						 <div class="wrap-input100 validate-input">
-							 <input class="input100" type="text" name="EMAIL" />
+							 <input class="input100" type="text" name="EMAIL" onChange={this.handleEmail}/>
 							 <span class="focus-input100" data-placeholder="Email"></span>
 						 </div>
 						 <div class="wrap-input100 validate-input">
-							 <input class="input100" type="text" name="USERNAME" />
+							 <input class="input100" type="text" name="USERNAME" onChange={this.handleUsername}/>
 							 <span class="focus-input100" data-placeholder="Username"></span>
 						 </div>
 						 <div class="wrap-input100 validate-input">
 							 <span class="btn-show-pass">
 								 <i class="material-icons">remove_red_eye</i>
 							 </span>
-							 <input class="input100" type="password" name="PASSWORD" />
+							 <input class="input100" type="password" name="PASSWORD" onChange={this.handlePassword}/>
 							 <span class="focus-input100" data-placeholder="Password"></span>
 						 </div>
 						 <div class="wrap-input100 validate-input">
