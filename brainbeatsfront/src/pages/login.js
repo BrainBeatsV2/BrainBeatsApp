@@ -40,8 +40,8 @@ class Login extends Component {
 		  });
 	  }
 	
-	const register = document.getElementById('registerform')
-		register.addEventListener('submit', registerUser)
+	const register = document.getElementById('registerform');
+		register.addEventListener('submit', registerUser);
 
 		async function registerUser(event)
 		{
@@ -70,8 +70,8 @@ class Login extends Component {
 			})
 		}
 
-		const login = document.getElementById('loginform')
-		login.addEventListener('submit', loginUser)
+		const login = document.getElementById('loginform');
+		login.addEventListener('submit', loginUser);
 
 		async function loginUser(event)
 		{
