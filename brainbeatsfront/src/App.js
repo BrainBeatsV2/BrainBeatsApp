@@ -1,21 +1,20 @@
-import logo from './logo.svg';
 import './App.css';
-
-import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
-import Navbar from './components/Navbar';
-import Home from './pages';
-import Login from './pages/login';
-
+import Navbar from './components/Navbar'
+import {BrowserRouter as Router, Switch, Route} from 'react-router-dom'
+import Home from './pages'
+import Login from './pages/login'
+import MusicGeneration from './pages/music-generation'
 function App() {
-    return (
-        <Router>
-            <Navbar />
-            <Switch>
-                <Route path="/" exact component={Home} />
-                <Route path="/login" exact component={Login} />
-            </Switch>
-        </Router>
-    );
+  return (
+    <Router>
+      <Navbar />
+      <Switch>
+        <Route path="/" exact component={Home} />
+        <Route path="/login" exact component={Login} />
+        <Route path="/music-generation" exact component={MusicGeneration} />
+      </Switch>
+    </Router>
+  );
 }
 
 export default App;
