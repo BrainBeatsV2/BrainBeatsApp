@@ -1,9 +1,10 @@
 import './App.css';
 import Navbar from './components/Navbar'
-import {BrowserRouter as Router, Switch, Route} from 'react-router-dom'
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom'
 import Home from './pages'
 import Login from './pages/login'
 import MusicGeneration from './pages/music-generation'
+
 function App() {
   return (
     <Router>
