@@ -1,4 +1,5 @@
 import React,{ Component, useState } from 'react';
+import axios from 'axios';
 
 class Login extends Component {
 	constructor(props) {
@@ -7,7 +8,9 @@ class Login extends Component {
 		showLogin: true,
 		showRegister: false,
 		showResetPassword: false,
-		showVerify: false
+		showVerify: false,
+		username: '',
+		password: ''
 	  };
 	  this.onShowRegister = this.onShowRegister.bind(this);
 	  this.onShowLogin = this.onShowLogin.bind(this);
@@ -18,7 +21,9 @@ class Login extends Component {
 			showRegister: true,
 			showLogin:false,
 			showResetPassword:false,
-			showVerify: false
+			showVerify: false,
+			username: '',
+			password: ''
 		  });
 	  }
 	  onShowLogin() {
@@ -26,8 +31,9 @@ class Login extends Component {
 			showRegister: false,
 			showLogin:true,
 			showResetPassword:false,
-			showVerify: false
-
+			showVerify: false,
+			username: '',
+			password: ''
 		  });
 	  }
 	  onShowResetPassword() {
@@ -35,12 +41,37 @@ class Login extends Component {
 			showRegister: false,
 			showLogin:false,
 			showResetPassword:true,
-			showVerify: false
-
+			showVerify: false,
+			username: '',
+			password: ''
 		  });
 	  }
-	
-	
+
+		handleUsername = event => {
+			this.setState({username: event.target.value});
+		}
+
+		handlePassword = event => {
+			this.setState({password: event.target.value});
+		}
+
+		handleLogin = event =>{
+			event.preventDefault();
+
+			const options = {
+				headers: {
+					'Content-type': 'application/json; charset=utf-8'
+				}
+			}
+
+			let res = await axios.post('http://brainbeats.dev/api/login', options, {
+
+		    username: this.state.username,
+		    password: this.state.password
+		  });
+		}
+
+
 	render() {
 	  return (
 		<div class="container-login100">
@@ -49,9 +80,9 @@ class Login extends Component {
 
 
 					 <div id="banner" class="alert m-b-38" role="alert"></div>
-					 <form id="loginform" action="" method="post" class="login100-form validate-form" style={{display: this.state.showLogin ? 'block' : 'none' }}>
+					 <form id="loginform" action="" method="post" class="login100-form validate-form" style={{display: this.state.showLogin ? 'block' : 'none' }} onSubmit={this.handleLogin}>
 						 <div class="wrap-input100 validate-input" >
-							 <input class="input100" type="text" name="USERNAME" />
+							 <input class="input100" type="text" name="USERNAME" onChange={this.handleUsername}/>
 							 <span class="focus-input100" data-placeholder="Username or Email"></span>
 						 </div>
 
@@ -59,7 +90,7 @@ class Login extends Component {
 							 <span class="btn-show-pass">
 								 <i class="material-icons">remove_red_eye</i>
 							 </span>
-							 <input class="input100" type="password" name="PASSWORD" />
+							 <input class="input100" type="password" name="PASSWORD" onChange={this.handlePassword}/>
 							 <span class="focus-input100" data-placeholder="Password"></span>
 						 </div>
 						 <input type="hidden" name="ACTION" value="LOGIN" />
@@ -182,3 +213,4 @@ class Login extends Component {
 	}
   }
 export default Login
+
