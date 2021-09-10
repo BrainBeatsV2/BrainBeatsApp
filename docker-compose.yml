@@ -1,0 +1,57 @@
+version: '3'
+services:
+    front:
+        build:
+            context: brainbeatsfront
+            dockerfile: Dockerfile
+        container_name: front
+        restart: unless-stopped
+        networks:
+            - app-network
+        ports:
+            - "3000:3000"
+        command:
+            serve -s build -p 3000
+    
+    db:
+        image: mongo:4.1.8-xenial
+        container_name: db
+        restart: unless-stopped
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: root
+            MONGO_INITDB_ROOT_PASSWORD: toor
+            MONGO_INITDB_DATABASE: main
+        volumes:
+            - ./setup:/docker-entrypoint-initdb.d
+            # - dbdata:/data/db
+        networks:
+            - app-network
+    back:
+        build:
+            context: brainbeatsback
+            dockerfile: Dockerfile
+        container_name: back
+        restart: unless-stopped
+        networks:
+            - app-network
+        ports:
+            - "4000:4000"
+        command:
+            npm run start
+            
+        depends_on:
+            - db
+        environment:
+            MONGO_USERNAME: root
+            MONGO_PASSWORD: toor
+            MONGO_HOSTNAME: db
+            MONGO_PORT: 27017
+            MONGO_DB: main
+            SENDGRID_API_KEY: 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
+            
+networks:
+    app-network:
+        driver: bridge
+        
+volumes:
+  dbdata:
