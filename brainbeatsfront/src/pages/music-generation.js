@@ -1,21 +1,21 @@
 import React, { Component, useState } from 'react';
+import './music-generation-library.js';
+
 class MusicGeneration extends Component {
     constructor(props) {
         super(props);
         this.state = {
-          name: "React"
+            name: "React"
         };
-      }
-      render() {
+    }
+    render() {
         return (
 
-
-            
             <div class="music-generation-bg">
-            <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+                <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
                 <h3>Music Generation</h3>
                 <br />
-                 <br />
+                <br />
                 <div class="left">
                     Active Model:
                     <select>
@@ -34,24 +34,24 @@ class MusicGeneration extends Component {
                 </div>
                 <br />
                 <div class="parameters">
-                <h4>Adjustable Parameters</h4>
-                <br />
-                Key: <select><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>A</option><option>B</option></select>
-                Triad: <select><option>Major</option><option>Minor</option><option>Augmented</option><option>Diminished</option></select>
-                <br />
-                Pre-Set Scale: <select><option>Chromatic</option><option>Whole Tone</option><option>Pentatonic</option></select>
-                <br />
-                Desired Time Signature: <input type="text" class="border-input" value="4/4" />
-                <br />
-                BPM: <input type="number" class="border-input" value="120" />
-                <br />
-                Enable Harmony: <input type="checkbox" /> Enable Aggregation: <input type="checkbox" />
-                <br />
+                    <h4>Adjustable Parameters</h4>
+                    <br />
+                    Key: <select><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>A</option><option>B</option></select>
+                    Triad: <select><option>Major</option><option>Minor</option><option>Augmented</option><option>Diminished</option></select>
+                    <br />
+                    Pre-Set Scale: <select><option>Chromatic</option><option>Whole Tone</option><option>Pentatonic</option></select>
+                    <br />
+                    Desired Time Signature: <input type="text" class="border-input" value="4/4" />
+                    <br />
+                    BPM: <input type="number" class="border-input" value="120" />
+                    <br />
+                    Enable Harmony: <input type="checkbox" /> Enable Aggregation: <input type="checkbox" />
+                    <br />
                 </div>
-    
-    
+
+
             </div>
-    
+
 
         );
     }
