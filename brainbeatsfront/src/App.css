@@ -473,6 +473,102 @@ iframe {
   left: 0;
 }
 
+#midi-tracks
+{
+  background:#2d2d2d;
+  border-radius: 5px;
+  padding:20px;
+  color:white;
+  max-width:50%;
+}
+#other-tracks
+{
+  background:#2d2d2d;
+  border-radius: 5px;
+  padding:20px;
+  color:white;
+  max-width:100%;
+}
+#top-bar
+{
+
+  border-radius: 5px;
+
+  color:white;
+  max-width:50%;
+margin-bottom:10px;
+
+}
+.midi-track
+{
+  background: #0058ab;
+  border-radius:8px;
+  padding:10px;
+  display:inline-block;
+  width:300px;
+  vertical-align: middle;
+  color: white;
+  margin:5px;
+}
+.midi-track-play
+{
+  background: #d2d2d2;
+  border-radius:8px;
+  padding:20px;
+  display:inline-block;
+  width:300px;
+  vertical-align: middle;
+  color: #2d2d2d;
+  margin:5px;
+}
+.midi-settings
+{
+  display:inline-block;
+  font-size:9pt;
+  cursor:pointer;
+  vertical-align: middle;
+  float:right;
+
+}
+.midi-play
+{
+  display:inline-block;
+  font-size:9pt;
+  cursor:pointer;
+  vertical-align: middle;
+  float:left;
+
+
+}
+.midi-add
+{
+  border-radius:8px;
+  border: 1px solid #008e00;
+  background:#008e00;
+  color:white;
+  
+
+  padding:5px;
+  font-size:12px;
+  cursor:pointer;
+  vertical-align: middle;
+  display: inline-block;
+
+}
+.left-tracks
+{
+  
+}
+.settings-area
+{
+  background:white;
+}
+.midi-add i.material-icons
+{
+  font-size:12px;
+  vertical-align: middle;
+  margin-top:-1px;
+}
 .music-generation-bg
 {
  margin:50px;
@@ -487,8 +583,24 @@ iframe {
   .wrap-login100 {
     padding: 50px 15px 33px 15px;
   }
+  #midi-tracks,#top-bar
+  {
+    max-width: 100%;
+  }
+  .midi-track-play,.midi-track
+  {
+    width:100%;
+  }
 }
+.text-center
+{
+  text-align:center;
 
+}
+.white-text
+{
+  color:white;
+}
 
 
 /*------------------------------------------------------------------
