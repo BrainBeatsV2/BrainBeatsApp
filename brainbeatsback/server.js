@@ -368,7 +368,7 @@ app.post('/api/midis/:midi_id', async function(req, res) {
             var password = body.password;
             
             User.findOne({"email": email}).then(function(doc) {
-                if (doc == null || doc.password != password || midi_doc.user_email != email) {
+                if (doc == null || doc.password != password || midi_doc.username != email) {
                     res.status(401).send("Incorrect account credentials.");
                 } else {
                     // send midi data
@@ -405,7 +405,7 @@ app.post('/download/midi/:midi_id', async function(req, res) {
             var password = body.password;
 
             User.findOne({"email": email}).then(function(doc) {
-                if (doc == null || doc.password != password || midi_doc.user_email != email) {
+                if (doc == null || doc.password != password || midi_doc.username != email) {
                     res.status(401).send("Incorrect account credentials.");
                 } else {
                     // send midi data
@@ -416,6 +416,32 @@ app.post('/download/midi/:midi_id', async function(req, res) {
         
     });
 })
+
+/*
+    Download of raw MIDI file
+    Example: 
+        GET localhost:4000/download/midi/606e1726f9d7edf2fe715ee6
+        Headers- Content-Type: application/json; charset=utf-8
+        Body- {"email": "harry@hsauers.net", "password": "Passwd123!"}
+        Response- 200 OK
+    * You MUST supply the exact Content-Type above, or it won't work. 
+    * User account info not needed if MIDI is public
+*/
+app.get('/download/midi/:midi_id', async function(req, res) {
+    var midi_id = req.params.midi_id;
+
+    // fetch midi
+    Midi.findOne({"_id": midi_id}).then(function(midi_doc) {
+        if (midi_doc.privacy != "private") {
+            // send midi data
+            res.status(200).send(midi_doc['midiData']);
+        } else {
+            res.status(401).send("Unauthorized.");
+        }
+        
+    });
+})
+
 
 
 // start app
