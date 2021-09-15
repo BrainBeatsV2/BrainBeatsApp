@@ -4,6 +4,8 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
 
+const Timidity = require('timidity')
+
 const PORT = 4000;
 
 var mongo_username = process.env.MONGO_USERNAME;
@@ -272,7 +274,7 @@ app.post('/api/midis', async function(req, res) {
             res.status(401).send("Incorrect account credentials.");
         } else {
             // send all midi data
-            Midi.find({"user_email": email}).then(function(doc) {
+            Midi.find({"username": email}).then(function(doc) {
                 res.status(200).send(doc);
             });
         }
@@ -318,15 +320,17 @@ app.post('/api/midis/create', async function(req, res) {
 
     // check credentials
     User.findOne({"email": email}).then(function(doc) {
-        if (doc == null || doc.password != password) {
-            res.status(401).send("Incorrect account credentials.");
+        if (doc == null) {
+            res.status(401).send("Incorrect account username.");
+        } else if (doc.password != password) {
+            res.status(401).send("Incorrect account password.");
         } else {
             // create new midi
             var newMidi = Midi({
-                "user_email": email, 
+                "username": email, 
                 "name": midi_name, 
-                "midi_data": midi_data, 
-                "model_id": midi_model_id, 
+                "midiData": midi_data, 
+                "modelId": midi_model_id, 
                 "privacy": midi_privacy, 
                 "notes": midi_notes, 
             });
@@ -351,10 +355,6 @@ app.post('/api/midis/create', async function(req, res) {
     * User account info not needed if MIDI is public
 */
 app.post('/api/midis/:midi_id', async function(req, res) {
-    var body = req.body;
-    var email = body.email;
-    var password = body.password;
-
     var midi_id = req.params.midi_id;
 
     // fetch midi
@@ -363,6 +363,10 @@ app.post('/api/midis/:midi_id', async function(req, res) {
             // send midi data
             res.status(200).send(midi_doc);
         } else {
+            var body = req.body;
+            var email = body.email;
+            var password = body.password;
+            
             User.findOne({"email": email}).then(function(doc) {
                 if (doc == null || doc.password != password || midi_doc.user_email != email) {
                     res.status(401).send("Incorrect account credentials.");
@@ -375,6 +379,44 @@ app.post('/api/midis/:midi_id', async function(req, res) {
         
     });
 })
+
+
+/*
+    Download of raw MIDI file
+    Example: 
+        GET localhost:4000/download/midi/606e1726f9d7edf2fe715ee6
+        Headers- Content-Type: application/json; charset=utf-8
+        Body- {"email": "harry@hsauers.net", "password": "Passwd123!"}
+        Response- 200 OK
+    * You MUST supply the exact Content-Type above, or it won't work. 
+    * User account info not needed if MIDI is public
+*/
+app.post('/download/midi/:midi_id', async function(req, res) {
+    var midi_id = req.params.midi_id;
+
+    // fetch midi
+    Midi.findOne({"_id": midi_id}).then(function(midi_doc) {
+        if (midi_doc.privacy != "private") {
+            // send midi data
+            res.status(200).send(midi_doc['midiData']);
+        } else {
+            var body = req.body;
+            var email = body.email;
+            var password = body.password;
+
+            User.findOne({"email": email}).then(function(doc) {
+                if (doc == null || doc.password != password || midi_doc.user_email != email) {
+                    res.status(401).send("Incorrect account credentials.");
+                } else {
+                    // send midi data
+                    res.status(200).send(midi_doc['midiData']);
+                }
+            });
+        }
+        
+    });
+})
+
 
 // start app
 app.listen(PORT, () => console.log("Running on"), PORT);
