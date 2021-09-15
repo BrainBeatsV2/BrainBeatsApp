@@ -21,3 +21,9 @@ Terminate by:
 ```
 docker-compose down
 ```
+
+### Electron App
+Get into the brainbeatsfront folder by `cd brainbeatsfront` then run 
+```
+npm run electron-dev
+```
