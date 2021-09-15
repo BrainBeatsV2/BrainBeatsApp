@@ -88,7 +88,7 @@ class Login extends Component {
 			}
 		}
 
-		axios.post('http://brainbeats.dev/api/register', options, {
+		axios.post('/api/register', options, {
 			username: this.state.username,
 			password: this.state.password,
 			email: this.state.email
