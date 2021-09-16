@@ -1,9 +1,12 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const { PythonShell } = require('python-shell');
-
 const path = require('path');
 const url = require('url');
 const isDev = require('electron-is-dev');
+
+// Todo handle import for checking if iselectron
+let scriptPath = path.join(__dirname, 'eeg_stream.py')
+console.log(scriptPath)
 
 let mainWindow;
 
@@ -27,11 +30,11 @@ app.on('activate', () => {
   }
 });
 
-// TODO: Melanie needs to parse out what is needed for the python script to work with (music-generation.js)
-// PythonShell.run('./scripts/eeg_stream.py', null, function (err) {
-//   if (err) throw err;
-//   console.log('finished');
-// });
+
+PythonShell.run(scriptPath, null, function (err) {
+  if (err) throw err;
+  console.log('Python.run finished');
+});
 
 // Event listeners for coordinating IPC between main and renderer threads
 let pyshell
@@ -72,11 +75,11 @@ const parsePyshellMessage = args => {
 // Event to tell electron to create python script handler
 ipcMain.on('HARDWARE_PROCESS_START', event => {
   endPyshell()
-  let startScriptPath = path.join(__dirname, 'eeg_stream.py')
-  console.log(startScriptPath)
-  pyshell = new PythonShell(startScriptPath, {
+  pyshell = new PythonShell(scriptPath, {
     pythonPath: 'python',
   })
+
+  console.log("ipcMain.on('HARDWARE_PROCESS_START')");
 
   pyshell.on('message', function (results) {
     parsePyshellMessage(results)
@@ -96,5 +99,6 @@ ipcMain.on('HARDWARE_PROCESS_START', event => {
 
 // Event to shutdown python script handler
 ipcMain.on('HARDWARE_PROCESS_SHUTDOWN', event => {
+  console.log("ipcMain.on('HARDWARE_PROCESS_SHUTDOWN')");
   endPyshell()
 })
