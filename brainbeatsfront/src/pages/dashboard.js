@@ -16,7 +16,7 @@ class Dashboard extends Component {
             <h3>My Tracks </h3>
             
             <br />
-            <div id="top-bar"><div class="midi-add"><i class="material-icons">add</i> Add Track</div></div>
+            <div id="top-bar"><div class="midi-add"><a href="/music-generation"><i class="material-icons">add</i> Add Track</a></div></div>
                  <div id="midi-tracks">
                      
                    
