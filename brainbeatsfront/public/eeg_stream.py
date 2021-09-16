@@ -16,10 +16,10 @@ from brainflow.exit_codes import *
 # TODO When customizing adding a circuit board, need to allow for the user to input the serial port, mac address, and board-id in order for it to work well with it.
 # Based off of the board id, update the brainflow input params [offer default settings recommended by the docs and offer for the user to customize it as well]
 # https://stackoverflow.com/questions/23450534/how-to-call-a-python-function-from-node-js
+# TODO have the EEG data save in a cleaner spot aka in it's own directory
 
 def main():
     ganglion = False
-
     # Setting up the board specifications & preparing the board, data, models, & parsing:
     BoardShim.enable_board_logger()
     DataFilter.enable_data_logger()

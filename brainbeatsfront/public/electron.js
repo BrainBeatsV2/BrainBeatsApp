@@ -6,7 +6,7 @@ const isDev = require('electron-is-dev');
 
 // Todo handle import for checking if iselectron
 let scriptPath = path.join(__dirname, 'eeg_stream.py')
-console.log(scriptPath)
+let eegScript = 'eeg_stream.py'
 
 let mainWindow;
 
@@ -31,74 +31,98 @@ app.on('activate', () => {
 });
 
 
-PythonShell.run(scriptPath, null, function (err) {
+let pyshell = new PythonShell(scriptPath);
+
+// sends a message to the Python script via stdin
+pyshell.send('hello');
+pyshell.on('message', function (message) {
+  // received a message sent from the Python script (a simple "print" statement)
+  console.log(message);
+});
+// end the input stream and allow the process to exit
+pyshell.end(function (err, code, signal) {
   if (err) throw err;
-  console.log('Python.run finished');
+  console.log('The exit code was: ' + code);
+  console.log('The exit signal was: ' + signal);
+  console.log('finished');
 });
 
-// Event listeners for coordinating IPC between main and renderer threads
-let pyshell
+// Running all the time right off of the bat 
+// PythonShell.run(scriptPath, null, function (err, results) {
+//   console.log(scriptPath)
+//   if (err) {d
+//     console.log(err)
+//     throw err
+//   }
+//   console.log(results)
+//   console.log('Python.run finished');
+// });
 
-const endPyshell = _ => {
-  if (pyshell == null || pyshell == undefined) {
-    return
-  }
-  console.log('BACKGROUND DEBUG PRINT: Ending Script Child Process')
-  pyshell.childProcess.kill(0)
-  pyshell = null
-}
 
-const parsePyshellMessage = args => {
-  try {
-    const messageDetails = JSON.parse(args)
-    if (messageDetails == undefined || messageDetails == null) {
-      return
-    }
+//  Brain Beats V1 Code: 
+// // Event listeners for coordinating IPC between main and renderer threads
+// let pyshell
 
-    /// Handle sending emotion
-    if (messageDetails.data != null && messageDetails.data != undefined) {
-      console.log('BACKGROUND DEBUG PRINT: Emotion Predicted')
-      mainWindow.webContents.send('HARDWARE_PROCESS_MESSAGE', messageDetails.emotion)
-      return
-    }
+// const endPyshell = _ => {
+//   if (pyshell == null || pyshell == undefined) {
+//     return
+//   }
+//   console.log('BACKGROUND DEBUG PRINT: Ending Script Child Process')
+//   pyshell.childProcess.kill(0)
+//   pyshell = null
+// }
 
-    /// Handle sending confirmation
-    if (messageDetails.hasConfirmed != undefined && messageDetails.hasConfirmed != null) {
-      console.log('BACKGROUND DEBUG PRINT: Connection Confirmed')
-      return
-    }
-  } catch (error) {
-    console.log(args)
-  }
-}
+// const parsePyshellMessage = args => {
+//   try {
+//     const messageDetails = JSON.parse(args)
+//     if (messageDetails == undefined || messageDetails == null) {
+//       return
+//     }
 
-// Event to tell electron to create python script handler
-ipcMain.on('HARDWARE_PROCESS_START', event => {
-  endPyshell()
-  pyshell = new PythonShell(scriptPath, {
-    pythonPath: 'python',
-  })
+//     /// Handle sending emotion
+//     if (messageDetails.data != null && messageDetails.data != undefined) {
+//       console.log('BACKGROUND DEBUG PRINT: Emotion Predicted')
+//       mainWindow.webContents.send('HARDWARE_PROCESS_MESSAGE', messageDetails.emotion)
+//       return
+//     }
 
-  console.log("ipcMain.on('HARDWARE_PROCESS_START')");
+//     /// Handle sending confirmation
+//     if (messageDetails.hasConfirmed != undefined && messageDetails.hasConfirmed != null) {
+//       console.log('BACKGROUND DEBUG PRINT: Connection Confirmed')
+//       return
+//     }
+//   } catch (error) {
+//     console.log(args)
+//   }
+// }
 
-  pyshell.on('message', function (results) {
-    parsePyshellMessage(results)
-  })
+// // Event to tell electron to create python script handler
+// ipcMain.on('HARDWARE_PROCESS_START', event => {
+//   endPyshell()
+//   pyshell = new PythonShell(scriptPath, {
+//     pythonPath: 'python',
+//   })
 
-  pyshell.on('error', function (results) {
-    console.log('BACKGROUND DEBUG PRINT: Script Error Exit')
-    endPyshell()
-  })
+//   console.log("ipcMain.on('HARDWARE_PROCESS_START')");
 
-  pyshell.on('stderr', function (stderr) {
-    endPyshell()
-    console.log(stderr)
-    mainWindow.webContents.send('HARDWARE_PROCESS_ERROR')
-  })
-})
+//   pyshell.on('message', function (results) {
+//     parsePyshellMessage(results)
+//   })
 
-// Event to shutdown python script handler
-ipcMain.on('HARDWARE_PROCESS_SHUTDOWN', event => {
-  console.log("ipcMain.on('HARDWARE_PROCESS_SHUTDOWN')");
-  endPyshell()
-})
+//   pyshell.on('error', function (results) {
+//     console.log('BACKGROUND DEBUG PRINT: Script Error Exit')
+//     endPyshell()
+//   })
+
+//   pyshell.on('stderr', function (stderr) {
+//     endPyshell()
+//     console.log(stderr)
+//     mainWindow.webContents.send('HARDWARE_PROCESS_ERROR')
+//   })
+// })
+
+// // Event to shutdown python script handler
+// ipcMain.on('HARDWARE_PROCESS_SHUTDOWN', event => {
+//   console.log("ipcMain.on('HARDWARE_PROCESS_SHUTDOWN')");
+//   endPyshell()
+// })
