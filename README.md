@@ -23,7 +23,7 @@ docker-compose down
 ```
 
 ### Electron App
-Get into the brainbeatsfront folder by `cd brainbeatsfront` then run 
+Get into the brainbeatsfront folder by `cd brainbeatsfront`, run `npm update` then run 
 ```
 npm run electron-dev
 ```

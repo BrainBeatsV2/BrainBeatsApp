@@ -1,6 +1,8 @@
 {
   "name": "brainbeatsfront",
   "version": "0.1.0",
+  "license": "",
+  "main": "public/electron.js",
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^5.11.9",
