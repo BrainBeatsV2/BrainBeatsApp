@@ -27,6 +27,11 @@ app.on('activate', () => {
   }
 });
 
+// TODO: Melanie needs to parse out what is needed for the python script to work with (music-generation.js)
+// PythonShell.run('./scripts/eeg_stream.py', null, function (err) {
+//   if (err) throw err;
+//   console.log('finished');
+// });
 
 // Event listeners for coordinating IPC between main and renderer threads
 let pyshell
