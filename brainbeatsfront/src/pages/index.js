@@ -1,6 +1,6 @@
 import React, { Component, useState } from 'react';
+import './music-generation-library.js';
 const { ipcRenderer } = window.require('electron');
-//import './music-generation-library.js';
 
 
 class Home extends Component {
@@ -12,9 +12,18 @@ class Home extends Component {
         this.streamModeOnClick = this.streamModeOnClick.bind(this);
     }
 
+    /**
+ * @param {(message: Dict) => void} handleData
+ */
     streamModeOnClick() {
         console.log('clicked!')
         ipcRenderer.send('start_eeg_script');
+
+        ipcRenderer.on('start_eeg_script', (event, args) => {
+            /// Important: Assumes any message is the predicted emotion
+            console.log(args)
+            // handleData(args)
+        })
     }
 
     render() {

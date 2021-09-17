@@ -29,6 +29,11 @@ app.on('activate', () => {
   }
 });
 
+function sendEEGData(eeg_data) {
+  mainWindow.webContents.send('start_eeg_script', eeg_data)
+  console.log('sent')
+  return
+}
 
 let filePath = path.join(__dirname, 'eeg_stream.py');
 let pyshell;
@@ -44,11 +49,13 @@ ipcMain.on('start_eeg_script', (event) => {
         return
       }
       console.log(eeg_data)
+      sendEEGData(eeg_data)
     } catch (error) {
       console.log(error)
     }
   })
 });
+
 
 ipcMain.on('end_eeg_script', (event) => {
   pyshell.end(function (err, code, signal) {
@@ -58,40 +65,3 @@ ipcMain.on('end_eeg_script', (event) => {
     console.log('finished');
   });
 });
-
-// How to not have this continually run?
-// let pyshell = new PythonShell(scriptPath);
-
-// pyshell.on('message', function (message) {
-//   try {
-//     eeg_data = JSON.parse(message)
-//     if (eeg_data == undefined || eeg_data == null) {
-//       return
-//     }
-
-//     console.log(eeg_data)
-//     console.log('test')
-
-//     // mainWindow.webContents.send()
-
-//     // if (messageDetails.data != null && messageDetails.data != undefined) {
-//     //   console.log('BACKGROUND DEBUG PRINT: Emotion Predicted')
-//     //   mainWindow.webContents.send('HARDWARE_PROCESS_MESSAGE', messageDetails.emotion)
-//     //   return
-//     // }
-//     // if (messageDetails.hasConfirmed != undefined && messageDetails.hasConfirmed != null) {
-//     //   console.log('BACKGROUND DEBUG PRINT: Connection Confirmed')
-//     //   return
-//     // }
-//   } catch (error) {
-//     console.log(error)
-//   }
-// });
-
-// end the input stream and allow the process to exit
-// pyshell.end(function (err, code, signal) {
-//   if (err) throw err;
-//   console.log('The exit code was: ' + code);
-//   console.log('The exit signal was: ' + signal);
-//   console.log('finished');
-// });
