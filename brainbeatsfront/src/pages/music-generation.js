@@ -1,5 +1,4 @@
 import React, { Component, useState } from 'react';
-import './music-generation-library.js';
 
 class MusicGeneration extends Component {
     constructor(props) {
