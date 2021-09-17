@@ -2,6 +2,7 @@
 import sys
 import argparse
 import time
+import json
 import brainflow
 import numpy as np
 import pandas as pd
@@ -18,14 +19,105 @@ from brainflow.exit_codes import *
 # https://stackoverflow.com/questions/23450534/how-to-call-a-python-function-from-node-js
 # TODO have the EEG data save in a cleaner spot aka in it's own directory
 
+def get_band_values(data, sampling_rate, eeg_channel):
+    print('Get_band_values')
+    df = pd.DataFrame(np.transpose(data))
+
+    # Refactored to make time a variable wherever 4 was - may need to change back to 4
+    temp = []
+    nfft = DataFilter.get_nearest_power_of_two(sampling_rate)
+
+    for j in range(0, int(len(df)-1)):
+        temp.append(data[eeg_channel][int(j)])
+
+    DataFilter.detrend(np.array(temp), DetrendOperations.LINEAR.value)
+    psd = DataFilter.get_psd_welch(data=np.array(temp), nfft=nfft, overlap=nfft //
+                                   2, sampling_rate=sampling_rate, window=WindowFunctions.BLACKMAN_HARRIS.value)
+    print(psd)
+
+    # Potential way to plot https://brainflow.readthedocs.io/en/stable/notebooks/band_power.html
+    # plt.plot(psd[1][:60], psd[0][:60])
+    # plt.show()
+
+    # Have to have get_band_power in try excepts since if the finds 0, it will throw an error
+    try:
+        delta = DataFilter.get_band_power(psd, 0.5, 4.0)
+    except:
+        delta = 0.0
+    try:
+        theta = DataFilter.get_band_power(psd, 4.1, 7.9)
+    except:
+        theta = 0.0
+    try:
+        alpha = DataFilter.get_band_power(psd, 8.0, 13.9)
+    except:
+        alpha = 0.0
+    try:
+        beta = DataFilter.get_band_power(psd, 14.0, 31.0)
+    except:
+        beta = 0.0
+    try:
+        gamma = DataFilter.get_band_power(psd, 32.0, 100.0)
+    except:
+        gamma = 0.0
+
+    all_band_values = {"delta": delta, "theta": theta,
+                       "alpha": alpha, "beta": beta, "gamma": gamma}
+
+    print(all_band_values)
+    # To get it to print it back to node:
+    # print(json.dumps(all_band_values))
+    return all_band_values
+
+
+def get_feature_vector(data, eeg_channels_count, sampling_rate):
+    # Create the feature vector for the machine learning models
+    bands = DataFilter.get_avg_band_powers(
+        data, eeg_channels_count, sampling_rate, True)
+    vector = np.concatenate((bands[0], bands[1]))
+    print(f'Feature vector: {vector}')
+    return vector
+
+
+def get_concentration_percent(data, eeg_channels_count, sampling_rate):
+    feature_vector = get_feature_vector(
+        data, eeg_channels_count, sampling_rate)
+    concentration_params = BrainFlowModelParams(
+        BrainFlowMetrics.CONCENTRATION.value, BrainFlowClassifiers.KNN.value)
+    concentration_model = MLModel(concentration_params)
+    concentration_model.prepare()
+    concentration_prediction_percent = concentration_model.predict(
+        feature_vector)
+    print('Concentration: %f' % concentration_prediction_percent,  flush=True)
+    concentration_model.release()
+    return concentration_prediction_percent
+
+
+def get_relaxation_percent(data, eeg_channels_count, sampling_rate):
+    feature_vector = get_feature_vector(
+        data, eeg_channels_count, sampling_rate)
+    relaxation_params = BrainFlowModelParams(
+        BrainFlowMetrics.RELAXATION.value, BrainFlowClassifiers.REGRESSION.value)
+    relaxation_model = MLModel(relaxation_params)
+    relaxation_model.prepare()
+    relaxation_prediction_percent = relaxation_model.predict(feature_vector)
+    print('Relaxation: %f' % relaxation_prediction_percent,  flush=True)
+    relaxation_model.release()
+    return relaxation_prediction_percent
+
+
 def main():
-    ganglion = False
-    # Setting up the board specifications & preparing the board, data, models, & parsing:
+    # Enable loggers
     BoardShim.enable_board_logger()
     DataFilter.enable_data_logger()
     MLModel.enable_ml_logger()
+
+    type = ''
+
+    # Setting up the board specifications & preparing the board, data, models, & parsing:
     parser = argparse.ArgumentParser()
 
+    # Set up default settings:
     parser.add_argument('--ip-port', type=int,
                         help='ip port', required=False, default=0)
     parser.add_argument('--ip-protocol', type=int, help='ip protocol, check IpProtocolType enum', required=False,
@@ -41,7 +133,8 @@ def main():
     parser.add_argument('--file', type=str, help='file',
                         required=False, default='')
 
-    if ganglion:
+    if type == 'ganglion':
+        print('EEG Headset determined to be Ganglion')
         parser.add_argument('--serial-port', type=str,
                             help='serial port', required=False, default='COM3')  # COM3
         parser.add_argument('--mac-address', type=str, help='mac address',
@@ -50,8 +143,8 @@ def main():
                             required=False, default=1)  # 1
         parser.add_argument('--timeout', type=int, help='timeout for device discovery or connection', required=False,
                             default=15)  # 15
-    # Defaults to synthetic board
     else:
+        print('EEG Headset is synthetic. If you did not choose this, it means the EEG Headset was not found, not an option, or could not connect.')
         parser.add_argument('--serial-port', type=str,
                             help='serial port', required=False, default='')
         parser.add_argument('--mac-address', type=str,
@@ -62,6 +155,9 @@ def main():
                             default=0)
 
     args = parser.parse_args()
+
+    # Set configured data within BrainFlowInputParams
+    # TODO: Bring to own function?
     params = BrainFlowInputParams()
     params.ip_port = args.ip_port
     params.serial_port = args.serial_port
@@ -73,122 +169,42 @@ def main():
     params.timeout = args.timeout
     params.file = args.file
 
+    # Create board object, save important default data about the boards
     board = BoardShim(args.board_id, params)
     master_board_id = board.get_board_id()
     sampling_rate = BoardShim.get_sampling_rate(master_board_id)
+    eeg_channels_count = BoardShim.get_eeg_channels(int(master_board_id))
+    print(
+        f'Board ID: {master_board_id}, Sampling rate: {sampling_rate}, Total Channels: {eeg_channels_count}')
 
     # Starting the streamming session with a buffer of 450000, pausing the script to get the EEG readings
     board.prepare_session()
+    print('Preparing to log EEG data')
     board.start_stream(45000, args.streamer_params)
     BoardShim.log_message(LogLevels.LEVEL_INFO.value,
                           'start sleeping in the main thread')
-    # recommended window size for eeg metric calculation is at least 4 seconds, bigger is better
-    time.sleep(4)
+    there_is_still_time = 5
+
+    while(there_is_still_time):
+        time.sleep(4)
+
+        # TODO This is using only the eeg data from the second channel, in the future it'd be best to average the values between all of the channels
+        eeg_channel = eeg_channels_count[1]
+
+        data = board.get_board_data()
+        band_values = get_band_values(data, sampling_rate, eeg_channel)
+        concentration_percent = get_concentration_percent(
+            data, eeg_channels_count, sampling_rate)
+        relaxation_percent = get_relaxation_percent(
+            data, eeg_channels_count, sampling_rate)
+        eeg_data = {"band_values": band_values,
+                    "concentration": concentration_percent, "relaxation": relaxation_percent}
+        print(json.dumps(eeg_data))
+        there_is_still_time = there_is_still_time - 1
 
     # Ending the streaming & preparing the data.
-    data = board.get_board_data()
     board.stop_stream()
     board.release_session()
-
-    # TODO This is using only the eeg data from the second channel, in the future it'd be best to average the values between all of the channels
-    # Apply the fast Fourier transform (FFT) to determine the delta, theta, alpha, beta and gamma
-    eeg_channels = BoardShim.get_eeg_channels(int(master_board_id))
-    eeg_channel = eeg_channels[1]
-
-    # TODO Possibly add headers
-    df = pd.DataFrame(np.transpose(data))
-    eeg_data = []
-
-    for i in range(0, 4):
-        temp = []
-        val = int(len(df)/4)
-        nfft = DataFilter.get_nearest_power_of_two(int(val/2))
-        print(val)
-        print(nfft)
-
-        for j in range(0, val):
-            temp.append(data[eeg_channel][int(j+i*len(df)/4)])
-
-        DataFilter.detrend(np.array(temp), DetrendOperations.LINEAR.value)
-        psd = DataFilter.get_psd_welch(
-            np.array(temp), nfft, nfft // 2, sampling_rate, WindowFunctions.HANNING.value)
-        print(psd)
-
-        # Have to have get_band_power in try excepts since if the finds 0 deltas, it will throw an error
-        try:
-            delta = DataFilter.get_band_power(psd, 0.5, 4.0)
-        except:
-            delta = 0.0
-
-        try:
-            theta = DataFilter.get_band_power(psd, 4.1, 7.9)
-        except:
-            theta = 0.0
-
-        try:
-            alpha = DataFilter.get_band_power(psd, 8.0, 13.9)
-        except:
-            alpha = 0.0
-
-        try:
-            beta = DataFilter.get_band_power(psd, 14.0, 31.0)
-        except:
-            beta = 0.0
-
-        try:
-            gamma = DataFilter.get_band_power(psd, 32.0, 100.0)
-        except:
-            gamma = 0.0
-
-        print("Overall:")
-        print("Delta %f" % delta)
-        print("Theta %f" % theta)
-        print("Alpha %f" % alpha)
-        print("Beta %f" % beta)
-        print("Gamma %f" % gamma)
-
-        cur_eeg_data = []
-        cur_eeg_data.append(delta)
-        cur_eeg_data.append(theta)
-        cur_eeg_data.append(alpha)
-        cur_eeg_data.append(beta)
-        cur_eeg_data.append(gamma)
-        print(cur_eeg_data)
-        eeg_data.append(cur_eeg_data)
-
-    # use 'a' for append mode
-    DataFilter.write_file(np.array(eeg_data), 'eeg_data.csv', 'w')
-
-    # Create the feature vector for the machine learning models
-    bands = DataFilter.get_avg_band_powers(
-        data, eeg_channels, sampling_rate, True)
-    feature_vector = np.concatenate((bands[0], bands[1]))
-
-    # calc concentration
-    concentration_params = BrainFlowModelParams(
-        BrainFlowMetrics.CONCENTRATION.value, BrainFlowClassifiers.KNN.value)
-    concentration = MLModel(concentration_params)
-    concentration.prepare()
-    print('Concentration: %f' %
-          concentration.predict(feature_vector),  flush=True)
-    concentration.release()
-
-    # calc relaxation
-    relaxation_params = BrainFlowModelParams(
-        BrainFlowMetrics.RELAXATION.value, BrainFlowClassifiers.REGRESSION.value)
-    relaxation = MLModel(relaxation_params)
-    relaxation.prepare()
-    print('Relaxation: %f' % relaxation.predict(feature_vector),  flush=True)
-    relaxation.release()
-
-    DataFilter.write_file(data, 'raw_channel_data.csv',
-                          'w')  # use 'a' for append mode
-    restored_data = DataFilter.read_file('raw_channel_data.csv')
-    restored_df = pd.DataFrame(np.transpose(restored_data))
-    print('Data From the File')
-    print(restored_df)
-
-    print(eeg_data,  flush=True)
     sys.stdout.flush()
 
 

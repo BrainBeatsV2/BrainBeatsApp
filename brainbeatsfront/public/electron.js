@@ -6,7 +6,6 @@ const isDev = require('electron-is-dev');
 
 // Todo handle import for checking if iselectron
 let scriptPath = path.join(__dirname, 'eeg_stream.py')
-let eegScript = 'eeg_stream.py'
 
 let mainWindow;
 
