@@ -18,7 +18,6 @@ class Home extends Component {
         ipcRenderer.send('start_eeg_script');
 
         ipcRenderer.on('start_eeg_script', (event, args) => {
-            console.log("Logging frontend side record")
             console.log(args)
         })
 
