@@ -1,28 +1,33 @@
-// const csv = require('csvtojson')
-// const path = require('path');
+// // class GenerateMIDI {
+// //     constructor(incoming_data, duration) {
+// //         this.incoming_data = this.incoming_data
+// //         this.duration = this.duration
 
-// // https://stackoverflow.com/questions/66266205/how-to-read-a-local-file-in-javascript-running-from-an-electron-app
+// //         this.state = {
+// //             name: "React"
+// //         };
+// //     }
+// // }
 
-// let csv_file_path = '../pages/eeg_data.csv'
+// // create midi file
+// // add notes to midi file
+// // determine pitch?
+// // select instrument 
+// // write and save the file 
 
-// async function parseCSV(csv_file_path) {
-//     const array = await csv().fromFile(csv_file_path);
-//     return (array)
-// };
+// async function generateMidi(incoming_data, time) {
+//     // TODO Step one: Grab the incoming data!
 
-// async function generateMidi(filePath, time) {
-//     console.log(filePath)
-//     let eegData = await parseCSV(filePath)
-//     console.log('Finished parsing. Here is the data')
-//     console.log(eegData)
+//     console.log("In generate Midi")
+//     console.log(time)
+//     console.log(incoming_data)
+//     // delta = incoming_data.delta
+//     // theta = incoming_data.theta
+//     // alpha = incoming_data.alpha
+//     // beta = incoming_data.beta
+//     // gamma = incoming_data.gamma
 
-//     // let average = (array) => array.reduce((a, b) => a + b) / array.length;  
-//     // deltaAvg = average(eegData[0].Delta)
-//     // thetaAvg = average(eegData[0])
-//     // alphaAvg = average(eegData[0])
-//     // betaAvg = average(eegData[0])
-//     // gammaAvg = average(eegData[0])
-
+//     // TODO: Verify midi import is done correctly
 //     var MidiWriter = require('midi-writer-js')
 
 //     // Start with a new track
@@ -121,4 +126,4 @@
 //     write.saveMIDI('file');
 // }
 
-// generateMidi(csv_file_path, 100);
+// // generateMidi(csv_file_path, 100);

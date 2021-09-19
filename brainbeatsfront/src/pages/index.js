@@ -1,5 +1,4 @@
 import React, { Component, useState } from 'react';
-import './music-generation-library.js';
 const { ipcRenderer } = window.require('electron');
 
 
@@ -7,23 +6,43 @@ class Home extends Component {
     constructor() {
         super();
         this.state = {
-            name: "React"
+            name: "React",
+            isStreamModeOn: false
         };
-        this.streamModeOnClick = this.streamModeOnClick.bind(this);
+        this.onClickRecord = this.onClickRecord.bind(this);
+        this.onClickStream = this.onClickStream.bind(this);
     }
 
-    /**
- * @param {(message: Dict) => void} handleData
- */
-    streamModeOnClick() {
-        console.log('clicked!')
+    onClickRecord() {
+        console.log('Clicked record mode!')
         ipcRenderer.send('start_eeg_script');
 
         ipcRenderer.on('start_eeg_script', (event, args) => {
-            /// Important: Assumes any message is the predicted emotion
+            console.log("Logging frontend side record")
             console.log(args)
-            // handleData(args)
         })
+
+    }
+
+    onClickStream() {
+        console.log(this.state.isStreamModeOn)
+        if (!this.state.isStreamModeOn) {
+            console.log('Clicked start stream mode!')
+            ipcRenderer.send('start_eeg_script');
+            ipcRenderer.on('start_eeg_script', (event, args) => {
+                console.log("Logging frontend side stream")
+                console.log(args)
+            })
+        } else {
+            console.log('Clicked end stream mode!')
+            ipcRenderer.send('end_eeg_script');
+
+            ipcRenderer.on('end_eeg_script', (event, args) => {
+                console.log(args)
+            })
+        }
+        this.setState({ isStreamModeOn: !this.state.isStreamModeOn })
+        console.log(this.state.isStreamModeOn)
     }
 
     render() {
@@ -44,8 +63,8 @@ class Home extends Component {
                 </div>
                 <br />
                 <div class="middle">
-                    <button class="modes" onClick={this.streamModeOnClick} ><i class="material-icons">wifi_tethering</i> Stream Mode</button>
-                    <button class="modes modes_active"><i class="material-icons">fiber_manual_record</i> Record Mode</button>
+                    <button class="modes" onClick={this.onClickStream} ><i class="material-icons">wifi_tethering</i> Stream Mode</button>
+                    <button class="modes modes_active" onClick={this.onClickRecord} ><i class="material-icons">fiber_manual_record</i> Record Mode</button>
                 </div>
                 <div class="stream">
                     Insert Brain Wave Visualizer Concept Here

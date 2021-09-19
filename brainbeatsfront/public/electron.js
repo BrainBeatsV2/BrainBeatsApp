@@ -3,6 +3,8 @@ const path = require('path');
 const url = require('url');
 const isDev = require('electron-is-dev');
 const { PythonShell } = require('python-shell');
+var kill = require('tree-kill');
+
 
 // Todo handle import for checking if iselectron
 // let scriptPath = path.join(__dirname, 'eeg_stream.py')
@@ -31,7 +33,6 @@ app.on('activate', () => {
 
 function sendEEGData(eeg_data) {
   mainWindow.webContents.send('start_eeg_script', eeg_data)
-  console.log('sent')
   return
 }
 
@@ -39,17 +40,28 @@ let filePath = path.join(__dirname, 'eeg_stream.py');
 let pyshell;
 
 ipcMain.on('start_eeg_script', (event) => {
+  const start = Date.now();
+
   console.log('Starting eeg script')
   pyshell = new PythonShell(filePath);
+  console.log("Script ready to run, starting now")
 
   pyshell.on('message', function (message) {
     try {
+      console.log("Parsing json")
       eeg_data = JSON.parse(message)
       if (eeg_data == undefined || eeg_data == null) {
         return
       }
-      console.log(eeg_data)
+
+      console.log("Sent from on pyshell")
+      const millis = Date.now() - start;
+      console.log(`seconds elapsed = ${(millis / 1000)}`);
+      cur = Date.now()
+      console.log(cur)
+
       sendEEGData(eeg_data)
+
     } catch (error) {
       console.log(error)
     }
@@ -58,10 +70,10 @@ ipcMain.on('start_eeg_script', (event) => {
 
 
 ipcMain.on('end_eeg_script', (event) => {
-  pyshell.end(function (err, code, signal) {
-    if (err) throw err;
-    console.log('The exit code was: ' + code);
-    console.log('The exit signal was: ' + signal);
-    console.log('finished');
-  });
+  if (pyshell == null || pyshell == undefined) {
+    return
+  }
+  console.log(pyshell.childProcess.pid)
+  console.log('Terminating python script')
+  kill(pyshell.childProcess.pid)
 });
