@@ -631,11 +631,12 @@ margin-bottom:10px;
 #stream-bar th{
   font-size:12px;
 }
-#start_stream i
+#start_stream i, #play_stream i
 {
   color:white;
   font-size:50px;
   padding:5px;
+  cursor:pointer;
 }
 #start_stream
 {
@@ -688,4 +689,34 @@ input, select{
   content: "";
   display: table;
   clear: both;
+}
+.nav__button i.material-icons{
+  color:#424242;
+  display:inline-block;
+  font-size:60px;
+  float:right;
+}
+.nav__menu
+{
+  background:black;
+  display:inline-block;
+  padding:20px;
+  border-radius:10px;
+  float:right;
+}
+.nav_menu-item a
+{
+  color:white;
+  text-decoration: none;
+}
+.nav_menu-item a:hover{
+  color:gray;
+}
+
+.save_options i, #parameters i, #rerecord i{
+  cursor:pointer;
+}
+.save_options
+{
+width:100%;  
 }

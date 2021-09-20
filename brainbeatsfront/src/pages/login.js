@@ -7,12 +7,15 @@ class Login extends Component {
 		showLogin: true,
 		showRegister: false,
 		showResetPassword: false,
-		showVerify: false
+		showVerify: false,
+		errors: {},
+		input: {}
 	  };
 	  this.onShowRegister = this.onShowRegister.bind(this);
 	  this.onShowLogin = this.onShowLogin.bind(this);
 	  this.onShowResetPassword = this.onShowResetPassword.bind(this);
 	  this.onShowVerify = this.onShowVerify.bind(this);
+	  this.handleSubmit = this.handleSubmit.bind(this);
 	}
 	onShowRegister() {
 		this.setState({
@@ -49,14 +52,45 @@ class Login extends Component {
 
 		  });
 	  }
+	  handleSubmit(event) {
+		event.preventDefault();
+		if(this.validate()){
+			console.log(this.state);
+	  
+			let input = {};
+			input["name"] = "";
+			input["email"] = "";
+			input["password"] = "";
+			input["confirm_password"] = "";
+			this.setState({input:input});
+	  
+			alert('Demo Form is submited');
+		}
+	  }
+	  validate(){
+		let input = this.state.input;
+		let isValid = true;
+		let errors = {};
+		if (input["password"] != input["confirm_password"]) {
+			isValid = false;
+			errors["confirm_password"] = "Please enter your confirm password.";
+		  }
+		  
+		  this.setState({
+			errors: errors
+		  });
+	  
+		  return isValid;
+	  }
 	render() {
 	  return (
 		<div class="container-login100">
 			<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+			
 				 <div class="wrap-login100">
 
 
-					 <div id="banner" class="alert m-b-38" role="alert"></div>
+					 <div id="banner" class="alert m-b-38" role="alert">{this.state.errors.confirm_password}</div>
 					 <form id="loginform" action="" method="post" class="login100-form validate-form" style={{display: this.state.showLogin ? 'block' : 'none' }}>
 						 <div class="wrap-input100 validate-input" >
 							 <input class="input100" type="text" name="USERNAME" />
@@ -81,7 +115,7 @@ class Login extends Component {
 						 </div>
 						 <div class="text-center p-t-5" >
 							 <a class="txt2" onClick={this.onShowResetPassword}> Forgot Your Password?</a>
-							 <a class="txt2" onClick={this.onShowVerify}> New Pass</a>
+							 
 
 
 						 </div>
@@ -97,7 +131,7 @@ class Login extends Component {
 
 					 </form>
 
-					 <form id="registerform" action="" method="post" class="login100-form validate-form" style={{display: this.state.showRegister ? 'block' : 'none' }}>
+					 <form id="registerform" action="" onSubmit={this.handleSubmit} method="post" class="login100-form validate-form" style={{display: this.state.showRegister ? 'block' : 'none' }}>
 						 <div class="wrap-input100 validate-input">
 							 <input class="input100" type="text" name="EMAIL" />
 							 <span class="focus-input100" data-placeholder="Email"></span>
@@ -110,14 +144,14 @@ class Login extends Component {
 							 <span class="btn-show-pass">
 								 <i class="material-icons">remove_red_eye</i>
 							 </span>
-							 <input class="input100" type="password" name="PASSWORD" />
+							 <input class="input100" type="password" name="PASSWORD" value={this.state.input.password} />
 							 <span class="focus-input100" data-placeholder="Password"></span>
 						 </div>
 						 <div class="wrap-input100 validate-input">
 							 <span class="btn-show-pass">
 								 <i class="material-icons">remove_red_eye</i>
 							 </span>
-							 <input class="input100" type="password" name="CONFIRM" />
+							 <input class="input100" type="password" name="CONFIRM" value={this.state.input.confirm_password}/>
 							 <span class="focus-input100" data-placeholder="Confirm Password"></span>
 						 </div>
 						 <input type="hidden" name="ACTION" value="REGISTER" />
