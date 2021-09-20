@@ -11,12 +11,17 @@ class Login extends Component {
 			showVerify: false,
 			username: '',
 			password: '',
-			email: ''
+			email: '',
+			requestEmail: '',
+			resetCode: '',
+			newPassword: '',
+			confirmedPassword: ''
 		};
 		this.onShowRegister = this.onShowRegister.bind(this);
 		this.onShowLogin = this.onShowLogin.bind(this);
 		this.onShowResetPassword = this.onShowResetPassword.bind(this);
 		this.onShowVerify = this.onShowVerify.bind(this);
+
 	}
 	onShowRegister() {
 		this.setState({
@@ -24,9 +29,6 @@ class Login extends Component {
 			showLogin: false,
 			showResetPassword: false,
 			showVerify: false,
-			username: '',
-			password: '',
-			email: ''
 		});
 	}
 	onShowLogin() {
@@ -35,9 +37,6 @@ class Login extends Component {
 			showLogin: true,
 			showResetPassword: false,
 			showVerify: false,
-			username: '',
-			password: '',
-			email: ''
 		});
 	}
 	onShowResetPassword() {
@@ -46,53 +45,126 @@ class Login extends Component {
 			showLogin: false,
 			showResetPassword: true,
 			showVerify: false,
-			username: '',
-			password: '',
-			email: ''
 		});
 	}
 
-	handleUsername = event => {
-		this.setState({ username: event.target.value });
+	handleUsername = (e) => {
+		this.setState({ username: e.target.value});
+	};
+
+	handlePassword = (e) => {
+		this.setState({ password: e.target.value});
+	};
+
+	handleEmail = (e) => {
+		this.setState({ email: e.target.value});
+	};
+
+	handleRequestEmail = (e) => {
+		this.setState({ requestEmail: e.target.value});
 	}
 
-	handlePassword = event => {
-		this.setState({ password: event.target.value });
+	handleResetCode = (e) => {
+		this.setState({ resetCode: e.target.value});
 	}
 
-	handleEmail = event => {
-		this.setState({ email: event.target.value });
+	handleNewPassword = (e) => {
+		this.setState({ newPassword: e.target.value});
 	}
 
-	handleLogin = event => {
-		event.preventDefault();
+	handleConfirmedPassword = (e) => {
+		this.setState({ confirmedPassword: e.target.value});
+	}
+
+	handleRequestReset = (e) => {
+		e.preventDefault();
 
 		const options = {
 			headers: {
 				'Content-type': 'application/json; charset=utf-8'
 			}
-		}
+		};
 
-		axios.post('/api/login', options, {
+		const userObject = {
+			email: this.state.requestEmail
+		};
+
+		axios.post('/api/requestreset', userObject, options)
+			.then((res) => {
+				console.log(res.data)
+			}).catch((error) => {
+				console.log(error)
+			});
+	}
+
+	handleResetPassword = (e) => {
+		e.preventDefault();
+
+		const options = {
+			headers: {
+				'Content-type': 'application/json; charset=utf-8'
+			}
+		};
+
+		const userObject = {
+			email: this.state.requestEmail,
+			token: this.state.resetCode,
+			new_password: this.state.newPassword
+		};
+
+		axios.post('/api/resetpassword', userObject, options)
+			.then((res) => {
+				console.log(res.data)
+			}).catch((error) => {
+				console.log(error)
+			});
+	}
+
+	handleLogin = (e) => {
+		e.preventDefault();
+
+		const options = {
+			headers: {
+				'Content-type': 'application/json; charset=utf-8'
+			}
+		};
+
+		const userObject = {
 			username: this.state.username,
 			password: this.state.password
-		});
+		};
+
+		axios.post('/api/login', userObject, options)
+			.then((res) => {
+				console.log(res.data)
+			}).catch((error) => {
+				console.log(error)
+			});
 	}
 
-	handleRegister = event => {
-		event.preventDefault();
+	handleRegister = (e) => {
+		e.preventDefault();
 
 		const options = {
 			headers: {
 				'Content-type': 'application/json; charset=utf-8'
 			}
-		}
+		};
 
-		axios.post('/api/register', options, {
+		const userObject = {
 			username: this.state.username,
 			password: this.state.password,
 			email: this.state.email
-		});
+		};
+
+		axios.post('/api/register', userObject, options)
+			.then((res) => {
+				console.log(res.data)
+			}).catch((error) => {
+				console.log(error)
+			});
+
+			//this.onShowResetPassword();
 	}
 
 	// 	showVerify: false
@@ -117,7 +189,7 @@ class Login extends Component {
 					<div id="banner" class="alert m-b-38" role="alert"></div>
 					<form id="loginform" action="" method="post" class="login100-form validate-form" style={{ display: this.state.showLogin ? 'block' : 'none' }} onSubmit={this.handleLogin}>
 						<div class="wrap-input100 validate-input" >
-							<input class="input100" type="text" name="USERNAME" onChange={this.handleUsername} />
+							<input class="input100" type="text" name="USERNAME" value={this.state.username} onChange={this.handleUsername} required />
 							<span class="focus-input100" data-placeholder="Username or Email"></span>
 						</div>
 
@@ -125,14 +197,14 @@ class Login extends Component {
 							<span class="btn-show-pass">
 								<i class="material-icons">remove_red_eye</i>
 							</span>
-							<input class="input100" type="password" name="PASSWORD" onChange={this.handlePassword} />
+							<input class="input100" type="password" name="PASSWORD" value={this.state.password} onChange={this.handlePassword} required />
 							<span class="focus-input100" data-placeholder="Password"></span>
 						</div >
 						<input type="hidden" name="ACTION" value="LOGIN" />
 						<div class="container-login100-form-btn">
 							<div class="wrap-login100-form-btn">
 								<div class="login100-form-bgbtn"></div>
-								<button id="loginbtn" class="login100-form-btn">
+								<button type="submit" id="loginbtn" class="login100-form-btn">
 									Login
 								</button>
 							</div>
@@ -153,34 +225,34 @@ class Login extends Component {
 
 					</form >
 
-					<form id="registerform" action="" method="post" class="login100-form validate-form" style={{ display: this.state.showRegister ? 'block' : 'none' }} onSubmit={this.handleLogin}>
+					<form id="registerform" action="" method="post" class="login100-form validate-form" style={{ display: this.state.showRegister ? 'block' : 'none' }} onSubmit={this.handleRegister}>
 						<div class="wrap-input100 validate-input">
-							<input class="input100" type="text" name="EMAIL" onChange={this.handleEmail} />
+							<input class="input100" type="text" name="EMAIL" value={this.state.email} onChange={this.handleEmail} required/>
 							<span class="focus-input100" data-placeholder="Email"></span>
 						</div>
 						<div class="wrap-input100 validate-input">
-							<input class="input100" type="text" name="USERNAME" onChange={this.handleUsername} />
+							<input class="input100" type="text" name="USERNAME" value={this.state.username} onChange={this.handleUsername} required/>
 							<span class="focus-input100" data-placeholder="Username"></span>
 						</div>
 						<div class="wrap-input100 validate-input">
 							<span class="btn-show-pass">
 								<i class="material-icons">remove_red_eye</i>
 							</span>
-							<input class="input100" type="password" name="PASSWORD" onChange={this.handlePassword} />
+							<input class="input100" type="password" name="PASSWORD" value={this.state.password} onChange={this.handlePassword} required/>
 							<span class="focus-input100" data-placeholder="Password"></span>
 						</div >
 						<div class="wrap-input100 validate-input">
 							<span class="btn-show-pass">
 								<i class="material-icons">remove_red_eye</i>
 							</span>
-							<input class="input100" type="password" name="CONFIRM" />
+							<input class="input100" type="password" name="CONFIRM" required/>
 							<span class="focus-input100" data-placeholder="Confirm Password"></span>
 						</div>
 						<input type="hidden" name="ACTION" value="REGISTER" />
 						<div class="container-login100-form-btn">
 							<div class="wrap-login100-form-btn">
 								<div class="login100-form-bgbtn"></div>
-								<button id="createbtn" class="login100-form-btn">
+								<button type="submit" id="createbtn" class="login100-form-btn" >
 									Register
 								</button>
 							</div>
@@ -197,9 +269,9 @@ class Login extends Component {
 						</div>
 					</form >
 
-					<form id="resetform" action="" method="post" class="login100-form validate-form" style={{ display: this.state.showResetPassword ? 'block' : 'none' }}>
+					<form id="resetform" action="" method="post" class="login100-form validate-form" style={{ display: this.state.showResetPassword ? 'block' : 'none' }} onSubmit={this.handleRequestReset}>
 						<div class="wrap-input100 validate-input">
-							<input class="input100" type="text" name="USERNAME" />
+							<input class="input100" type="text" name="USERNAME" onChange={this.handleRequestEmail} required/>
 							<span class="focus-input100" data-placeholder="Enter Username or Email"></span>
 						</div>
 						<input type="hidden" name="ACTION" value="RESET" />
@@ -223,19 +295,19 @@ class Login extends Component {
 						</div>
 					</form>
 
-					<form id="verifyform" action="" method="post" class="login100-form validate-form" style={{ display: this.state.showVerify ? 'block' : 'none' }}>
+					<form id="verifyform" action="" method="post" class="login100-form validate-form" style={{ display: this.state.showVerify ? 'block' : 'none' }} onSubmit={this.handleResetPassword}>
 						<h4 class="text-center white-text">Verify Account</h4>
 						<br />
 						<div class="wrap-input100 validate-input">
-							<input class="input100 code" type="text" name="CODE" />
+							<input class="input100 code" type="text" name="CODE" onChange={this.handleResetCode} required/>
 							<span class="focus-input100" data-placeholder="Enter Code"></span>
 						</div>
 						<div class="wrap-input100 validate-input">
-							<input class="input100" type="text" name="PASSWORD" />
+							<input class="input100" type="text" name="PASSWORD" onChange={this.handleNewPassword} required/>
 							<span class="focus-input100" data-placeholder="New Password"></span>
 						</div>
 						<div class="wrap-input100 validate-input">
-							<input class="input100" type="text" name="CONFIRM" />
+							<input class="input100" type="text" name="CONFIRM" onChange={this.handleConfirmedPassword} required/>
 							<span class="focus-input100" data-placeholder="Confirm Password"></span>
 						</div>
 						<input id="userSID" class="input100" type="hidden" name="SID" />
@@ -255,4 +327,3 @@ class Login extends Component {
 	}
 }
 export default Login
-
