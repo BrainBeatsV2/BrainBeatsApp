@@ -7,29 +7,36 @@ class Home extends Component {
         super();
         this.state = {
             name: "React",
-            isStreamModeOn: false
+            runEEGScript: false
         };
         this.onClickRecord = this.onClickRecord.bind(this);
         this.onClickStream = this.onClickStream.bind(this);
     }
 
     onClickRecord() {
-        console.log('Clicked record mode!')
-        ipcRenderer.send('start_eeg_script');
+        if (!this.state.runEEGScript) {
+            console.log('Started record mode!')
+            ipcRenderer.send('start_eeg_script');
 
-        ipcRenderer.on('start_eeg_script', (event, args) => {
-            console.log(args)
-        })
+            ipcRenderer.on('start_eeg_script', (event, args) => {
+                console.log(args)
+            })
+        } else {
+            console.log('Ended record mode!')
+            ipcRenderer.send('end_eeg_script');
 
+            ipcRenderer.on('end_eeg_script', (event, args) => {
+                console.log(args)
+            })
+        }
+        this.setState({ runEEGScript: !this.state.runEEGScript })
     }
 
     onClickStream() {
-        console.log(this.state.isStreamModeOn)
-        if (!this.state.isStreamModeOn) {
+        if (!this.state.runEEGScript) {
             console.log('Clicked start stream mode!')
             ipcRenderer.send('start_eeg_script');
             ipcRenderer.on('start_eeg_script', (event, args) => {
-                console.log("Logging frontend side stream")
                 console.log(args)
             })
         } else {
@@ -40,8 +47,7 @@ class Home extends Component {
                 console.log(args)
             })
         }
-        this.setState({ isStreamModeOn: !this.state.isStreamModeOn })
-        console.log(this.state.isStreamModeOn)
+        this.setState({ runEEGScript: !this.state.runEEGScript })
     }
 
     render() {
