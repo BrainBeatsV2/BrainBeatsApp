@@ -1,4 +1,4 @@
-const { generateMidi } = require('./music-generation-library');
+const { generateMidi, startMIDITrack, endMIDITrack } = require('./music-generation-library');
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const isDev = require('electron-is-dev');
@@ -6,13 +6,11 @@ const { PythonShell } = require('python-shell');
 var kill = require('tree-kill');
 
 
-// Todo handle import for checking if iselectron
-// let scriptPath = path.join(__dirname, 'eeg_stream.py')
-
 let mainWindow;
 
 function createWindow() {
   mainWindow = new BrowserWindow({ width: 900, height: 680, webPreferences: { nodeIntegration: true, contextIsolation: false } });
+  mainWindow.setMenuBarVisibility(false);
   mainWindow.loadURL(isDev ? 'http://localhost:3000' : `file://${path.join(__dirname, '../build/index.html')}`);
   mainWindow.on('closed', () => mainWindow = null);
 }

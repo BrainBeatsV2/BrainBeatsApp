@@ -6,22 +6,22 @@ const commonNoteDurations = ['4', '8', '8t', '16', '16t', '32'];
 var track
 var write
 
-function startTrack() {
+function startMIDITrack() {
     track = new MidiWriter.Track();
     console.log('Midi track created.');
 }
 
-function endTrack() {
+function endMIDITrack() {
     track = null;
     console.log('Midi track nulled.')
 }
 
-function startWriter() {
+function startMIDIWriter() {
     write = new MidiWriter.Writer(track);
     console.log('MidiWriter created')
 }
 
-function endWriter() {
+function endMIDIWriter() {
     write = null;
     console.log('MidiWriter nullified.')
 }
@@ -67,6 +67,7 @@ let createNoteDistribution = (currentPitch) => {
     for (var j = 0; j < numberOfNotesToGenerate; j++) {
         distribution = [];
         // most common pitches will be one note up or one note down
+        // Change current pitch by one
         for (var k = 0; k < 25; k++) {
             if (currentPitch > 1) {
                 distribution.push(currentPitch - 1);
@@ -82,7 +83,7 @@ let createNoteDistribution = (currentPitch) => {
                 distribution.push(currentPitch - 1);
             }
         }
-        // skips will be slightly less common
+        // Change current pitch by 2
         for (var k = 0; k < 15; k++) {
             if (currentPitch < 4) {
                 distribution.push(currentPitch + 2);
@@ -100,6 +101,7 @@ let createNoteDistribution = (currentPitch) => {
         }
 
         // staying on the same note is also possible
+        // Keep the same pitch
         for (var k = 0; k < 20; k++) {
             distribution.push(currentPitch);
         }
@@ -121,7 +123,6 @@ function createNotes() {
         // pick a random note grouping and duration and generate that many notes
         var numberOfNotesToGenerate = commonNoteGroupings[Math.floor(Math.random() * commonNoteGroupings.length)];
         var duration = commonNoteDurations[Math.floor(Math.random() * commonNoteDurations.length)];
-        // console.log(duration.toString());
         var pitches = [];
         for (var j = 0; j < numberOfNotesToGenerate; j++) {
             var distribution = createNoteDistribution(currentPitch);
@@ -142,7 +143,9 @@ function createNotes() {
 }
 
 function generateMidi(eeg_data, duration) {
-    startTrack();
+
+
+    startMIDITrack();
     setInstrument(1);
 
     pentatonic_notes = ['C4', 'D4', 'E4', 'G4', 'A4']
@@ -151,15 +154,17 @@ function generateMidi(eeg_data, duration) {
     noteEvents = createNotes();
     addNotesToTrack(noteEvents);
 
-    startWriter();
+    startMIDIWriter();
     getDataURI();
     writeMIDIfile();
-    endWriter();
-    endTrack();
+    endMIDIWriter();
+    endMIDITrack();
 }
 
 module.exports = {
     generateMidi: generateMidi,
+    startMIDITrack: startMIDITrack,
+    endMIDITrack: endMIDITrack
 }
 
 
