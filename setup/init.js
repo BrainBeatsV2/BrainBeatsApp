@@ -27,9 +27,10 @@ db.users.insertOne(
 
 db.midi.insertOne(
     {
-        "username": 123, 
+        "username": "harry@hsauers.net", 
         "name": "fakepass", 
-        "midi_data": "fakedata", 
+        "midiData": "fakedata", 
+        "modelId": "1", 
         "privacy": "datatype?", 
         "notes": "fakenotes"
     }
