@@ -3,8 +3,21 @@ class Dashboard extends Component {
     constructor(props) {
         super(props);
         this.state = {
-          name: "React"
+          name: "React",
+          showMenu:false
         };
+        this.onShowMenu = this.onShowMenu.bind(this);
+        this.onHideMenu = this.onHideMenu.bind(this);
+      }
+      onShowMenu(){
+        this.setState({
+			showMenu: true
+		  });
+      }
+      onHideMenu(){
+        this.setState({
+			showMenu: false
+		  });
       }
       render() {
         return (
@@ -12,11 +25,23 @@ class Dashboard extends Component {
 
             
             <div class="music-generation-bg">
+              
             <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+            <div className="nav__button" onClick={this.onShowMenu}  onMouseEnter={this.onShowMenu} onMouseLeave={this.onHideMenu}><i class="material-icons">account_circle</i>
+
+<ul className="nav__menu" style={{display: this.state.showMenu ? 'block' : 'none' }}>
+    <li className="nav_menu-item"><a href="#">My Account</a></li>
+    <li className="nav_menu-item"><a href="#">Settings</a></li>
+    <li className="nav_menu-item"><a href="#">Log Out</a></li>
+</ul>
+</div>
             <h3>My Tracks </h3>
             
             <br />
-            <div id="top-bar"><div class="midi-add"><i class="material-icons">add</i> Add Track</div></div>
+            <br />
+            <br />
+            <br />
+            <div id="top-bar"><div class="midi-add"><a href="/music-generation"><i class="material-icons">add</i> Add Track</a></div></div>
                  <div id="midi-tracks">
                      
                    

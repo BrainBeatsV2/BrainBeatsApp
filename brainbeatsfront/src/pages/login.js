@@ -211,7 +211,6 @@ class Login extends Component {
 						</div>
 						<div class="text-center p-t-5" >
 							<a class="txt2" onClick={this.onShowResetPassword}> Forgot Your Password?</a>
-							<a class="txt2" onClick={this.onShowVerify}> New Pass</a>
 						</div >
 
 						<div class="text-center p-t-55">

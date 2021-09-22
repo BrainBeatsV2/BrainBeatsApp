@@ -5,10 +5,16 @@ import Home from './pages'
 import Login from './pages/login'
 import MusicGeneration from './pages/music-generation'
 import Dashboard from './pages/dashboard'
+
 function App() {
+  let curLocation = window.location.pathname
+
   return (
+    
     <Router>
-      <Navbar />
+      { curLocation === '/' && <Navbar /> }
+      { curLocation === '/login' && <Navbar /> }
+      
       <Switch>
         <Route path="/" exact component={Home} />
         <Route path="/login" exact component={Login} />
