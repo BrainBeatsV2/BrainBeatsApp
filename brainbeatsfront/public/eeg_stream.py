@@ -1,4 +1,3 @@
-
 import sys
 import argparse
 import time
@@ -152,6 +151,9 @@ def main():
     BoardShim.enable_board_logger()
     DataFilter.enable_data_logger()
     MLModel.enable_ml_logger()
+
+    args = str(sys.argv)
+    isStreaming = args[1]
 
     headset_type_name = ''
     parser = configure_eeg_headset(headset_type_name)

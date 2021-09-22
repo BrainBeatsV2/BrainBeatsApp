@@ -38,6 +38,9 @@ function sendEEGDataToNode(eeg_data) {
 let filePath = path.join(__dirname, 'eeg_stream.py');
 let pyshell;
 
+const eegDataQueueSizeCap = 10;
+let eegDataQueue = [];
+
 ipcMain.on('start_eeg_script', (event) => {
   pyshell = new PythonShell(filePath);
   track = new MidiWriter.Track();
@@ -52,6 +55,7 @@ ipcMain.on('start_eeg_script', (event) => {
       if (eeg_data == undefined || eeg_data == null) {
         return
       }
+      eegDataQueue.push(eeg_data);
 
       sendEEGDataToNode(eeg_data);
       scale = getScaleNotes('pentatonicC');
@@ -60,14 +64,16 @@ ipcMain.on('start_eeg_script', (event) => {
       noteEvents = createNotes(20);
       track = addNotesToTrack(track, noteEvents);
 
+      if (eegDataQueue.length === eegDataQueueSizeCap) {
+        write = new MidiWriter.Writer(track);
+        midiString = getMidiString(write);
+        writeMIDIfile(write);
+        eegDataQueue = [];
+      }
     } catch (error) {
       console.log(error)
     }
   })
-
-  write = new MidiWriter.Writer(track);
-  midiString = getMidiString(write);
-  writeMIDIfile(write);
 });
 
 

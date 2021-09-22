@@ -6,10 +6,12 @@ const commonNoteDurations = ['4', '8', '8t', '16', '16t', '32'];
 
 function setInstrument(track, instrument_num) {
     track.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: instrument_num }));
+    console.log('Set instrument to track')
     return track;
 }
 
 function getMidiString(write) {
+    console.log(write.base64());
     return write.base64()
 }
 
@@ -30,6 +32,8 @@ function createIntervalPitchMap(notesNum, notesArray) {
     for (let i = 0; i < notesNum; i++) {
         intervalPitchMap.set(i, notesArray[i]);
     }
+    console.log('Interval Pitch Map');
+    console.log(intervalPitchMap);
     return intervalPitchMap;
 }
 
@@ -76,6 +80,8 @@ let createNoteDistribution = (numberOfNotesToGenerate, currentPitch) => {
             distribution.push(currentPitch);
         }
     }
+    console.log('note distribution');
+    console.log(distribution);
     return distribution;
 }
 
@@ -102,6 +108,8 @@ function createNotes(totalNoteGroupingsDurations) {
         });
         noteEvents.push(new MidiWriter.NoteEvent({ pitch: pitchesAsNotes, duration: duration.toString() }));
     }
+    console.log('note events');
+    console.log(noteEvents);
     return noteEvents;
 }
 
@@ -109,6 +117,8 @@ function addNotesToTrack(track, noteEvents) {
     track.addEvent(noteEvents, function (event, index) {
         return { sequential: true };
     });
+    console.log('addnotes to track');
+    console.log(track);
     return track;
 }
 
