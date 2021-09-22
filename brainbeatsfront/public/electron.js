@@ -6,7 +6,6 @@ const isDev = require('electron-is-dev');
 const { PythonShell } = require('python-shell');
 var kill = require('tree-kill');
 
-
 let mainWindow;
 
 function createWindow() {
@@ -38,12 +37,12 @@ function sendEEGDataToNode(eeg_data) {
 let filePath = path.join(__dirname, 'eeg_stream.py');
 let pyshell;
 
-const eegDataQueueSizeCap = 10;
 let eegDataQueue = [];
+track = new MidiWriter.Track();
 
 ipcMain.on('start_eeg_script', (event) => {
-  pyshell = new PythonShell(filePath);
-  track = new MidiWriter.Track();
+  pyshell = new PythonShell(filePath, { pythonOptions: ['-u'] });
+
   console.log('Python script started & track started');
 
   // Currently default setting the instrument as piano, can later change instruments
@@ -51,25 +50,14 @@ ipcMain.on('start_eeg_script', (event) => {
 
   pyshell.on('message', function (message) {
     try {
+      console.log('Recieved message')
       eeg_data = JSON.parse(message)
       if (eeg_data == undefined || eeg_data == null) {
         return
       }
+      console.log(eeg_data)
       eegDataQueue.push(eeg_data);
-
       sendEEGDataToNode(eeg_data);
-      scale = getScaleNotes('pentatonicC');
-      intervalPitchMap = createIntervalPitchMap(scale.length, scale);
-      // TODO: Fix hardcoding and allow for it to be something that's modified by time in the script or time it
-      noteEvents = createNotes(20);
-      track = addNotesToTrack(track, noteEvents);
-
-      if (eegDataQueue.length === eegDataQueueSizeCap) {
-        write = new MidiWriter.Writer(track);
-        midiString = getMidiString(write);
-        writeMIDIfile(write);
-        eegDataQueue = [];
-      }
     } catch (error) {
       console.log(error)
     }
@@ -82,5 +70,20 @@ ipcMain.on('end_eeg_script', (event) => {
     return
   }
   console.log('Terminating python script')
+
+  eegDataQueue.forEach(eegDataPoint => {
+    sendEEGDataToNode(eeg_data);
+    scale = getScaleNotes('pentatonicC');
+    intervalPitchMap = createIntervalPitchMap(scale.length, scale);
+    // TODO: Fix hardcoding and allow for it to be something that's modified by time in the script or time it
+    noteEvents = createNotes(20);
+    track = addNotesToTrack(track, noteEvents);
+  });
+
+  write = new MidiWriter.Writer(track);
+  midiString = getMidiString(write);
+  writeMIDIfile(write);
+  eegDataQueue = [];
+  track = new MidiWriter.Track();
   kill(pyshell.childProcess.pid)
 });

@@ -152,9 +152,6 @@ def main():
     DataFilter.enable_data_logger()
     MLModel.enable_ml_logger()
 
-    args = str(sys.argv)
-    isStreaming = args[1]
-
     headset_type_name = ''
     parser = configure_eeg_headset(headset_type_name)
     args = parser.parse_args()
@@ -186,9 +183,8 @@ def main():
     board.start_stream(45000, args.streamer_params)
     BoardShim.log_message(LogLevels.LEVEL_INFO.value,
                           'start sleeping in the main thread')
-    there_is_still_time = 5
 
-    while(there_is_still_time):
+    while(True):
         time.sleep(4)
 
         # TODO This is using only the eeg data from the second channel, in the future it'd be best to average the values between all of the channels
@@ -203,18 +199,20 @@ def main():
         eeg_data = {"band_values": band_values,
                     "concentration": concentration_percent, "relaxation": relaxation_percent}
         print(str(json.dumps(eeg_data)))
-        there_is_still_time = there_is_still_time - 1
-
-    # Ending the streaming & preparing the data.
-    board.stop_stream()
-    board.release_session()
-    sys.stdout.flush()
+        # Required to flush output for python to allow for python to output script!!!
+        sys.stdout.flush()
 
 
 def print_debug(string):
     debug = 1
+    # print(string)
     # sys.stderr.write(string)
 
 
 if __name__ == "__main__":
     main()
+
+# while(True):
+#     print('{"here": "there"}')
+#     sys.stdout.flush()
+#     time.sleep(1)
