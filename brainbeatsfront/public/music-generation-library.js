@@ -3,55 +3,26 @@ const fs = require('fs');
 
 const commonNoteGroupings = [1, 2, 3, 4, 6, 8];
 const commonNoteDurations = ['4', '8', '8t', '16', '16t', '32'];
-var track
-var write
 
-function startMIDITrack() {
-    track = new MidiWriter.Track();
-    console.log('Midi track created.');
-}
-
-function endMIDITrack() {
-    track = null;
-    console.log('Midi track nulled.')
-}
-
-function startMIDIWriter() {
-    write = new MidiWriter.Writer(track);
-    console.log('MidiWriter created')
-}
-
-function endMIDIWriter() {
-    write = null;
-    console.log('MidiWriter nullified.')
-}
-
-function setInstrument(instrument_num) {
+function setInstrument(track, instrument_num) {
     track.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: instrument_num }));
+    return track;
 }
 
-function getDataURI() {
-    midiDataURI = write.dataUri()
-    console.log(midiDataURI)
-    console.log('Get data URI');
+function getMidiString(write) {
+    return write.base64()
 }
 
-function writeMIDIfile() {
+function writeMIDIfile(write) {
     filename = Date.now()
     const buffer = new Buffer.from(write.buildFile());
     fs.writeFile(filename + '.mid', buffer, function (err) {
-        if (err) throw err;
+        if (err) {
+            console.log(err)
+            throw err;
+        }
     });
     console.log('MIDI file created')
-}
-
-function parseEEGData(eeg_data) {
-    console.log("In generate Midi")
-    // delta = incoming_data.delta
-    // theta = incoming_data.theta
-    // alpha = incoming_data.alpha
-    // beta = incoming_data.beta
-    // gamma = incoming_data.gamma
 }
 
 function createIntervalPitchMap(notesNum, notesArray) {
@@ -62,8 +33,7 @@ function createIntervalPitchMap(notesNum, notesArray) {
     return intervalPitchMap;
 }
 
-
-let createNoteDistribution = (currentPitch) => {
+let createNoteDistribution = (numberOfNotesToGenerate, currentPitch) => {
     for (var j = 0; j < numberOfNotesToGenerate; j++) {
         distribution = [];
         // most common pitches will be one note up or one note down
@@ -109,23 +79,17 @@ let createNoteDistribution = (currentPitch) => {
     return distribution;
 }
 
-
-function addNotesToTrack(noteEvents) {
-    track.addEvent(noteEvents, function (event, index) {
-        return { sequential: true };
-    });
-}
-
-function createNotes() {
+function createNotes(totalNoteGroupingsDurations) {
+    const commonNoteGroupings = [1, 2, 3, 4, 6, 8];
     var noteEvents = [];
     var currentPitch = 3;
-    for (var i = 0; i < duration; i++) {
+    for (var i = 0; i < totalNoteGroupingsDurations; i++) {
         // pick a random note grouping and duration and generate that many notes
         var numberOfNotesToGenerate = commonNoteGroupings[Math.floor(Math.random() * commonNoteGroupings.length)];
         var duration = commonNoteDurations[Math.floor(Math.random() * commonNoteDurations.length)];
         var pitches = [];
         for (var j = 0; j < numberOfNotesToGenerate; j++) {
-            var distribution = createNoteDistribution(currentPitch);
+            var distribution = createNoteDistribution(numberOfNotesToGenerate, currentPitch);
             var randomIndex = Math.floor(Math.random() * 100);
             var nextPitch = distribution[randomIndex];
             pitches.push(nextPitch);
@@ -134,7 +98,6 @@ function createNotes() {
 
         var pitchesAsNotes = [];
         pitches.forEach(pitch => {
-            // console.log(pitch);
             pitchesAsNotes.push(intervalPitchMap.get(pitch));
         });
         noteEvents.push(new MidiWriter.NoteEvent({ pitch: pitchesAsNotes, duration: duration.toString() }));
@@ -142,29 +105,27 @@ function createNotes() {
     return noteEvents;
 }
 
-function generateMidi(eeg_data, duration) {
+function addNotesToTrack(track, noteEvents) {
+    track.addEvent(noteEvents, function (event, index) {
+        return { sequential: true };
+    });
+    return track;
+}
 
-
-    startMIDITrack();
-    setInstrument(1);
-
+// Ideally will have further Note options and scales with more features added
+function getScaleNotes(selection) {
     pentatonic_notes = ['C4', 'D4', 'E4', 'G4', 'A4']
-    intervalPitchMap = createIntervalPitchMap(5, pentatonic_notes)
-
-    noteEvents = createNotes();
-    addNotesToTrack(noteEvents);
-
-    startMIDIWriter();
-    getDataURI();
-    writeMIDIfile();
-    endMIDIWriter();
-    endMIDITrack();
+    return pentatonic_notes;
 }
 
 module.exports = {
-    generateMidi: generateMidi,
-    startMIDITrack: startMIDITrack,
-    endMIDITrack: endMIDITrack
+    setInstrument: setInstrument,
+    getScaleNotes: getScaleNotes,
+    createIntervalPitchMap: createIntervalPitchMap,
+    createNotes: createNotes,
+    addNotesToTrack: addNotesToTrack,
+    getMidiString: getMidiString,
+    writeMIDIfile: writeMIDIfile,
 }
 
 

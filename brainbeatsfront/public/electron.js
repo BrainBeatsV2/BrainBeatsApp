@@ -1,4 +1,5 @@
-const { generateMidi, startMIDITrack, endMIDITrack } = require('./music-generation-library');
+const { setInstrument, getScaleNotes, createIntervalPitchMap, createNotes, addNotesToTrack, getMidiString, writeMIDIfile } = require('./music-generation-library');
+var MidiWriter = require('midi-writer-js')
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const isDev = require('electron-is-dev');
@@ -29,7 +30,7 @@ app.on('activate', () => {
   }
 });
 
-function sendEEGData(eeg_data) {
+function sendEEGDataToNode(eeg_data) {
   mainWindow.webContents.send('start_eeg_script', eeg_data)
   return
 }
@@ -39,24 +40,34 @@ let pyshell;
 
 ipcMain.on('start_eeg_script', (event) => {
   pyshell = new PythonShell(filePath);
-  console.log('Script started, running now')
+  track = new MidiWriter.Track();
+  console.log('Python script started & track started');
+
+  // Currently default setting the instrument as piano, can later change instruments
+  track = setInstrument(track, 1);
 
   pyshell.on('message', function (message) {
     try {
-      console.log("Parsing json")
       eeg_data = JSON.parse(message)
       if (eeg_data == undefined || eeg_data == null) {
         return
       }
 
-      console.log(Date.now())
-      sendEEGData(eeg_data)
-      generateMidi(eeg_data, 4)
+      sendEEGDataToNode(eeg_data);
+      scale = getScaleNotes('pentatonicC');
+      intervalPitchMap = createIntervalPitchMap(scale.length, scale);
+      // TODO: Fix hardcoding and allow for it to be something that's modified by time in the script or time it
+      noteEvents = createNotes(20);
+      track = addNotesToTrack(track, noteEvents);
 
     } catch (error) {
       console.log(error)
     }
   })
+
+  write = new MidiWriter.Writer(track);
+  midiString = getMidiString(write);
+  writeMIDIfile(write);
 });
 
 
