@@ -3,6 +3,7 @@ const app = express();
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
+const jwt = require('jsonwebtoken');
 
 const Timidity = require('timidity')
 
@@ -35,7 +36,7 @@ app.get('/api', (req, res) => {
 app.get('/api/users', (req, res) => {
     var conn = getConnection();
     var db = conn.db;
-        
+
     db.collection("users").find().toArray(function (err, data) {
         if (err) {
             console.log(err);
@@ -46,12 +47,12 @@ app.get('/api/users', (req, res) => {
 })
 
 /*
-    Example: 
+    Example:
         POST localhost:4000/api/requestreset
         Headers- Content-Type: application/json; charset=utf-8
         Body- {"email": "harry@hsauers.net"}
         Response- 200 OK
-    * You MUST supply the exact Content-Type above, or it won't work. 
+    * You MUST supply the exact Content-Type above, or it won't work.
 */
 app.post('/api/requestreset', function(req, res) {
     var body = req.body;
@@ -81,21 +82,21 @@ app.post('/api/requestreset', function(req, res) {
             // send email
             var email_text = "Your password reset token is: " + token;
             sendMail(doc.email, "hsauers@knights.ucf.edu", "Reset your Password", email_text, email_text);
-        }   
+        }
     });
 })
 
 /*
-    Example: 
+    Example:
         POST localhost:4000/api/resetpassword
         Headers- Content-Type: application/json; charset=utf-8
         Body- {"email": "harry@hsauers.net", "token": "1234", "new_password": "Passwd123!"}
         Response- 200 OK
-    * You MUST supply the exact Content-Type above, or it won't work. 
+    * You MUST supply the exact Content-Type above, or it won't work.
 */
 app.post('/api/resetpassword', function(req, res) {
     var body = req.body;
-    var email = body.email; 
+    var email = body.email;
     var token = body.token;
     var new_password = body.new_password;
 
@@ -119,7 +120,7 @@ app.post('/api/resetpassword', function(req, res) {
 })
 
 /*
-    Validates user's username and password 
+    Validates user's username and password
     Will likely return a JWT token depending on which authorization route we go
 */
 app.post('/api/login', function (req, res) {
@@ -131,10 +132,14 @@ app.post('/api/login', function (req, res) {
 
     User.findOne({"username": username}).then(function(doc) {
         if (doc == null) {
-            res.status(400).send("Invalid username or password");    
+            res.status(400).send("Invalid username or password");
         }
         else if (doc.password != password) {
-            res.status(400).send("Invalid username or password")
+            res.status(400).send("Invalid username or password");
+        }
+        else if (doc.password == password)
+        {
+            res.status(200).send("login successful");
         }
     });
 });
@@ -146,8 +151,6 @@ app.post('/api/login', function (req, res) {
 app.post('/api/register', function (req, res) {
     var conn = getConnection();
     var body = req.body;
-    var firstName = body.firstName;
-    var lastName = body.lastName;
     var email = body.email;
     var username = body.username;
     var password = body.password;
@@ -174,8 +177,6 @@ app.post('/api/register', function (req, res) {
                 "username": username,
                 "email": email,
                 "password": password,
-                "firstName": firstName,
-                "lastName": lastName
             });
 
             postUser.save();
@@ -191,11 +192,11 @@ app.post('/api/register', function (req, res) {
 });
 
 /*
-    Example: 
+    Example:
         GET localhost:4000/api/models
         Headers- Content-Type: application/json; charset=utf-8
         Response- 200 OK
-    * You MUST supply the exact Content-Type above, or it won't work. 
+    * You MUST supply the exact Content-Type above, or it won't work.
 */
 app.get('/api/models', function(req, res) {
     var conn = getConnection();
@@ -212,11 +213,11 @@ app.get('/api/models', function(req, res) {
 })
 
 /*
-    Example: 
+    Example:
         GET localhost:4000/api/models/all
         Headers- Content-Type: application/json; charset=utf-8
         Response- 200 OK
-    * You MUST supply the exact Content-Type above, or it won't work. 
+    * You MUST supply the exact Content-Type above, or it won't work.
 */
 app.get('/api/models/all', function(req, res) {
     var conn = getConnection();
@@ -231,11 +232,11 @@ app.get('/api/models/all', function(req, res) {
 })
 
 /*
-    Example: 
+    Example:
         GET localhost:4000/api/models/MODEL_NAME
         Headers- Content-Type: application/json; charset=utf-8
         Response- 200 OK
-    * You MUST supply the exact Content-Type above, or it won't work. 
+    * You MUST supply the exact Content-Type above, or it won't work.
 */
 app.get('/api/models/:model_name', function(req, res) {
     var conn = getConnection();
@@ -253,15 +254,15 @@ app.get('/api/models/:model_name', function(req, res) {
 
 
 /*
-    Example: 
+    Example:
         GET localhost:4000/api/midis
         Headers- Content-Type: application/json; charset=utf-8
         Body- {"email": "harry@hsauers.net", "password": "Passwd123!"}
         Response- 200 OK
-    * You MUST supply the exact Content-Type above, or it won't work. 
-    * Note the user's account info in the body. 
-    * 
-    * @TODO - this feels bad. I don't like the various nested levels. fix it at some point. 
+    * You MUST supply the exact Content-Type above, or it won't work.
+    * Note the user's account info in the body.
+    *
+    * @TODO - this feels bad. I don't like the various nested levels. fix it at some point.
 */
 app.post('/api/midis', async function(req, res) {
     var body = req.body;
@@ -282,15 +283,15 @@ app.post('/api/midis', async function(req, res) {
 })
 
 /*
-    Example: 
+    Example:
         GET localhost:4000/api/midis/create
         Headers- Content-Type: application/json; charset=utf-8
-        Body- {"email": "harry@hsauers.net", "password": "Passwd123!", 
-                "midi_name": "midi_name1", "midi_data", "12345", 
+        Body- {"email": "harry@hsauers.net", "password": "Passwd123!",
+                "midi_name": "midi_name1", "midi_data", "12345",
                 "midi_privacy": "private", "midi_notes": "lorem ipsum"}
         Response- 200 OK
-    * You MUST supply the exact Content-Type above, or it won't work. 
-    * Note the user's account info in the body. 
+    * You MUST supply the exact Content-Type above, or it won't work.
+    * Note the user's account info in the body.
 */
 app.post('/api/midis/create', async function(req, res) {
     var body = req.body;
@@ -327,17 +328,17 @@ app.post('/api/midis/create', async function(req, res) {
         } else {
             // create new midi
             var newMidi = Midi({
-                "username": email, 
-                "name": midi_name, 
-                "midiData": midi_data, 
-                "modelId": midi_model_id, 
-                "privacy": midi_privacy, 
-                "notes": midi_notes, 
+                "user_email": email,
+                "name": midi_name,
+                "midi_data": midi_data,
+                "model_id": midi_model_id,
+                "privacy": midi_privacy,
+                "notes": midi_notes,
             });
 
             newMidi.save();
             res.status(200).send({
-                "message": "MIDI uploaded successfully!", 
+                "message": "MIDI uploaded successfully!",
                 "id": newMidi._id
             });
         }
@@ -346,12 +347,12 @@ app.post('/api/midis/create', async function(req, res) {
 
 
 /*
-    Example: 
+    Example:
         GET localhost:4000/api/midis/606e1726f9d7edf2fe715ee6
         Headers- Content-Type: application/json; charset=utf-8
         Body- {"email": "harry@hsauers.net", "password": "Passwd123!"}
         Response- 200 OK
-    * You MUST supply the exact Content-Type above, or it won't work. 
+    * You MUST supply the exact Content-Type above, or it won't work.
     * User account info not needed if MIDI is public
 */
 app.post('/api/midis/:midi_id', async function(req, res) {
@@ -376,7 +377,7 @@ app.post('/api/midis/:midi_id', async function(req, res) {
                 }
             });
         }
-        
+
     });
 })
 
@@ -455,10 +456,10 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
 function sendMail(to, from, subject, text, html) {
     var msg = {
-        to: to, 
-        from: from, 
-        subject: subject, 
-        text: text, 
+        to: to,
+        from: from,
+        subject: subject,
+        text: text,
         html: html
     }
     sgMail.send(msg).then(() => {
