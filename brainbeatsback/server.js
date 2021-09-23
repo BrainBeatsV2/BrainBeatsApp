@@ -255,7 +255,7 @@ app.get('/api/models/:model_name', function(req, res) {
 
 /*
     Example:
-        GET localhost:4000/api/midis
+        POST localhost:4000/api/midis
         Headers- Content-Type: application/json; charset=utf-8
         Body- {"email": "harry@hsauers.net", "password": "Passwd123!"}
         Response- 200 OK
@@ -442,6 +442,61 @@ app.get('/download/midi/:midi_id', async function(req, res) {
         
     });
 })
+
+
+/*
+    Update MIDI file
+    Example: 
+        GET localhost:4000/download/midi/606e1726f9d7edf2fe715ee6
+        Headers- Content-Type: application/json; charset=utf-8
+        Body- {"email": "harry@hsauers.net", "password": "Passwd123!"}
+        Response- 200 OK
+*/
+app.post('/api/midis/:midi_id/update', async function(req, res) {
+    var midi_id = req.params.midi_id;
+    var body = req.body;
+    var email = body.email;
+    var password = body.password;
+
+    // midi-specific vars
+    var midi_name = body.midi_name;
+    var midi_privacy = body.midi_privacy;
+    var midi_notes = body.midi_notes;
+
+    // check credentials
+    User.findOne({"email": email}).then(function(doc) {
+        if (doc == null) {
+            res.status(401).send("Incorrect account username.");
+        } else if (doc.password != password) {
+            res.status(401).send("Incorrect account password.");
+        } else {
+            // update midi
+            var newMidiValues = {};
+            
+            if (midi_name != null) { 
+                newMidiValues["name"] = midi_name;
+            }
+            if (midi_privacy != null) { 
+                newMidiValues["privacy"] = midi_privacy;
+            } 
+            if (midi_notes != null) { 
+                newMidiValues["notes"] = midi_notes;
+            } 
+            
+            Midi.updateOne({"_id": midi_id}, newMidiValues).then(function(err) {
+                if (err.ok != 1) {
+                    res.status(400).send("bad request");
+                } else {
+                    res.status(200).send({
+                        "message": "MIDI updated successfully!",
+                        "id": midi_id
+                    });
+                }
+              });
+        }
+    });
+});
+
 
 
 
