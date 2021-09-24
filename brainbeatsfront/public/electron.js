@@ -1,6 +1,7 @@
 const { setInstrument, getScaleNotes, createIntervalPitchMap, createNotes, addNotesToTrack, getMidiString, writeMIDIfile } = require('./music-generation-library');
 var MidiWriter = require('midi-writer-js')
 const { app, BrowserWindow, ipcMain } = require('electron');
+import isElectron from '../src/library/isElectron';
 const path = require('path');
 const isDev = require('electron-is-dev');
 const { PythonShell } = require('python-shell');
@@ -11,8 +12,10 @@ let mainWindow;
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 900, height: 680, webPreferences:
-      { nodeIntegration: true, contextIsolation: false, enableRemoteModule: true, preload: `${__dirname}/preload.js`, }
+      // { nodeIntegration: true, contextIsolation: false, enableRemoteModule: true, preload: path.join(__dirname, 'preload.js'), }
+      { nodeIntegration: true, contextIsolation: false, preload: path.join(__dirname, 'preload.js'), }
   });
+  console.log(__dirname);
   mainWindow.setMenuBarVisibility(false);
   mainWindow.loadURL(isDev ? 'http://localhost:3000' : `file://${path.join(__dirname, '../build/index.html')}`);
   mainWindow.on('closed', () => mainWindow = null);

@@ -1,5 +1,8 @@
 import React, { Component, useState } from 'react';
-const { ipcRenderer } = window.require('electron');
+import isElectron from '../library/isElectron';
+// const { ipcRenderer } = window.require('electron');
+// const { ipcRenderer } = window.require('electron');
+
 
 class MusicGeneration extends Component {
     constructor(props) {
@@ -30,8 +33,8 @@ class MusicGeneration extends Component {
         // If not running the EEG Script, then run it!
         if (!this.state.isEEGScriptRunning) {
             console.log('Started recording!')
-            ipcRenderer.send('start_eeg_script');
-            ipcRenderer.on('start_eeg_script', (event, args) => {
+            window.ipcRenderer.send('start_eeg_script');
+            window.ipcRenderer.on('start_eeg_script', (event, args) => {
                 console.log(args)
             })
         }
@@ -47,8 +50,8 @@ class MusicGeneration extends Component {
         // If EEG Script is running, stop it right now
         if (this.state.isEEGScriptRunning) {
             console.log('Ended recording!')
-            ipcRenderer.send('end_eeg_script');
-            ipcRenderer.on('end_eeg_script', (event, args) => {
+            window.ipcRenderer.send('end_eeg_script');
+            window.ipcRenderer.on('end_eeg_script', (event, args) => {
                 console.log(args)
             })
         }
