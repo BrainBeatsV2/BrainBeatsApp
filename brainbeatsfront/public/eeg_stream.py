@@ -211,8 +211,3 @@ def print_debug(string):
 
 if __name__ == "__main__":
     main()
-
-# while(True):
-#     print('{"here": "there"}')
-#     sys.stdout.flush()
-#     time.sleep(1)

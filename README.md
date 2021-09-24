@@ -27,3 +27,10 @@ Get into the brainbeatsfront folder by `cd brainbeatsfront`, run `npm update` th
 ```
 npm run electron-dev
 ```
+
+### MongoDB
+
+Open the Docker Desktop app, click on brainbeatsapp, scroll over the db container and click the CLI button (it looks like ">-"). Inside the Docker CLI, paste the command below to log in as an authenticated user and see data in the database. After that you will be in the mongo CLI!
+```
+mongo --port 27017 -u "root" -p "toor" --authenticationDatabase "admin"
+```
