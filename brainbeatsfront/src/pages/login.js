@@ -49,31 +49,31 @@ class Login extends Component {
 	}
 
 	handleUsername = (e) => {
-		this.setState({ username: e.target.value});
+		this.setState({ username: e.target.value });
 	};
 
 	handlePassword = (e) => {
-		this.setState({ password: e.target.value});
+		this.setState({ password: e.target.value });
 	};
 
 	handleEmail = (e) => {
-		this.setState({ email: e.target.value});
+		this.setState({ email: e.target.value });
 	};
 
 	handleRequestEmail = (e) => {
-		this.setState({ requestEmail: e.target.value});
+		this.setState({ requestEmail: e.target.value });
 	}
 
 	handleResetCode = (e) => {
-		this.setState({ resetCode: e.target.value});
+		this.setState({ resetCode: e.target.value });
 	}
 
 	handleNewPassword = (e) => {
-		this.setState({ newPassword: e.target.value});
+		this.setState({ newPassword: e.target.value });
 	}
 
 	handleConfirmedPassword = (e) => {
-		this.setState({ confirmedPassword: e.target.value});
+		this.setState({ confirmedPassword: e.target.value });
 	}
 
 	handleRequestReset = (e) => {
@@ -164,13 +164,11 @@ class Login extends Component {
 				console.log(error)
 			});
 
-			//this.onShowResetPassword();
+		//this.onShowResetPassword();
 	}
 
 	// 	showVerify: false
 
-	// });
-	// 	  }
 	onShowVerify() {
 		this.setState({
 			showRegister: false,
@@ -226,25 +224,25 @@ class Login extends Component {
 
 					<form id="registerform" action="" method="post" class="login100-form validate-form" style={{ display: this.state.showRegister ? 'block' : 'none' }} onSubmit={this.handleRegister}>
 						<div class="wrap-input100 validate-input">
-							<input class="input100" type="text" name="EMAIL" value={this.state.email} onChange={this.handleEmail} required/>
+							<input class="input100" type="text" name="EMAIL" value={this.state.email} onChange={this.handleEmail} required />
 							<span class="focus-input100" data-placeholder="Email"></span>
 						</div>
 						<div class="wrap-input100 validate-input">
-							<input class="input100" type="text" name="USERNAME" value={this.state.username} onChange={this.handleUsername} required/>
+							<input class="input100" type="text" name="USERNAME" value={this.state.username} onChange={this.handleUsername} required />
 							<span class="focus-input100" data-placeholder="Username"></span>
 						</div>
 						<div class="wrap-input100 validate-input">
 							<span class="btn-show-pass">
 								<i class="material-icons">remove_red_eye</i>
 							</span>
-							<input class="input100" type="password" name="PASSWORD" value={this.state.password} onChange={this.handlePassword} required/>
+							<input class="input100" type="password" name="PASSWORD" value={this.state.password} onChange={this.handlePassword} required />
 							<span class="focus-input100" data-placeholder="Password"></span>
 						</div >
 						<div class="wrap-input100 validate-input">
 							<span class="btn-show-pass">
 								<i class="material-icons">remove_red_eye</i>
 							</span>
-							<input class="input100" type="password" name="CONFIRM" required/>
+							<input class="input100" type="password" name="CONFIRM" required />
 							<span class="focus-input100" data-placeholder="Confirm Password"></span>
 						</div>
 						<input type="hidden" name="ACTION" value="REGISTER" />
@@ -270,7 +268,7 @@ class Login extends Component {
 
 					<form id="resetform" action="" method="post" class="login100-form validate-form" style={{ display: this.state.showResetPassword ? 'block' : 'none' }} onSubmit={this.handleRequestReset}>
 						<div class="wrap-input100 validate-input">
-							<input class="input100" type="text" name="USERNAME" onChange={this.handleRequestEmail} required/>
+							<input class="input100" type="text" name="USERNAME" onChange={this.handleRequestEmail} required />
 							<span class="focus-input100" data-placeholder="Enter Username or Email"></span>
 						</div>
 						<input type="hidden" name="ACTION" value="RESET" />
@@ -298,15 +296,15 @@ class Login extends Component {
 						<h4 class="text-center white-text">Verify Account</h4>
 						<br />
 						<div class="wrap-input100 validate-input">
-							<input class="input100 code" type="text" name="CODE" onChange={this.handleResetCode} required/>
+							<input class="input100 code" type="text" name="CODE" onChange={this.handleResetCode} required />
 							<span class="focus-input100" data-placeholder="Enter Code"></span>
 						</div>
 						<div class="wrap-input100 validate-input">
-							<input class="input100" type="text" name="PASSWORD" onChange={this.handleNewPassword} required/>
+							<input class="input100" type="text" name="PASSWORD" onChange={this.handleNewPassword} required />
 							<span class="focus-input100" data-placeholder="New Password"></span>
 						</div>
 						<div class="wrap-input100 validate-input">
-							<input class="input100" type="text" name="CONFIRM" onChange={this.handleConfirmedPassword} required/>
+							<input class="input100" type="text" name="CONFIRM" onChange={this.handleConfirmedPassword} required />
 							<span class="focus-input100" data-placeholder="Confirm Password"></span>
 						</div>
 						<input id="userSID" class="input100" type="hidden" name="SID" />

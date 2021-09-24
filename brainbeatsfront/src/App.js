@@ -1,6 +1,7 @@
 import './App.css';
+import isElectron from './library/isElectron';
 import Navbar from './components/Navbar'
-import {BrowserRouter as Router, Switch, Route} from 'react-router-dom'
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom'
 import Home from './pages'
 import Login from './pages/login'
 import MusicGeneration from './pages/music-generation'
@@ -10,11 +11,11 @@ function App() {
   let curLocation = window.location.pathname
 
   return (
-    
+
     <Router>
-      { curLocation === '/' && <Navbar /> }
-      { curLocation === '/login' && <Navbar /> }
-      
+      {curLocation === '/' && <Navbar />}
+      {curLocation === '/login' && <Navbar />}
+
       <Switch>
         <Route path="/" exact component={Home} />
         <Route path="/login" exact component={Login} />
@@ -24,5 +25,7 @@ function App() {
     </Router>
   );
 }
+
+console.log(isElectron())
 
 export default App;
