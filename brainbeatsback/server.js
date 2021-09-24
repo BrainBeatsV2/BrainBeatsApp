@@ -132,7 +132,16 @@ app.post('/api/login', function (req, res) {
 
     User.findOne({"username": username}).then(function(doc) {
         if (doc == null) {
-            res.status(400).send("Invalid username or password");
+            User.findOne({"email": username}).then(function(doc) {
+                if (doc == null) {
+                    res.status(400).send("Invalid username or password");
+                } else if (doc.password != password) {
+                    res.status(400).send("Invalid username or password");
+                }
+                else if (doc.password == password) {
+                    res.status(200).send("login successful");
+                }
+            });
         }
         else if (doc.password != password) {
             res.status(400).send("Invalid username or password");
