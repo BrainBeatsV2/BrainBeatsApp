@@ -24,7 +24,7 @@ docker-compose down
 
 Faster docker build & run for testing:
 ```
-Unsupported platform for dmg-license@1.0.9: wanted {"os":"darwin","arch":"any"} (current: {"os":"linux","arch":"x64"})
+docker-compose up --build --force-recreate --renew-anon-volumes --remove-orphans
 ```
 
 ### Electron App
