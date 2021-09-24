@@ -9,7 +9,10 @@ var kill = require('tree-kill');
 let mainWindow;
 
 function createWindow() {
-  mainWindow = new BrowserWindow({ width: 900, height: 680, webPreferences: { nodeIntegration: true, contextIsolation: false } });
+  mainWindow = new BrowserWindow({
+    width: 900, height: 680, webPreferences:
+      { nodeIntegration: true, contextIsolation: false, enableRemoteModule: true, preload: `${__dirname}/preload.js`, }
+  });
   mainWindow.setMenuBarVisibility(false);
   mainWindow.loadURL(isDev ? 'http://localhost:3000' : `file://${path.join(__dirname, '../build/index.html')}`);
   mainWindow.on('closed', () => mainWindow = null);
