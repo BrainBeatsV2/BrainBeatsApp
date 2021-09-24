@@ -22,6 +22,11 @@ Terminate by:
 docker-compose down
 ```
 
+Faster docker build & run for testing:
+```
+Unsupported platform for dmg-license@1.0.9: wanted {"os":"darwin","arch":"any"} (current: {"os":"linux","arch":"x64"})
+```
+
 ### Electron App
 Get into the brainbeatsfront folder by `cd brainbeatsfront`, run `npm update` then run 
 ```
