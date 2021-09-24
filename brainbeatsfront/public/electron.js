@@ -1,7 +1,6 @@
 const { setInstrument, getScaleNotes, createIntervalPitchMap, createNotes, addNotesToTrack, getMidiString, writeMIDIfile } = require('./music-generation-library');
 var MidiWriter = require('midi-writer-js')
 const { app, BrowserWindow, ipcMain } = require('electron');
-import isElectron from '../src/library/isElectron';
 const path = require('path');
 const isDev = require('electron-is-dev');
 const { PythonShell } = require('python-shell');
