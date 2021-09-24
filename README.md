@@ -22,6 +22,11 @@ Terminate by:
 docker-compose down
 ```
 
+Faster docker build & run for testing:
+```
+docker-compose up --build --force-recreate --renew-anon-volumes --remove-orphans
+```
+
 ### Electron App
 Get into the brainbeatsfront folder by `cd brainbeatsfront`, run `npm update` then run 
 ```
