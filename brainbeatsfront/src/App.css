@@ -720,3 +720,37 @@ input, select{
 {
 width:100%;  
 }
+.changeOctave
+{
+  font-size:16px!important; 
+  cursor:pointer;
+
+}
+.range
+{
+  width:20px;
+}
+#headset_selection
+{
+  width:100%;
+
+  text-align:center;
+  display:inline-block;
+}
+#headset_selection p
+{
+  color:black;
+}
+#headset_selection i.material-icons
+{
+  cursor:pointer;
+}
+.noselect {
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
+}

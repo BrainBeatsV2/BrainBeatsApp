@@ -10,11 +10,15 @@ class MusicGeneration extends Component {
         this.state = {
             name: "React",
             recording: false,
+            disabledFields: '',
             cancelButton: false,
             showMenu: false,
             saveOptions: false,
             playing: false,
-            isEEGScriptRunning: false
+            isEEGScriptRunning: false,
+            minRange: 3,
+            maxRange: 3,
+            headsetMode: 'Synthetic'
         };
         this.onStartRecording = this.onStartRecording.bind(this);
         this.onStopRecording = this.onStopRecording.bind(this);
@@ -23,11 +27,21 @@ class MusicGeneration extends Component {
         this.onStartPlaying = this.onStartPlaying.bind(this);
         this.onStopPlaying = this.onStopPlaying.bind(this);
         this.onReRecord = this.onReRecord.bind(this);
+        this.onDecreaseMin = this.onDecreaseMin.bind(this);
+        this.onDecreaseMax = this.onDecreaseMax.bind(this);
+        this.onIncreaseMin = this.onIncreaseMin.bind(this);
+        this.onIncreaseMax = this.onIncreaseMax.bind(this);
+        this.updateRange = this.updateRange.bind(this);
+        this.onSynthetic = this.onSynthetic.bind(this);
+        this.onGanglion = this.onGanglion.bind(this);
+
+
     }
     onStartRecording() {
         this.setState({
             recording: true,
-            saveOptions: false
+            saveOptions: false,
+            disabledFields : 'disabled'
         });
 
         // If not running the EEG Script, then run it!
@@ -44,7 +58,8 @@ class MusicGeneration extends Component {
     onStopRecording() {
         this.setState({
             recording: false,
-            saveOptions: true
+            saveOptions: true,
+            disabledFields : ''
         });
 
         // If EEG Script is running, stop it right now
@@ -86,7 +101,77 @@ class MusicGeneration extends Component {
             showMenu: false
         });
     }
+    onDecreaseMin()
+    {
+        // Decreasing Minimum
+        // 1-4
 
+        if (this.state.minRange > 1)
+        {
+            this.setState({
+                minRange: (this.state.minRange - 1)
+            });
+        }
+
+
+    }
+    onDecreaseMax()
+    {
+        // Decrease max as long as max >= min
+        if (this.state.maxRange > this.state.minRange)
+        {
+            this.setState({
+                maxRange: (this.state.maxRange - 1)
+            });
+        }
+    }
+    onIncreaseMin()
+    {
+        // Increase min as long as min <= max
+        if (this.state.minRange < this.state.maxRange)
+        {
+            this.setState({
+                minRange: (this.state.minRange + 1)
+            });
+        }
+    }
+
+    onIncreaseMax()
+    {
+        // Increase Max
+        // 1-4
+        if (this.state.maxRange < 7)
+        {
+            this.setState({
+                maxRange: (this.state.maxRange + 1)
+            });
+        }
+    }
+    updateRange()
+    {
+        console.log("updated")
+    }
+
+    onSynthetic()
+    {
+    if (this.state.headsetMode == "Ganglion")
+        {
+            this.setState({
+                headsetMode: 'Synthetic'
+            })
+        }
+
+    }
+    onGanglion()
+    {
+        if (this.state.headsetMode == "Synthetic")
+        {
+            this.setState({
+                headsetMode: 'Ganglion'
+            })
+        }
+
+    }
     render() {
         return (
 
@@ -102,6 +187,11 @@ class MusicGeneration extends Component {
                     </ul>
                 </div>
                 <a id="back" href="/dashboard"><i class="material-icons" >chevron_left</i> <span>DASHBOARD</span></a>
+                <div id="headset_selection" class="">
+                    <p>{this.state.headsetMode} Mode</p>
+                    <i class="material-icons" onClick={this.onSynthetic} style={{ color: (this.state.headsetMode == 'Synthetic') ? '#4d90fe' : '#000000' }}>memory</i>
+                    <i class="material-icons" onClick={this.onGanglion} style={{ color: (this.state.headsetMode == 'Ganglion') ? '#4d90fe' : '#000000' }}>headset</i>
+                </div>
                 <div class="stream">
                     Insert Brain Wave Visualizer Concept Here
                 </div>
@@ -131,13 +221,25 @@ class MusicGeneration extends Component {
                             <table>
                                 <tr>
                                     <th>MODEL</th>
+                                    <th>INSTRUMENT</th>
+                                    
+                                    <th>MIN</th>
+                                    <th>MAX</th>
                                 </tr>
                                 <tr>
                                     <td>
-                                        <select disabled={this.state.recording}>
+                                        <select id="parameter_model" disabled={this.state.recording}>
                                             <option>Model 1</option>
                                         </select>
                                     </td>
+                                    <td>
+                                        <select id="parameter_instrument" disabled={this.state.recording}>
+                                            <option value="1">Piano</option>
+                                        </select>
+                                    </td>
+                                    <td><i class="material-icons changeOctave noselect" onClick={this.onDecreaseMin}>chevron_left</i> <input  type="text" class="border-input range"  onChange={this.updateRange} value={this.state.minRange} disabled={this.state.recording} /> <i class="material-icons changeOctave noselect" onClick={this.onIncreaseMin}>chevron_right</i></td>
+                                    <td><i class="material-icons changeOctave noselect " onClick={this.onDecreaseMax}>chevron_left</i> <input type="text" class="border-input range"  onChange={this.updateRange} value={this.state.maxRange} disabled={this.state.recording} /> <i class="material-icons changeOctave noselect" onClick={this.onIncreaseMax}>chevron_right</i></td>
+                             
                                 </tr>
                             </table>
                         </div>
@@ -178,28 +280,29 @@ class MusicGeneration extends Component {
                                     <th>SCALE</th>
                                     <th>TIMING</th>
                                     <th>BPM</th>
+                                 
                                 </tr>
                                 <tr>
                                     <td>
-                                        <select disabled={this.state.recording}>
-                                            <option>C</option>
-                                            <option>D</option>
-                                            <option>E</option>
-                                            <option>F</option>
-                                            <option>G</option>
-                                            <option>A</option>
-                                            <option>B</option>
+                                        <select id="parameter_key" disabled={this.state.recording}>
+                                            <option value="C">C</option>
+                                            <option value="D">D</option>
+                                            <option value="E">E</option>
+                                            <option value="F">F</option>
+                                            <option value="G">G</option>
+                                            <option value="A">A</option>
+                                            <option value="B">B</option>
                                         </select>
                                     </td>
                                     <td>
-                                        <select disabled={this.state.recording}>
-                                            <option>Chromatic</option>
-                                            <option>Whole Tone</option>
-                                            <option>Pentatonic</option>
+                                        <select id="parameter_scale" disabled={this.state.recording}>
+                                            <option value="pentatonic">Pentatonic</option>
+                                            <option value="chromatic">Chromatic</option>
+                                            <option value="whole_tone">Whole Tone</option>
                                         </select>
                                     </td>
                                     <td>
-                                        <select disabled={this.state.recording}>
+                                        <select id="parameter_timing" disabled={this.state.recording}>
                                             <option>4/4</option>
                                             <option>2/4</option>
                                             <option>2/2</option>
@@ -207,8 +310,8 @@ class MusicGeneration extends Component {
 
                                         </select>
                                     </td>
-                                    <td><input type="text" class="border-input bpm" value="120" disabled={this.state.recording} /></td>
-                                </tr>
+                                    <td><input id="parameter_bpm" type="text" class="border-input bpm" defaultValue="120" disabled={this.state.recording} /></td>
+                                       </tr>
                             </table>
                         </div>
                     </div>
