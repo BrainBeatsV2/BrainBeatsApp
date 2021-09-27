@@ -8,3 +8,5 @@ RUN npm install timidity
 
 # Bundle app source
 COPY . .
+
+RUN echo $SENDGRID_API_KEY
