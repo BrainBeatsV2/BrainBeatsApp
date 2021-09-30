@@ -16,11 +16,17 @@ function App() {
       {curLocation === '/' && <Navbar />}
       {curLocation === '/login' && <Navbar />}
 
+      
+
       <Switch>
-        <Route path="/" exact component={Home} />
-        <Route path="/login" exact component={Login} />
-        <Route path="/music-generation" exact component={MusicGeneration} />
-        <Route path="/dashboard" exact component={Dashboard} />
+      <Route path="/" exact component={Home} render={props =>
+        (<Home {...props} pieceOfState={this.state.pieceOfState}/>)}/> 
+      <Route path="/login" exact component={Login} render={props =>
+        (<Login {...props} pieceOfState={this.state.pieceOfState}/>)}/> 
+      <Route path="/music-generation" exact component={MusicGeneration} render={props =>
+        (<MusicGeneration {...props} pieceOfState={this.state.pieceOfState}/>)}/> 
+      <Route path="/dashboard" exact component={Dashboard} render={props =>
+        (<Dashboard {...props} pieceOfState={this.state.pieceOfState}/>)}/> 
       </Switch>
     </Router>
   );

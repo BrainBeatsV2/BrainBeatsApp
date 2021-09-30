@@ -1,5 +1,6 @@
 import React, { Component, useState } from 'react';
 import axios from 'axios';
+import { Redirect } from "react-router-dom";
 
 class Login extends Component {
 	constructor(props) {
@@ -15,7 +16,8 @@ class Login extends Component {
 			requestEmail: '',
 			resetCode: '',
 			newPassword: '',
-			confirmedPassword: ''
+			confirmedPassword: '',
+			redirect: null,
 		};
 		this.onShowRegister = this.onShowRegister.bind(this);
 		this.onShowLogin = this.onShowLogin.bind(this);
@@ -29,6 +31,7 @@ class Login extends Component {
 			showLogin: false,
 			showResetPassword: false,
 			showVerify: false,
+			redirect: null,
 		});
 	}
 	onShowLogin() {
@@ -37,6 +40,7 @@ class Login extends Component {
 			showLogin: true,
 			showResetPassword: false,
 			showVerify: false,
+			redirect: null,
 		});
 	}
 	onShowResetPassword() {
@@ -45,6 +49,7 @@ class Login extends Component {
 			showLogin: false,
 			showResetPassword: true,
 			showVerify: false,
+			redirect: null,
 		});
 	}
 
@@ -136,7 +141,11 @@ class Login extends Component {
 
 		axios.post('/api/login', userObject, options)
 			.then((res) => {
-				console.log(res.data)
+				//console.log(res.data)
+				if(res.data === "successful register" || 200)
+				{
+					this.setState({ redirect: "/dashboard"});
+				}
 			}).catch((error) => {
 				console.log(error)
 			});
@@ -179,6 +188,10 @@ class Login extends Component {
 		});
 	}
 	render() {
+		if (this.state.redirect) 
+		{
+			return <Redirect to={this.state.redirect} />
+		}
 		return (
 			<div class="container-login100">
 				<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />

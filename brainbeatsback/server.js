@@ -187,7 +187,7 @@ app.post('/api/register', function (req, res) {
                 "email": email,
                 "password": password,
             });
-
+            res.status(200).send("Successful Register");
             postUser.save();
         }
     })
