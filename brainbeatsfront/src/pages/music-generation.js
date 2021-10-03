@@ -64,13 +64,13 @@ class MusicGeneration extends Component {
         });
 
         // If not running the EEG Script, then run it!
-    /*    if (!this.state.isEEGScriptRunning) {
+        if (!this.state.isEEGScriptRunning) {
             console.log('Started recording!')
             window.ipcRenderer.send('start_eeg_script');
             window.ipcRenderer.on('start_eeg_script', (event, args) => {
                 console.log(args)
             })
-        } */
+        }
         this.setState({ isEEGScriptRunning: !this.state.isEEGScriptRunning })
     }
     // Stop MIDI Recording
@@ -82,13 +82,13 @@ class MusicGeneration extends Component {
         });
 
         // If EEG Script is running, stop it right now
-       /* if (this.state.isEEGScriptRunning) {
+        if (this.state.isEEGScriptRunning) {
             console.log('Ended recording!')
             window.ipcRenderer.send('end_eeg_script');
             window.ipcRenderer.on('end_eeg_script', (event, args) => {
                 console.log(args)
             })
-        } */
+        }
         this.setState({ isEEGScriptRunning: !this.state.isEEGScriptRunning })
     }
 
@@ -306,6 +306,15 @@ class MusicGeneration extends Component {
                                     <td>
                                         <select id="parameter_instrument" disabled={this.state.recording}>
                                             <option value="1">Piano</option>
+                                            <option value="13">Xylophone</option>
+                                            <option value="19">Organ (Church)</option>
+                                            <option value="24">Guitar (Acoustic)</option>
+                                            <option value="27">Guitar (Electric)</option>
+                                            <option value="40">Violin</option>
+                                            <option value="41">Viola</option>
+                                            <option value="42">Cello</option>
+                                            <option value="48">Strings</option>
+                                            <option value="56">Trumpet</option>
                                         </select>
                                     </td>
                                     <td><i class="material-icons changeOctave noselect" onClick={this.onDecreaseMin}>chevron_left</i> <input  type="text" class="border-input range"  onChange={this.updateRange} value={this.state.minRange} disabled={this.state.recording} /> <i class="material-icons changeOctave noselect" onClick={this.onIncreaseMin}>chevron_right</i></td>
