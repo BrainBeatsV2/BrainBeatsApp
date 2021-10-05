@@ -1,10 +1,14 @@
 const { setInstrument, getScaleNotes, createIntervalPitchMap, createNotes, addNotesToTrack, getMidiString, writeMIDIfile } = require('./music-generation-library');
 var MidiWriter = require('midi-writer-js')
+var MidiPlayer = require('midi-player-js');
+
+
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const isDev = require('electron-is-dev');
 const { PythonShell } = require('python-shell');
 var kill = require('tree-kill');
+
 
 let mainWindow;
 
@@ -44,7 +48,8 @@ let pyshell;
 
 let eegDataQueue = [];
 track = new MidiWriter.Track();
-
+player = new MidiPlayer.Player();
+urlMIDI = "";
 ipcMain.on('start_eeg_script', (event) => {
   pyshell = new PythonShell(filePath, { pythonOptions: ['-u'] });
 
@@ -70,7 +75,7 @@ ipcMain.on('start_eeg_script', (event) => {
 });
 
 
-ipcMain.on('end_eeg_script', (event) => {
+ipcMain.on('end_eeg_script', (event, args) => {
   if (pyshell == null || pyshell == undefined) {
     return
   }
@@ -86,9 +91,32 @@ ipcMain.on('end_eeg_script', (event) => {
   });
 
   write = new MidiWriter.Writer(track);
+  urlMIDI = write.dataUri();
+  player.loadDataUri(urlMIDI);
   midiString = getMidiString(write);
+  event.sender.send('end_eeg_script',midiString); 
   writeMIDIfile(write);
+
   eegDataQueue = [];
   track = new MidiWriter.Track();
   kill(pyshell.childProcess.pid)
+  
+});
+
+ipcMain.on('gen_midi', (event,args) =>{
+  console.log('Loaded midi now')
+  //player.loadDataUri(urlMIDI);
+});
+
+ipcMain.on('play_midi', (event,args) =>{
+  console.log('Playing midi now')
+  player.play();  
+  player.on('playing', function(currentTick) {
+    console.log(currentTick);
+});
+ 
+});
+ipcMain.on('pause_midi', (event,args) =>{
+  console.log('Paused midi now')
+  player.pause();  
 });

@@ -3,8 +3,9 @@ import isElectron from '../library/isElectron';
 // const { ipcRenderer } = window.require('electron');
 // const { ipcRenderer } = window.require('electron');
 
-import { Button, Checkbox, Grid, Modal, Header , Segment, Dimmer, Loader} from 'semantic-ui-react'
 
+
+import { Button, Checkbox, Grid, Modal, Header , Segment, Dimmer, Loader} from 'semantic-ui-react'
 class MusicGeneration extends Component {
     
     constructor(props) {
@@ -33,7 +34,8 @@ class MusicGeneration extends Component {
             saved: false,
             privacySettings: 0,
             trackLink: "brainbeats.dev/play/",
-            loggedout: 0
+            loggedout: 0,
+            midiString: ''
 
         };
         this.onStartRecording = this.onStartRecording.bind(this);
@@ -53,6 +55,7 @@ class MusicGeneration extends Component {
         this.setOpen = this.setOpen.bind(this);
         this.onSaveRecording = this.onSaveRecording.bind(this);
         this.onChangeTrackSettings = this.onChangeTrackSettings.bind(this);
+        
 
     }
     // Start MIDI Recording
@@ -73,6 +76,7 @@ class MusicGeneration extends Component {
         }
         this.setState({ isEEGScriptRunning: !this.state.isEEGScriptRunning })
     }
+    
     // Stop MIDI Recording
     onStopRecording() {
         this.setState({
@@ -87,6 +91,11 @@ class MusicGeneration extends Component {
             window.ipcRenderer.send('end_eeg_script');
             window.ipcRenderer.on('end_eeg_script', (event, args) => {
                 console.log(args)
+                this.setState({ midiString: args })
+               // this.player.load(args)
+                //this.player.play()
+                
+                window.ipcRenderer.send('gen_midi');
             })
         }
         this.setState({ isEEGScriptRunning: !this.state.isEEGScriptRunning })
@@ -97,12 +106,15 @@ class MusicGeneration extends Component {
         this.setState({
             playing: true
         });
+        window.ipcRenderer.send('play_midi');
+
     }
     // Paused MIDI
     onStopPlaying() {
         this.setState({
             playing: false
         });
+        window.ipcRenderer.send('pause_midi');
     }
     // Re-record MIDI
     onReRecord() {
@@ -236,15 +248,14 @@ class MusicGeneration extends Component {
         return (
 
 
-            <div class="music-generation-bg">
-                
-        <Dimmer.Dimmable dimmed={this.state.saving}>
-          <Dimmer active={this.state.saving} page>
-            <Loader>Uploading</Loader>
-          </Dimmer>
+            <div class="music-generation-bg"> 
+                <Dimmer.Dimmable dimmed={this.state.saving}>
+                <Dimmer active={this.state.saving} page>
+                    <Loader>Uploading</Loader>
+                </Dimmer>
 
-         
-        </Dimmer.Dimmable>
+                
+                </Dimmer.Dimmable>
 
                 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
                 <div className="nav__button" onClick={this.onShowMenu} onMouseEnter={this.onShowMenu} onMouseLeave={this.onHideMenu}><i class="material-icons">account_circle</i>
@@ -343,41 +354,41 @@ class MusicGeneration extends Component {
                                     <td><i class="material-icons">file_download</i></td>
                                     <td style={{ display: (this.state.saved || this.state.loggedout) ? 'none' : 'block' }}><i class="material-icons" onClick={this.onSaveRecording} >cloud_upload</i></td>
                                     <Modal
-        onClose={this.setOpen}
-        onOpen={this.setOpen}
-        open={this.state.saveModalOpen}
-        trigger={<td style={{ display: (this.state.saved) ? 'block' : 'none' }}><i class="material-icons" >ios_share</i></td>    }
-        closeOnDimmerClick={false} >
-      <Modal.Header>Track Settings</Modal.Header>
-      <Modal.Content text>
-        
-        <Modal.Description>
-          
-          <Header>Sharing and Privacy Settings</Header>
-          <Checkbox input onChange={this.changePrivacy} value='0' checked={this.state.privacySettings == 0} radio label='Track is visible on MIDI Discover section' />
-          <br />
-          <Checkbox onChange={this.changePrivacy} value='1' checked={this.state.privacySettings == 1} radio label='Track is only visible to anyone with my link' />
-          <br />
-          <Checkbox onChange={this.changePrivacy} value='2' checked={this.state.privacySettings == 2} radio label='Track is only visible to me' />
-          <br />
-          <br />
-         
-          MIDI Link: <input className="modal_input" value={this.state.trackLink} type="text" readOnly={true}/>
-        </Modal.Description>
-      </Modal.Content>
-      <Modal.Actions>
-        <Button color='black' onClick={this.setOpen}>
-          Close
-        </Button>
-        <Button
-          content="Save Settings"
-          labelPosition='right'
-          icon='checkmark'
-          onClick={this.onChangeTrackSettings}
-          positive
-        />
-      </Modal.Actions>
-    </Modal>
+                                        onClose={this.setOpen}
+                                        onOpen={this.setOpen}
+                                        open={this.state.saveModalOpen}
+                                        trigger={<td style={{ display: (this.state.saved) ? 'block' : 'none' }}><i class="material-icons" >ios_share</i></td>    }
+                                        closeOnDimmerClick={false} >
+                                    <Modal.Header>Track Settings</Modal.Header>
+                                    <Modal.Content text>
+                                        
+                                        <Modal.Description>
+                                        
+                                        <Header>Sharing and Privacy Settings</Header>
+                                        <Checkbox input onChange={this.changePrivacy} value='0' checked={this.state.privacySettings == 0} radio label='Track is visible on MIDI Discover section' />
+                                        <br />
+                                        <Checkbox onChange={this.changePrivacy} value='1' checked={this.state.privacySettings == 1} radio label='Track is only visible to anyone with my link' />
+                                        <br />
+                                        <Checkbox onChange={this.changePrivacy} value='2' checked={this.state.privacySettings == 2} radio label='Track is only visible to me' />
+                                        <br />
+                                        <br />
+                                        
+                                        MIDI Link: <input className="modal_input" value={this.state.trackLink} type="text" readOnly={true}/>
+                                        </Modal.Description>
+                                    </Modal.Content>
+                                    <Modal.Actions>
+                                        <Button color='black' onClick={this.setOpen}>
+                                        Close
+                                        </Button>
+                                        <Button
+                                        content="Save Settings"
+                                        labelPosition='right'
+                                        icon='checkmark'
+                                        onClick={this.onChangeTrackSettings}
+                                        positive
+                                        />
+                                    </Modal.Actions>
+                                    </Modal>
                                     
                                 </tr>
                                 <tr>
