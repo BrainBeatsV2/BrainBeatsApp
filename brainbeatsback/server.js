@@ -189,6 +189,7 @@ app.post('/api/register', function (req, res) {
             });
 
             postUser.save();
+            return res.status(200).json("Successful Register");
         }
     })
     .catch(err => {
