@@ -142,7 +142,7 @@ class Login extends Component {
 		axios.post('/api/login', userObject, options)
 			.then((res) => {
 				//console.log(res.data)
-				if(res.data === "successful register" || 200)
+				if(res.data === "login successful" || 200)
 				{
 					this.setState({ redirect: "/dashboard"});
 				}
@@ -168,7 +168,11 @@ class Login extends Component {
 
 		axios.post('/api/register', userObject, options)
 			.then((res) => {
-				console.log(res.data)
+				//console.log(res.data)
+				if(res.data === "Successful Register" || 200)
+				{
+					this.setState({ redirect: "/dashboard"});
+				}
 			}).catch((error) => {
 				console.log(error)
 			});

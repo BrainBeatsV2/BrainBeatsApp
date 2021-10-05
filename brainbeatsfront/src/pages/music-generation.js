@@ -1,5 +1,6 @@
 import React, { Component, useState } from 'react';
 import isElectron from '../library/isElectron';
+import { Redirect } from "react-router-dom";
 // const { ipcRenderer } = window.require('electron');
 // const { ipcRenderer } = window.require('electron');
 
@@ -88,6 +89,10 @@ class MusicGeneration extends Component {
     }
 
     render() {
+        if(!isElectron())
+        {
+            return <Redirect to="/" />
+        }
         return (
 
 

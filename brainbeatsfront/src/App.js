@@ -20,13 +20,14 @@ function App() {
 
       <Switch>
       <Route path="/" exact component={Home} render={props =>
-        (<Home {...props} pieceOfState={this.state.pieceOfState}/>)}/> 
+        (<Home {...props} username={this.state.username} password={this.state.password} email={this.state.email} />)}/> 
       <Route path="/login" exact component={Login} render={props =>
-        (<Login {...props} pieceOfState={this.state.pieceOfState}/>)}/> 
+        (<Login {...props} username={this.state.username} password={this.state.password} email={this.state.email} />)}/> 
       <Route path="/music-generation" exact component={MusicGeneration} render={props =>
-        (<MusicGeneration {...props} pieceOfState={this.state.pieceOfState}/>)}/> 
+        (<MusicGeneration {...props} username={this.state.username} password={this.state.password} email={this.state.email} />)}/> 
       <Route path="/dashboard" exact component={Dashboard} render={props =>
-        (<Dashboard {...props} pieceOfState={this.state.pieceOfState}/>)}/> 
+        (<Dashboard {...props} username={this.state.username} password={this.state.password} email={this.state.email} />)}/> 
+      <Route component={Home}/>
       </Switch>
     </Router>
   );

@@ -1,13 +1,21 @@
 import React, { Component, useState } from 'react';
+import isElectron from '../library/isElectron';
+import { Redirect } from "react-router-dom";
 class Dashboard extends Component {
     constructor(props) {
         super(props);
         this.state = {
           name: "React",
-          showMenu:false
+          showMenu:false,
+          username: '',
+			    password: '',
+			    email: '',
+          redirect: null,
+          electron: null,
         };
         this.onShowMenu = this.onShowMenu.bind(this);
         this.onHideMenu = this.onHideMenu.bind(this);
+        
       }
       onShowMenu(){
         this.setState({
@@ -19,7 +27,41 @@ class Dashboard extends Component {
 			showMenu: false
 		  });
       }
+  
+      onLogout = (e) => {
+        e.preventDefault();
+        this.setState({
+          username: '',
+          password: '',
+			    email: '',
+        });
+        if(isElectron())
+        {
+          this.setState({ redirect: "/music-generation"});
+        }else{
+          this.setState({ redirect: "/"});
+        }
+
+      }
+    
       render() {
+        if (this.state.redirect) 
+		    {
+		    	return <Redirect to={this.state.redirect} />
+		    }
+        if(this.state.electron == null)
+        {
+          if(isElectron())
+          {
+            this.setState({
+              electron: true
+            });
+          }else{
+            this.setState({
+              electron: false
+            });
+        }
+        }
         return (
 
 
@@ -29,19 +71,19 @@ class Dashboard extends Component {
             <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
             <div className="nav__button" onClick={this.onShowMenu}  onMouseEnter={this.onShowMenu} onMouseLeave={this.onHideMenu}><i class="material-icons">account_circle</i>
 
-<ul className="nav__menu" style={{display: this.state.showMenu ? 'block' : 'none' }}>
-    <li className="nav_menu-item"><a href="#">My Account</a></li>
-    <li className="nav_menu-item"><a href="#">Settings</a></li>
-    <li className="nav_menu-item"><a href="#">Log Out</a></li>
-</ul>
-</div>
+            <ul className="nav__menu" style={{display: this.state.showMenu ? 'block' : 'none' }}>
+                <li className="nav_menu-item"><a href="#">My Account</a></li>
+                <li className="nav_menu-item"><a href="#">Settings</a></li>
+                <li className="nav_menu-item"><a href="#" onClick={this.onLogout}>Log Out</a></li>
+            </ul>
+            </div>
             <h3>My Tracks </h3>
             
             <br />
             <br />
             <br />
             <br />
-            <div id="top-bar"><div class="midi-add"><a href="/music-generation"><i class="material-icons">add</i> Add Track</a></div></div>
+            <div id="top-bar"><div class="midi-add" style={{display: this.state.electron ? 'block' : 'none' }}><a href="/music-generation"><i class="material-icons" >add</i> Add Track</a></div></div>
                  <div id="midi-tracks">
                      
                    

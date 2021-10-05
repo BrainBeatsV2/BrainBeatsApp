@@ -13,7 +13,6 @@ const User = mongoose.Schema({
     password: {
         type: String,
         required: true,
-        unique: true,
     },
     favoritesList: {
         type: Array,
