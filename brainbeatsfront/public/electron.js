@@ -94,7 +94,8 @@ ipcMain.on('end_eeg_script', (event, args) => {
   urlMIDI = write.dataUri();
   player.loadDataUri(urlMIDI);
   midiString = getMidiString(write);
-  event.sender.send('end_eeg_script',midiString); 
+  console.log(midiString);
+  event.sender.send('end_eeg_script', midiString); 
   writeMIDIfile(write);
 
   eegDataQueue = [];

@@ -2,10 +2,11 @@ import React, { Component, useState } from 'react';
 import isElectron from '../library/isElectron';
 // const { ipcRenderer } = window.require('electron');
 // const { ipcRenderer } = window.require('electron');
-
+import 'html-midi-player'
 
 
 import { Button, Checkbox, Grid, Modal, Header , Segment, Dimmer, Loader} from 'semantic-ui-react'
+import { PlayerElement } from 'html-midi-player';
 class MusicGeneration extends Component {
     
     constructor(props) {
@@ -35,7 +36,7 @@ class MusicGeneration extends Component {
             privacySettings: 0,
             trackLink: "brainbeats.dev/play/",
             loggedout: 0,
-            midiString: ''
+            midiString: 'data:audio/midi;base64,TVRoZAAAAAYAAAABAIBNVHJrAAAFpADAAQCQPkArgD5AAJA+QCqAPkAAkEBAK4BAQACQPkArgD5AAJA+QCqAPkAAkEBAK4BAQACQQEAggEBAAJA+QCCAPkAAkD5AIIA+QACQQEBAgEBAAJBAQECAQEAAkD5AQIA+QACQQ0BAgENAAJAAQECAAEAAkEVAQIBFQACQAEBAgABAAJBDQECAQ0AAkEVAgQCARUAAkEBAgQCAQEAAkEBAgQCAQEAAkEVAgQCARUAAkABAIIAAQACQRUAggEVAAJBFQCCARUAAkENAIIBDQACQQEAggEBAAJBFQCCARUAAkEVAIIBFQACQQEAQgEBAAJBAQBCAQEAAkD5AEIA+QACQQEAQgEBAAJBDQBCAQ0AAkD5AEIA+QACQQEArgEBAAJBAQECAQEAAkENAQIBDQACQAEBAgABAAJAAQECAAEAAkENAQIBDQACQAEBAgABAAJBFQBWARUAAkENAFYBDQACQRUAWgEVAAJBFQBWARUAAkEVAFYBFQACQQ0AWgENAAJBFQIEAgEVAAJBAQIEAgEBAAJBAQIEAgEBAAJBAQIEAgEBAAJBAQCqAQEAAkEVAK4BFQACQQ0ArgENAAJBDQCqAQ0AAkD5AIIA+QACQQEAggEBAAJBDQCCAQ0AAkEBAIIBAQACQQECBAIBAQACQRUArgEVAAJAAQCuAAEAAkEVAKoBFQACQAEArgABAAJBDQCuAQ0AAkABAKoAAQACQAEArgABAAJBFQCuARUAAkABAFYAAQACQRUAVgEVAAJBFQBaARUAAkEVAFYBFQACQRUAVgEVAAJBDQBaAQ0AAkD5AFYA+QACQPkAVgD5AAJBAQIEAgEBAAJBFQCuARUAAkABAK4AAQACQRUAqgEVAAJAAQCuAAEAAkENAK4BDQACQRUAqgEVAAJBAQBaAQEAAkEBAFYBAQACQRUAVgEVAAJBDQBaAQ0AAkABAIIAAQACQRUAggEVAAJBFQCCARUAAkEVAIIBFQACQQ0AggENAAJBFQCCARUAAkEBAIIBAQACQPkAggD5AAJBAQCqAQEAAkENAK4BDQACQQEArgEBAAJBDQCqAQ0AAkD5AK4A+QACQQEBAgEBAAJBAQECAQEAAkENAQIBDQACQRUBAgEVAAJBAQECAQEAAkEVAQIBFQACQAEBAgABAAJBFQECARUAAkEBAIIBAQACQQEAggEBAAJBAQIEAgEBAAJBAQIEAgEBAAJBDQIEAgENAAJBDQIEAgENAAJBAQIEAgEBAAJBFQIEAgEVAAJBDQIEAgENAAJBFQIEAgEVAAJAAQCCAAEAAkEVAIIBFQACQQEAggEBAAJBDQCCAQ0AAkEBAIIBAQACQQ0AggENAAJBDQBCAQ0AAkABAEIAAQACQQ0AQgENAAJA+QBCAPkAAkEBAFYBAQACQQEAWgEBAAJA+QBWAPkAAkEBAFYBAQACQRUAQgEVAAJBFQBCARUAAkABAEIAAQACQQ0AQgENAAJBDQBCAQ0AAkD5AEIA+QACQQEAQgEBAAJBFQBCARUAAkEVAgQCARUAAkENAgQCAQ0AAkEVAgQCARUAAkABAgQCAAEAAkABAgQCAAEAAkENAgQCAQ0AAkENAgQCAQ0AAkEBAgQCAQEAAkD5AEIA+QACQQ0AWgENAAJBAQBWAQEAAkEVAFYBFQACQQ0ArgENAAJBFQIEAgEVAAJBAQIEAgEBAAJBFQIEAgEVAAJBFQBWARUAAkENAIIBDQACQQ0AggENAAJBAQCCAQEAAkENAIIBDQACQQEAggEBAAJBDQCCAQ0AAkEBAIIBAQACQQ0AggENAAJBAQBCAQEAAkEBAEIBAQACQQ0CBAIBDQACQPkCBAIA+QACQQECBAIBAQACQRUCBAIBFQACQAECBAIAAQACQRUCBAIBFQACQQ0CBAIBDQACQQECBAIBAQAD/LwA='
 
         };
         this.onStartRecording = this.onStartRecording.bind(this);
@@ -91,10 +92,10 @@ class MusicGeneration extends Component {
             window.ipcRenderer.send('end_eeg_script');
             window.ipcRenderer.on('end_eeg_script', (event, args) => {
                 console.log(args)
-                this.setState({ midiString: args })
+                this.setState({ midiString: 'data:audio/midi;base64,' + args })
                // this.player.load(args)
-                //this.player.play()
-                
+                //this.player.play() 
+                PlayerElement.start();
                 window.ipcRenderer.send('gen_midi');
             })
         }
@@ -106,7 +107,8 @@ class MusicGeneration extends Component {
         this.setState({
             playing: true
         });
-        window.ipcRenderer.send('play_midi');
+        
+       // window.ipcRenderer.send('play_midi');
 
     }
     // Paused MIDI
@@ -114,7 +116,8 @@ class MusicGeneration extends Component {
         this.setState({
             playing: false
         });
-        window.ipcRenderer.send('pause_midi');
+  
+        //window.ipcRenderer.send('pause_midi');
     }
     // Re-record MIDI
     onReRecord() {
@@ -256,7 +259,6 @@ class MusicGeneration extends Component {
 
                 
                 </Dimmer.Dimmable>
-
                 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
                 <div className="nav__button" onClick={this.onShowMenu} onMouseEnter={this.onShowMenu} onMouseLeave={this.onHideMenu}><i class="material-icons">account_circle</i>
 
@@ -275,7 +277,11 @@ class MusicGeneration extends Component {
                 </div>
     
                 <div class="stream">
-                    Insert Brain Wave Visualizer Concept Here
+                <midi-player 
+                    src={this.state.midiString}
+                    >
+
+                </midi-player>
                 </div>
                 <br />
                 <br />
