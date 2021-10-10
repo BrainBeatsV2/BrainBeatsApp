@@ -298,7 +298,8 @@ app.post('/api/midis', async function(req, res) {
         Headers- Content-Type: application/json; charset=utf-8
         Body- {"email": "harry@hsauers.net", "password": "Passwd123!",
                 "midi_name": "midi_name1", "midi_data", "12345",
-                "midi_privacy": "private", "midi_notes": "lorem ipsum"}
+                "midi_privacy": "private", "midi_notes": "lorem ipsum"
+                "midi_bpm": "123" }
         Response- 200 OK
     * You MUST supply the exact Content-Type above, or it won't work.
     * Note the user's account info in the body.
@@ -314,6 +315,7 @@ app.post('/api/midis/create', async function(req, res) {
     var midi_model_id = body.midi_model_id;
     var midi_privacy = body.midi_privacy;
     var midi_notes = body.midi_notes;
+    var midi_bpm = body.midi_bpm;
 
     // validate input
     if (midi_name == null || midi_name == "") {
@@ -344,6 +346,7 @@ app.post('/api/midis/create', async function(req, res) {
                 "model_id": midi_model_id,
                 "privacy": midi_privacy,
                 "notes": midi_notes,
+                "bpm": midi_bpm, 
             });
 
             newMidi.save();

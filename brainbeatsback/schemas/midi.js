@@ -23,6 +23,9 @@ const Midi = mongoose.Schema({
     notes: {
         type: String, 
     }, 
+    bpm: {
+        type: String, 
+    }, 
     createdAt: {
         type: Date,
         default: Date.now(),
