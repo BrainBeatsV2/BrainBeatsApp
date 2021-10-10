@@ -3,14 +3,15 @@ import isElectron from '../library/isElectron';
 // const { ipcRenderer } = window.require('electron');
 // const { ipcRenderer } = window.require('electron');
 import 'html-midi-player'
-
+import Plot from 'react-plotly.js';
+import recording_img from '../images/recording.gif'
 
 import { Button, Checkbox, Grid, Modal, Header , Segment, Dimmer, Loader} from 'semantic-ui-react'
 import { PlayerElement } from 'html-midi-player';
 class MusicGeneration extends Component {
     
     constructor(props) {
-        
+      
         super(props);
         this.state = {
             name: "React",
@@ -24,7 +25,7 @@ class MusicGeneration extends Component {
             model: 1,
             instrument: 1,
             key: "C",
-            scale: "Pentatonic",
+            scale: "pentatonic",
             timing: "4/4",
             bpm: 120,
             minRange: 3,
@@ -36,6 +37,9 @@ class MusicGeneration extends Component {
             privacySettings: 0,
             trackLink: "brainbeats.dev/play/",
             loggedout: 0,
+            playElem: null,
+            elapsedTime: 20,
+            finalTime: 0,
             midiString: 'data:audio/midi;base64,TVRoZAAAAAYAAAABAIBNVHJrAAAFpADAAQCQPkArgD5AAJA+QCqAPkAAkEBAK4BAQACQPkArgD5AAJA+QCqAPkAAkEBAK4BAQACQQEAggEBAAJA+QCCAPkAAkD5AIIA+QACQQEBAgEBAAJBAQECAQEAAkD5AQIA+QACQQ0BAgENAAJAAQECAAEAAkEVAQIBFQACQAEBAgABAAJBDQECAQ0AAkEVAgQCARUAAkEBAgQCAQEAAkEBAgQCAQEAAkEVAgQCARUAAkABAIIAAQACQRUAggEVAAJBFQCCARUAAkENAIIBDQACQQEAggEBAAJBFQCCARUAAkEVAIIBFQACQQEAQgEBAAJBAQBCAQEAAkD5AEIA+QACQQEAQgEBAAJBDQBCAQ0AAkD5AEIA+QACQQEArgEBAAJBAQECAQEAAkENAQIBDQACQAEBAgABAAJAAQECAAEAAkENAQIBDQACQAEBAgABAAJBFQBWARUAAkENAFYBDQACQRUAWgEVAAJBFQBWARUAAkEVAFYBFQACQQ0AWgENAAJBFQIEAgEVAAJBAQIEAgEBAAJBAQIEAgEBAAJBAQIEAgEBAAJBAQCqAQEAAkEVAK4BFQACQQ0ArgENAAJBDQCqAQ0AAkD5AIIA+QACQQEAggEBAAJBDQCCAQ0AAkEBAIIBAQACQQECBAIBAQACQRUArgEVAAJAAQCuAAEAAkEVAKoBFQACQAEArgABAAJBDQCuAQ0AAkABAKoAAQACQAEArgABAAJBFQCuARUAAkABAFYAAQACQRUAVgEVAAJBFQBaARUAAkEVAFYBFQACQRUAVgEVAAJBDQBaAQ0AAkD5AFYA+QACQPkAVgD5AAJBAQIEAgEBAAJBFQCuARUAAkABAK4AAQACQRUAqgEVAAJAAQCuAAEAAkENAK4BDQACQRUAqgEVAAJBAQBaAQEAAkEBAFYBAQACQRUAVgEVAAJBDQBaAQ0AAkABAIIAAQACQRUAggEVAAJBFQCCARUAAkEVAIIBFQACQQ0AggENAAJBFQCCARUAAkEBAIIBAQACQPkAggD5AAJBAQCqAQEAAkENAK4BDQACQQEArgEBAAJBDQCqAQ0AAkD5AK4A+QACQQEBAgEBAAJBAQECAQEAAkENAQIBDQACQRUBAgEVAAJBAQECAQEAAkEVAQIBFQACQAEBAgABAAJBFQECARUAAkEBAIIBAQACQQEAggEBAAJBAQIEAgEBAAJBAQIEAgEBAAJBDQIEAgENAAJBDQIEAgENAAJBAQIEAgEBAAJBFQIEAgEVAAJBDQIEAgENAAJBFQIEAgEVAAJAAQCCAAEAAkEVAIIBFQACQQEAggEBAAJBDQCCAQ0AAkEBAIIBAQACQQ0AggENAAJBDQBCAQ0AAkABAEIAAQACQQ0AQgENAAJA+QBCAPkAAkEBAFYBAQACQQEAWgEBAAJA+QBWAPkAAkEBAFYBAQACQRUAQgEVAAJBFQBCARUAAkABAEIAAQACQQ0AQgENAAJBDQBCAQ0AAkD5AEIA+QACQQEAQgEBAAJBFQBCARUAAkEVAgQCARUAAkENAgQCAQ0AAkEVAgQCARUAAkABAgQCAAEAAkABAgQCAAEAAkENAgQCAQ0AAkENAgQCAQ0AAkEBAgQCAQEAAkD5AEIA+QACQQ0AWgENAAJBAQBWAQEAAkEVAFYBFQACQQ0ArgENAAJBFQIEAgEVAAJBAQIEAgEBAAJBFQIEAgEVAAJBFQBWARUAAkENAIIBDQACQQ0AggENAAJBAQCCAQEAAkENAIIBDQACQQEAggEBAAJBDQCCAQ0AAkEBAIIBAQACQQ0AggENAAJBAQBCAQEAAkEBAEIBAQACQQ0CBAIBDQACQPkCBAIA+QACQQECBAIBAQACQRUCBAIBFQACQAECBAIAAQACQRUCBAIBFQACQQ0CBAIBDQACQQECBAIBAQAD/LwA='
 
         };
@@ -56,11 +60,14 @@ class MusicGeneration extends Component {
         this.setOpen = this.setOpen.bind(this);
         this.onSaveRecording = this.onSaveRecording.bind(this);
         this.onChangeTrackSettings = this.onChangeTrackSettings.bind(this);
-        
+        this.changeInstrument = this.changeInstrument.bind(this);
+        this.changeKey = this.changeKey.bind(this);
+        this.changeScale = this.changeScale.bind(this);
 
     }
     // Start MIDI Recording
     onStartRecording() {
+        
         this.setState({
             recording: true,
             saveOptions: false,
@@ -69,10 +76,14 @@ class MusicGeneration extends Component {
 
         // If not running the EEG Script, then run it!
         if (!this.state.isEEGScriptRunning) {
-            console.log('Started recording!')
+            console.log('Started recording!');
+            console.log(this.state.instrument);
+         
+            window.ipcRenderer.send('set_instrument',this.state.instrument);
             window.ipcRenderer.send('start_eeg_script');
             window.ipcRenderer.on('start_eeg_script', (event, args) => {
                 console.log(args)
+
             })
         }
         this.setState({ isEEGScriptRunning: !this.state.isEEGScriptRunning })
@@ -86,28 +97,33 @@ class MusicGeneration extends Component {
             disabledFields : ''
         });
 
+
         // If EEG Script is running, stop it right now
         if (this.state.isEEGScriptRunning) {
+           
             console.log('Ended recording!')
-            window.ipcRenderer.send('end_eeg_script');
+            // Parameters: key,scale
+            window.ipcRenderer.send('end_eeg_script', this.state.key, this.state.scale, this.state.minRange, this.state.maxRange);
             window.ipcRenderer.on('end_eeg_script', (event, args) => {
                 console.log(args)
                 this.setState({ midiString: 'data:audio/midi;base64,' + args })
                // this.player.load(args)
                 //this.player.play() 
-                PlayerElement.start();
+               
                 window.ipcRenderer.send('gen_midi');
             })
         }
         this.setState({ isEEGScriptRunning: !this.state.isEEGScriptRunning })
     }
+    
 
     // Start Playing MIDI
     onStartPlaying() {
         this.setState({
             playing: true
         });
-        
+        var player = document.querySelector("midi-player");
+        player.start();
        // window.ipcRenderer.send('play_midi');
 
     }
@@ -116,7 +132,8 @@ class MusicGeneration extends Component {
         this.setState({
             playing: false
         });
-  
+        var player = document.querySelector("midi-player");
+        player.stop();
         //window.ipcRenderer.send('pause_midi');
     }
     // Re-record MIDI
@@ -242,10 +259,27 @@ class MusicGeneration extends Component {
         })
 
     }
-
 	handleTrackName = (e) => {
 		this.setState({ trackName: e.target.value });
 	};
+    componentDidMount() {
+        var player = document.querySelector("midi-player");
+
+        // Player Stops
+        player.addEventListener("stop", function() {
+           if ((this.currentTime == this.duration ))
+                console.log("song ended");
+
+        });
+        // Player isPlaying
+        player.addEventListener("note", function() {
+           
+           
+        });
+    }
+    changeInstrument(event) { this.setState({instrument: event.target.value});  }
+    changeKey(event) { this.setState({key: event.target.value});  }
+    changeScale(event) { this.setState({scale: event.target.value});  }
     changePrivacy = (e, { value }) => this.setState({ privacySettings: value });
     render() {
         return (
@@ -260,15 +294,22 @@ class MusicGeneration extends Component {
                 
                 </Dimmer.Dimmable>
                 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
-                <div className="nav__button" onClick={this.onShowMenu} onMouseEnter={this.onShowMenu} onMouseLeave={this.onHideMenu}><i class="material-icons">account_circle</i>
-
-                    <ul className="nav__menu" style={{ display: this.state.showMenu ? 'block' : 'none' }}>
+                <script src="https://cdn.jsdelivr.net/combine/npm/tone@14.7.58,npm/@magenta/music@1.22.1/es6/core.js,npm/focus-visible@5,npm/html-midi-player@1.4.0"></script>
+                <div className="nav__button" onClick={this.onShowMenu} onMouseEnter={this.onShowMenu} onMouseLeave={this.onHideMenu}>
+                    <i class="material-icons">account_circle</i>
+                    
+                    <ul className="nav__menu_loggedin" style={{ display: (this.state.showMenu && !this.state.loggedout) ? 'inline-block' : 'none' }}>
                         <li className="nav_menu-item"><a href="#">My Account</a></li>
                         <li className="nav_menu-item"><a href="#">Settings</a></li>
                         <li className="nav_menu-item"><a href="#">Log Out</a></li>
                     </ul>
+                    <ul className="nav__menu_loggedout" style={{ display: (this.state.showMenu && this.state.loggedout) ? 'inline-block' : 'none' }}>
+                        <li className="nav_menu-item"><a href="/login">Login</a></li>
+                        <li className="nav_menu-item"><a href="#">Help</a></li>
+                    </ul>
+                    
                 </div>
-                <a id="back" href="/dashboard" style={{display: this.state.loggedout ? 'none': 'block'}}><i class="material-icons" >chevron_left</i> <span>DASHBOARD</span></a>
+                <a id="back" href="/dashboard" style={{display: this.state.loggedout ? 'none': 'inline-block'}}><i class="material-icons" >chevron_left</i> <span>DASHBOARD</span></a>
                 
                 <div id="headset_selection" class="">
                     <p>{this.state.headsetMode} Mode</p>
@@ -277,11 +318,13 @@ class MusicGeneration extends Component {
                 </div>
     
                 <div class="stream">
-                <midi-player 
-                    src={this.state.midiString}
+                <img id="recording_gif" src={recording_img} class={this.state.recording? 'fadeIn' : 'fadeOut'} alt='logo' />
+                <midi-player style={{display:'none'}}  
+                    src={this.state.midiString} 
                     >
 
                 </midi-player>
+
                 </div>
                 <br />
                 <br />
@@ -291,7 +334,7 @@ class MusicGeneration extends Component {
                 <br />
                 <div id="stream-bar">
                     <div class="column">
-                        <div id="rerecord" style={{ display: this.state.saveOptions ? 'block' : 'none', float: 'right' }}>
+                        <div id="rerecord" style={{ display: this.state.saveOptions ? 'inline-block' : 'none'}}>
 
                             <table >
                                 <tr>
@@ -321,7 +364,7 @@ class MusicGeneration extends Component {
                                         </select>
                                     </td>
                                     <td>
-                                        <select id="parameter_instrument" disabled={this.state.recording}>
+                                        <select id="parameter_instrument" disabled={this.state.recording} value={this.state.instrument} onChange={this.changeInstrument}>
                                             <option value="1">Piano</option>
                                             <option value="13">Xylophone</option>
                                             <option value="19">Organ (Church)</option>
@@ -341,7 +384,7 @@ class MusicGeneration extends Component {
                             </table>
                         </div>
                     </div>
-                    <div class="column">
+                    <div class="column" style={{width: '10%'}}>
                         <div id="play_stream" style={{ display: this.state.saveOptions ? 'block' : 'none' }}>
                             <i class="material-icons" onClick={this.onStartPlaying} style={{ display: this.state.playing ? 'none' : 'inline-block' }}>play_circle_filled</i>
                             <i class="material-icons" onClick={this.onStopPlaying} style={{ display: this.state.playing ? 'inline-block' : 'none' }}>pause</i>
@@ -416,21 +459,28 @@ class MusicGeneration extends Component {
                                 </tr>
                                 <tr>
                                     <td>
-                                        <select id="parameter_key" disabled={this.state.recording}>
+                                        <select id="parameter_key" disabled={this.state.recording} value={this.state.key} onChange={this.changeKey}>
                                             <option value="C">C</option>
+                                            <option value="Db">Db</option>
                                             <option value="D">D</option>
+                                            <option value="Eb">Eb</option>
                                             <option value="E">E</option>
                                             <option value="F">F</option>
+                                            <option value="Gb">Gb</option>
                                             <option value="G">G</option>
+                                            <option value="Ab">Ab</option>
                                             <option value="A">A</option>
+                                            <option value="Bb">Bb</option>
                                             <option value="B">B</option>
                                         </select>
                                     </td>
                                     <td>
-                                        <select id="parameter_scale" disabled={this.state.recording}>
+                                        <select id="parameter_scale" disabled={this.state.recording} value={this.state.scale} onChange={this.changeScale}>
                                             <option value="pentatonic">Pentatonic</option>
+                                            <option value="major">Major</option>
+                                            <option value="minor">Minor</option>
                                             <option value="chromatic">Chromatic</option>
-                                            <option value="whole_tone">Whole Tone</option>
+                                            <option value="singular">Singular</option>
                                         </select>
                                     </td>
                                     <td>

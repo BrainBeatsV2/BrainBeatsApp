@@ -15,8 +15,8 @@ function App() {
   return (
 
     <Router>
-      {curLocation === '/' && <Navbar />}
-      {curLocation === '/login' && <Navbar />}
+      {curLocation === '/' && <Navbar /> }
+      {curLocation === '/login' && <Navbar /> }
 
       <Switch>
         <Route path="/" exact component={Home} />

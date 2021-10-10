@@ -185,7 +185,7 @@ def main():
                           'start sleeping in the main thread')
 
     while(True):
-        time.sleep(4)
+        time.sleep(1.3)
 
         # TODO This is using only the eeg data from the second channel, in the future it'd be best to average the values between all of the channels
         eeg_channel = eeg_channels_count[1]

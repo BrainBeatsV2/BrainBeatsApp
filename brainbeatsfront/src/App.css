@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300&family=Poppins&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300&family=Montserrat&display=swap');
 *{
     font-family: 'Montserrat', sans-serif;
     box-sizing: border-box;
@@ -59,12 +59,12 @@
 
 body, html {
 	height: 100%;
-	font-family: 'Poppins', sans-serif;
+	font-family: 'Montserrat', sans-serif;
 }
 
 /*---------------------------------------------*/
 a {
-	font-family: 'Poppins';
+	font-family: 'Montserrat';
 	font-size: 14px;
 	line-height: 1.7;
 	color: #666666;
@@ -91,10 +91,11 @@ a:hover {
 /*---------------------------------------------*/
 h1,h2,h3,h4,h5,h6 {
 	margin: 0px;
+  font-family: 'Montserrat'!important;
 }
 
 p {
-	font-family: 'Poppins';
+	font-family: 'Montserrat';
 	font-size: 14px;
 	line-height: 1.7;
 	color: white  ;
@@ -161,18 +162,30 @@ iframe {
 /*//////////////////////////////////////////////////////////////////
 [ Utility ]*/
 .txt1 {
-  font-family: 'Poppins';
+  font-family: 'Montserrat';
   font-size: 13px;
   color: var(--hpcontainer-fc); /* info color */
   line-height: 1.5;
 }
 
 .txt2 {
-  font-family: 'Poppins';
+  font-family: 'Montserrat';
   font-size: 13px;
   color: var(--hplinks-fc); /* link color */
   line-height: 1.5;
+  cursor: pointer;
 }
+
+.p-t-5
+{
+  padding-top:5px;
+}
+.p-t-15
+{
+  padding-top:15px;
+  padding-bottom: 15px;
+}
+
 
 /*//////////////////////////////////////////////////////////////////
 [ login ]*/
@@ -202,7 +215,7 @@ iframe {
   background: var(--hpcontainer-bg); /* inner bg color */
   border-radius: 10px;
   overflow: hidden;
-  padding: 50px 55px 33px 55px;
+  padding: 33px 33px 33px 33px;
 
   box-shadow: 0 5px 10px 0px rgba(0, 0, 0, 0.1);
   -moz-box-shadow: 0 5px 10px 0px rgba(0, 0, 0, 0.1);
@@ -244,13 +257,15 @@ iframe {
     }
     .stream
     {
-        background:#777;
+        background:black;
         margin-left:100px;
         margin-right:100px;
         margin-top:40px;
         color:white;
         text-align: center;
-        padding:200px;
+        padding:100px;
+        border-radius:10px;
+        min-height:305px;
 
     }
     .parameters{
@@ -265,7 +280,7 @@ iframe {
 
 .login100-form-title {
   display: block;
-  font-family: Poppins-Bold;
+  font-family: 'Montserrat';
   font-size: 30px;
   color: var(--hpcontainer-title); /* Form title color */
   line-height: 1.2;
@@ -286,7 +301,7 @@ iframe {
 }
 
 .input100 {
-  font-family: 'Poppins';
+  font-family: 'Montserrat';
   font-size: 15px;
   color:  var(--hpinput-fc); /* input text color */
   line-height: 1.2;
@@ -300,6 +315,7 @@ iframe {
 
 /*---------------------------------------------*/
 .focus-input100 {
+  font-family: 'Montserrat';
   position: absolute;
   display: block;
   width: 100%;
@@ -331,7 +347,7 @@ iframe {
 }
 
 .focus-input100::after {
-  font-family: 'Poppins';
+  font-family: 'Montserrat';
   font-size: 15px;
   color: #999999;
   line-height: 1.2;
@@ -349,7 +365,9 @@ iframe {
   -moz-transition: all 0.4s;
   transition: all 0.4s;
 }
-
+button, input, optgroup, select, textarea{
+  font-family: 'Montserrat'!important;
+}
 .input100:focus + .focus-input100::after {
   top: -15px;
 }
@@ -451,7 +469,7 @@ iframe {
 }
 
 .login100-form-btn {
-  font-family: Poppins-Medium;
+  font-family: 'Montserrat';
   font-size: 15px;
   color: var(--hpbuttons-fc); /* form button forecolor */
   line-height: 1.2;
@@ -635,7 +653,7 @@ margin-bottom:10px;
 {
   color:white;
   font-size:50px;
-  padding:5px;
+  
   cursor:pointer;
 }
 #start_stream
@@ -681,7 +699,9 @@ input, select{
 }
 .column {
   float: left;
-  width: 33.33%;
+  width: 45%;
+  line-height: 10px;
+ 
 }
 
 /* Clear floats after the columns */
@@ -695,14 +715,18 @@ input, select{
   display:inline-block;
   font-size:60px;
   float:right;
+  cursor: pointer;
 }
-.nav__menu
+.nav__menu_loggedin, .nav__menu_loggedout
 {
   background:black;
   display:inline-block;
   padding:20px;
   border-radius:10px;
   float:right;
+  z-index: 4;
+  position:absolute;
+  right:110px;
 }
 .nav_menu-item a
 {
@@ -772,4 +796,30 @@ width:100%;
   width: 180px;
   background: #eee;
   color: #424242;
+}
+#recording_gif{
+  width:100%;
+ max-width: 800px;
+  -webkit-user-drag: none;
+-khtml-user-drag: none;
+-moz-user-drag: none;
+-o-user-drag: none;
+user-drag: none;
+
+  border-radius: 10;
+  opacity:0.9;
+}
+.fadeOut{
+  opacity:0;
+  width:0;
+  height:0;
+  transition: width 0.5s 0.5s, height 0.5s 0.5s, opacity 0.5s;
+
+}
+.fadeIn{
+  opacity:1;
+  width:100px;
+  height:100px;
+  transition: width 0.5s, height 0.5s, opacity 0.5s 0.5s;
+
 }

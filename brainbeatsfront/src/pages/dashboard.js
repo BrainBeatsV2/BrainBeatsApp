@@ -29,11 +29,15 @@ class Dashboard extends Component {
             <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
             <div className="nav__button" onClick={this.onShowMenu}  onMouseEnter={this.onShowMenu} onMouseLeave={this.onHideMenu}><i class="material-icons">account_circle</i>
 
-<ul className="nav__menu" style={{display: this.state.showMenu ? 'block' : 'none' }}>
-    <li className="nav_menu-item"><a href="#">My Account</a></li>
-    <li className="nav_menu-item"><a href="#">Settings</a></li>
-    <li className="nav_menu-item"><a href="#">Log Out</a></li>
-</ul>
+            <ul className="nav__menu_loggedin" style={{ display: (this.state.showMenu && !this.state.loggedout) ? 'inline-block' : 'none' }}>
+                        <li className="nav_menu-item"><a href="#">My Account</a></li>
+                        <li className="nav_menu-item"><a href="#">Settings</a></li>
+                        <li className="nav_menu-item"><a href="#">Log Out</a></li>
+                    </ul>
+                    <ul className="nav__menu_loggedout" style={{ display: (this.state.showMenu && this.state.loggedout) ? 'inline-block' : 'none' }}>
+                        <li className="nav_menu-item"><a href="/login">Login</a></li>
+                        <li className="nav_menu-item"><a href="#">Help</a></li>
+                    </ul>
 </div>
             <h3>My Tracks </h3>
             
@@ -60,7 +64,7 @@ class Dashboard extends Component {
                      <div class="midi-track-play"><i class="material-icons midi-play">play_circle</i> User239 - Track 1</div>
                      <div class="midi-track-play"><i class="material-icons midi-play">play_circle</i> User203 - Woo</div>
                      <div class="midi-track-play"><i class="material-icons midi-play">play_circle</i> User009 - Piano Jazz</div>
-                  </div>
+            </div>
             </div>
            
     
