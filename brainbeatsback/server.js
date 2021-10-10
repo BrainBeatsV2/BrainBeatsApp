@@ -66,7 +66,7 @@ app.post('/api/requestreset', function(req, res) {
         if (doc == null) {
             res.status(404).send("Account does not exist.");
         } else {
-            res.status(200).send("Please check your email for a password reset link.");
+            res.status(200).send("Please check your email for a password reset token.");
 
             // generate token
             function genNumber() {
