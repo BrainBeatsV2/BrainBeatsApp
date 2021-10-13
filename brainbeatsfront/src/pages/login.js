@@ -1,6 +1,7 @@
 import React, { Component, useState } from 'react';
 import axios from 'axios';
-
+import logo from '../images/logo_dev.png';
+import isElectron from '../library/isElectron';
 class Login extends Component {
 	constructor(props) {
 		super(props);
@@ -181,22 +182,22 @@ class Login extends Component {
 	render() {
 		return (
 			<div class="container-login100">
+				
+
+					
 				<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
 				<div class="wrap-login100">
-
+					<img style={{height:'150px',margin: '0 auto', display: isElectron() ? 'block' : 'none'}} src={logo} alt='logo' />
 					<div id="banner" class="alert m-b-38" role="alert"></div>
 					<form id="loginform" action="" method="post" class="login100-form validate-form" style={{ display: this.state.showLogin ? 'block' : 'none' }} onSubmit={this.handleLogin}>
 						<div class="wrap-input100 validate-input" >
-							<input class="input100" type="text" name="USERNAME" value={this.state.username} onChange={this.handleUsername} required />
-							<span class="focus-input100" data-placeholder="Username or Email"></span>
+							<input class="input100" placeholder="Username or Email" type="text" name="USERNAME" value={this.state.username} onChange={this.handleUsername} required />
+							
 						</div>
 
 						<div class="wrap-input100 validate-input">
-							<span class="btn-show-pass">
-								<i class="material-icons">remove_red_eye</i>
-							</span>
-							<input class="input100" type="password" name="PASSWORD" value={this.state.password} onChange={this.handlePassword} required />
-							<span class="focus-input100" data-placeholder="Password"></span>
+							<input class="input100" placeholder="Password" type="password" name="PASSWORD" value={this.state.password} onChange={this.handlePassword} required />
+							
 						</div >
 						<input type="hidden" name="ACTION" value="LOGIN" />
 						<div class="container-login100-form-btn">
@@ -211,10 +212,10 @@ class Login extends Component {
 							<a class="txt2" onClick={this.onShowResetPassword}> Forgot Your Password?</a>
 						</div >
 
-						<div class="text-center p-t-55">
+						<div class="text-center p-t-15">
 							<span class="txt1" >
 								Don't have an account?
-							</span>
+							</span>&nbsp;
 							<a class="txt2 backtologin" href="#" onClick={this.onShowRegister}>
 								Sign Up
 							</a>
@@ -224,26 +225,21 @@ class Login extends Component {
 
 					<form id="registerform" action="" method="post" class="login100-form validate-form" style={{ display: this.state.showRegister ? 'block' : 'none' }} onSubmit={this.handleRegister}>
 						<div class="wrap-input100 validate-input">
-							<input class="input100" type="text" name="EMAIL" value={this.state.email} onChange={this.handleEmail} required />
-							<span class="focus-input100" data-placeholder="Email"></span>
+							<input placeholder="Email" class="input100" type="text" name="EMAIL" value={this.state.email} onChange={this.handleEmail} required />
+						
 						</div>
 						<div class="wrap-input100 validate-input">
-							<input class="input100" type="text" name="USERNAME" value={this.state.username} onChange={this.handleUsername} required />
-							<span class="focus-input100" data-placeholder="Username"></span>
+							<input placeholder="Username" class="input100" type="text" name="USERNAME" value={this.state.username} onChange={this.handleUsername} required />
+						
 						</div>
 						<div class="wrap-input100 validate-input">
-							<span class="btn-show-pass">
-								<i class="material-icons">remove_red_eye</i>
-							</span>
-							<input class="input100" type="password" name="PASSWORD" value={this.state.password} onChange={this.handlePassword} required />
-							<span class="focus-input100" data-placeholder="Password"></span>
+
+							<input class="input100" placeholder="Password" type="password" name="PASSWORD" value={this.state.password} onChange={this.handlePassword} required />
+							
 						</div >
 						<div class="wrap-input100 validate-input">
-							<span class="btn-show-pass">
-								<i class="material-icons">remove_red_eye</i>
-							</span>
-							<input class="input100" type="password" name="CONFIRM" required />
-							<span class="focus-input100" data-placeholder="Confirm Password"></span>
+							<input class="input100" placeholder="Confirm Password" type="password" name="CONFIRM" required />
+							
 						</div>
 						<input type="hidden" name="ACTION" value="REGISTER" />
 						<div class="container-login100-form-btn">
@@ -255,11 +251,11 @@ class Login extends Component {
 							</div>
 						</div>
 
-						<div class="text-center p-t-95">
+						<div class="text-center p-t-15">
 							<span class="txt1">
 								Already have an account?
 							</span>
-
+							&nbsp;
 							<a class="txt2 backtologin" href="#" onClick={this.onShowLogin}>
 								Login
 							</a>
@@ -281,11 +277,11 @@ class Login extends Component {
 							</div>
 						</div>
 
-						<div class="text-center p-t-95">
+						<div class="text-center p-t-15">
 							<span class="txt1" >
 								Already have an account?
 							</span>
-
+							&nbsp;
 							<a class="txt2 backtologin" href="#" onClick={this.onShowLogin}>
 								Login
 							</a>
@@ -318,6 +314,7 @@ class Login extends Component {
 							</div>
 						</div>
 					</form >
+					<a href="/music-generation" style={{'font-size':'16px',display: isElectron() ? 'block' : 'none'}}> <span style={{'font-size':'12px'}} class="material-icons">arrow_back_ios</span> Go Back </a>
 				</div >
 			</div >
 		);
