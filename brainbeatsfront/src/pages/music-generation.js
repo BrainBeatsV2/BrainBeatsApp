@@ -313,8 +313,8 @@ class MusicGeneration extends Component {
                 
                 <div id="headset_selection" class="">
                     <p>{this.state.headsetMode} Mode</p>
-                    <i class="material-icons" onClick={this.onSynthetic} style={{ color: (this.state.headsetMode == 'Synthetic') ? '#4d90fe' : '#000000' }}>memory</i>
-                    <i class="material-icons" onClick={this.onGanglion} style={{ color: (this.state.headsetMode == 'Ganglion') ? '#4d90fe' : '#000000' }}>headset</i>
+                    <i class="material-icons" onClick={this.onSynthetic} style={{ color: (this.state.headsetMode == 'Synthetic') ? 'white' : 'rgba(48,50,54)' }}>memory</i>
+                    <i class="material-icons" onClick={this.onGanglion} style={{ color: (this.state.headsetMode == 'Ganglion') ? 'white' : 'rgba(48,50,54)' }}>headset</i>
                 </div>
     
                 <div class="stream">
@@ -390,7 +390,7 @@ class MusicGeneration extends Component {
                             <i class="material-icons" onClick={this.onStopPlaying} style={{ display: this.state.playing ? 'inline-block' : 'none' }}>pause</i>
 
                         </div>
-                        <div id="start_stream" style={{ display: this.state.saveOptions ? 'none' : 'block' }}>
+                        <div id="start_stream" style={{ display: this.state.saveOptions ? 'none' : 'block',marginTop: '5px' }}>
                             <i class="material-icons" onClick={this.onStartRecording} style={{ display: this.state.recording ? 'none' : 'inline-block' }}>radio_button_unchecked</i>
                             <i class="material-icons" onClick={this.onStopRecording} style={{ color: 'red', display: this.state.recording ? 'inline-block' : 'none' }}>radio_button_checked</i>
                         </div>
@@ -450,8 +450,8 @@ class MusicGeneration extends Component {
                         </div>
                         <div id="parameters" style={{ display: this.state.saveOptions ? 'none' : 'block' }}>
                             <table>
-                                <tr>
-                                    <th>KEY</th>
+                                <tr >
+                                    <th >KEY</th>
                                     <th>SCALE</th>
                                     <th>TIMING</th>
                                     <th>BPM</th>
@@ -480,7 +480,6 @@ class MusicGeneration extends Component {
                                             <option value="major">Major</option>
                                             <option value="minor">Minor</option>
                                             <option value="chromatic">Chromatic</option>
-                                            <option value="singular">Singular</option>
                                         </select>
                                     </td>
                                     <td>

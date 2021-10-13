@@ -183,10 +183,9 @@ def main():
     board.start_stream(45000, args.streamer_params)
     BoardShim.log_message(LogLevels.LEVEL_INFO.value,
                           'start sleeping in the main thread')
-
+    #time.sleep(4)
     while(True):
-        time.sleep(1.3)
-
+        time.sleep(4)
         # TODO This is using only the eeg data from the second channel, in the future it'd be best to average the values between all of the channels
         eeg_channel = eeg_channels_count[1]
 
@@ -201,6 +200,7 @@ def main():
         print(str(json.dumps(eeg_data)))
         # Required to flush output for python to allow for python to output script!!!
         sys.stdout.flush()
+        #time.sleep(1)
 
 
 def print_debug(string):

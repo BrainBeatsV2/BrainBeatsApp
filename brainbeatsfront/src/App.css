@@ -61,6 +61,9 @@ body, html {
 	height: 100%;
 	font-family: 'Montserrat', sans-serif;
 }
+body{
+  background: #000!important;
+}
 
 /*---------------------------------------------*/
 a {
@@ -491,22 +494,29 @@ button, input, optgroup, select, textarea{
   left: 0;
 }
 
-#midi-tracks
+#midi-tracks,#other-tracks
 {
   background:#2d2d2d;
   border-radius: 5px;
   padding:20px;
   color:white;
-  max-width:100%;
+  max-width:50%;
+  width:48%;
+  margin: 0 auto;
 }
-#other-tracks
+.midi-track:hover,.midi-track-play:hover{
+  opacity:0.8;
+}
+.column-track
 {
-  background:#2d2d2d;
-  border-radius: 5px;
-  padding:20px;
+  max-width:50%;
+  width:48%;
+  text-align: center;
+  margin: 0 auto;
   color:white;
-  max-width:100%;
+  padding:10px;
 }
+
 #top-bar
 {
 
@@ -517,28 +527,30 @@ button, input, optgroup, select, textarea{
 margin-bottom:10px;
 
 }
-.midi-track
+
+.list i.material-icons{
+  margin-top: 0px;
+  font-size:19px;
+}
+.list {
+  width: 100%;
+  vertical-align: top;
+  display: flex;
+  margin: 0 auto;
+}
+.midi-track, .midi-track-play
 {
   background: #0058ab;
   border-radius:8px;
   padding:10px;
   display:inline-block;
-  width:300px;
+  width:100%;
   vertical-align: middle;
   color: white;
   margin:5px;
+  filter: drop-shadow(2px 4px 6px #2d2d2d );
 }
-.midi-track-play
-{
-  background: #d2d2d2;
-  border-radius:8px;
-  padding:20px;
-  display:inline-block;
-  width:300px;
-  vertical-align: middle;
-  color: #2d2d2d;
-  margin:5px;
-}
+
 .midi-settings
 {
   display:inline-block;
@@ -597,6 +609,7 @@ margin-bottom:10px;
 }
 .border-input{
   border:1px solid black;border-radius:5px;
+  height:32px;
 }
 /*------------------------------------------------------------------
 [ Responsive ]*/
@@ -634,7 +647,7 @@ margin-bottom:10px;
 
 #stream-bar
 {
-  background:black;
+  background: rgba(35,36,38,0.8);
   color:white;
   width:100%;
   height:80px;
@@ -647,7 +660,9 @@ margin-bottom:10px;
    bottom:0px;
 }
 #stream-bar th{
-  font-size:12px;
+  font-size: 10px;
+    padding: 5px;
+    color: gray;
 }
 #start_stream i, #play_stream i
 {
@@ -711,7 +726,7 @@ input, select{
   clear: both;
 }
 .nav__button i.material-icons{
-  color:#424242;
+  color:white;
   display:inline-block;
   font-size:60px;
   float:right;
@@ -719,7 +734,7 @@ input, select{
 }
 .nav__menu_loggedin, .nav__menu_loggedout
 {
-  background:black;
+  background:rgba(48,50,54);
   display:inline-block;
   padding:20px;
   border-radius:10px;
@@ -763,7 +778,7 @@ width:100%;
 }
 #headset_selection p
 {
-  color:black;
+  color:white;
 }
 #headset_selection i.material-icons
 {
