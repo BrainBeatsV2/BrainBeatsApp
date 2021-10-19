@@ -6,12 +6,12 @@ import 'html-midi-player'
 import Plot from 'react-plotly.js';
 import recording_img from '../images/recording.gif'
 
-import { Button, Checkbox, Grid, Modal, Header , Segment, Dimmer, Loader} from 'semantic-ui-react'
+import { Button, Checkbox, Grid, Modal, Header, Segment, Dimmer, Loader } from 'semantic-ui-react'
 import { PlayerElement } from 'html-midi-player';
 class MusicGeneration extends Component {
-    
+
     constructor(props) {
-      
+
         super(props);
         this.state = {
             name: "React",
@@ -67,55 +67,61 @@ class MusicGeneration extends Component {
     }
     // Start MIDI Recording
     onStartRecording() {
-        
+
         this.setState({
             recording: true,
             saveOptions: false,
-            disabledFields : 'disabled'
+            disabledFields: 'disabled'
         });
 
         // If not running the EEG Script, then run it!
         if (!this.state.isEEGScriptRunning) {
             console.log('Started recording!');
             console.log(this.state.instrument);
-         
-            window.ipcRenderer.send('set_instrument',this.state.instrument);
-            window.ipcRenderer.send('start_eeg_script');
+
+            // Sets the MIDI instrument for MIDI writer
+            window.ipcRenderer.send('set_instrument', this.state.instrument);
+
+            // Starts EEG script
+            window.ipcRenderer.send('start_eeg_script', {
+                data: "-m " + this.state.model + " -h " + this.state.headsetMode
+            });
+
+            // Opens a channel between the EEG script & recieves the output from the EEG script as args
             window.ipcRenderer.on('start_eeg_script', (event, args) => {
                 console.log(args)
-
             })
         }
         this.setState({ isEEGScriptRunning: !this.state.isEEGScriptRunning })
     }
-    
+
     // Stop MIDI Recording
     onStopRecording() {
         this.setState({
             recording: false,
             saveOptions: true,
-            disabledFields : ''
+            disabledFields: ''
         });
 
 
         // If EEG Script is running, stop it right now
         if (this.state.isEEGScriptRunning) {
-           
+
             console.log('Ended recording!')
             // Parameters: key,scale
             window.ipcRenderer.send('end_eeg_script', this.state.key, this.state.scale, this.state.minRange, this.state.maxRange);
             window.ipcRenderer.on('end_eeg_script', (event, args) => {
                 console.log(args)
                 this.setState({ midiString: 'data:audio/midi;base64,' + args })
-               // this.player.load(args)
+                // this.player.load(args)
                 //this.player.play() 
-               
+
                 window.ipcRenderer.send('gen_midi');
             })
         }
         this.setState({ isEEGScriptRunning: !this.state.isEEGScriptRunning })
     }
-    
+
 
     // Start Playing MIDI
     onStartPlaying() {
@@ -124,7 +130,7 @@ class MusicGeneration extends Component {
         });
         var player = document.querySelector("midi-player");
         player.start();
-       // window.ipcRenderer.send('play_midi');
+        // window.ipcRenderer.send('play_midi');
 
     }
     // Paused MIDI
@@ -157,57 +163,46 @@ class MusicGeneration extends Component {
         });
     }
     // Range : Decreased Min
-    onDecreaseMin()
-    {
-        if (this.state.minRange > 1)
-        {
+    onDecreaseMin() {
+        if (this.state.minRange > 1) {
             this.setState({
                 minRange: (this.state.minRange - 1)
             });
         }
     }
     // Range : Decreased Max
-    onDecreaseMax()
-    {
+    onDecreaseMax() {
         // Decrease max as long as max >= min
-        if (this.state.maxRange > this.state.minRange)
-        {
+        if (this.state.maxRange > this.state.minRange) {
             this.setState({
                 maxRange: (this.state.maxRange - 1)
             });
         }
     }
     // Range : Increase Min
-    onIncreaseMin()
-    {
+    onIncreaseMin() {
         // Increase min as long as min <= max
-        if (this.state.minRange < this.state.maxRange)
-        {
+        if (this.state.minRange < this.state.maxRange) {
             this.setState({
                 minRange: (this.state.minRange + 1)
             });
         }
     }
     // Range : Increase Max
-    onIncreaseMax()
-    {
-        if (this.state.maxRange < 7)
-        {
+    onIncreaseMax() {
+        if (this.state.maxRange < 7) {
             this.setState({
                 maxRange: (this.state.maxRange + 1)
             });
         }
     }
 
-    updateRange()
-    {
+    updateRange() {
         console.log("updated")
     }
     // Clicking Synthetic
-    onSynthetic()
-    {
-        if (this.state.headsetMode == "Ganglion")
-        {
+    onSynthetic() {
+        if (this.state.headsetMode == "Ganglion") {
             this.setState({
                 headsetMode: 'Synthetic'
             })
@@ -215,89 +210,84 @@ class MusicGeneration extends Component {
 
     }
     // Clicking Ganglion
-    onGanglion()
-    {
-        if (this.state.headsetMode == "Synthetic")
-        {
+    onGanglion() {
+        if (this.state.headsetMode == "Synthetic") {
             this.setState({
                 headsetMode: 'Ganglion'
             })
         }
     }
-    setOpen()
-    {
+    setOpen() {
         this.setState({
             saveModalOpen: !this.state.saveModalOpen
         })
     }
     // Clicking Save and Upload and show loading screen
-    onSaveRecording()
-    {
+    onSaveRecording() {
         this.setState({
             saving: true,
-            saved:true
+            saved: true
         })
         setTimeout(
-            function() {
+            function () {
                 this.setState({
                     saving: false,
-                    saved:true
+                    saved: true
                 })
             }
-            .bind(this),
+                .bind(this),
             3000
         );
     }
     // Radio Button privacy settings switch
 
     // Save Settings Button
-    onChangeTrackSettings()
-    {
+    onChangeTrackSettings() {
         this.setState({
             privacySettings: this.state.privacySettings,
             saveModalOpen: !this.state.saveModalOpen
         })
 
     }
-	handleTrackName = (e) => {
-		this.setState({ trackName: e.target.value });
-	};
+    handleTrackName = (e) => {
+        this.setState({ trackName: e.target.value });
+    };
     componentDidMount() {
         var player = document.querySelector("midi-player");
 
         // Player Stops
-        player.addEventListener("stop", function() {
-           if ((this.currentTime == this.duration ))
+        player.addEventListener("stop", function () {
+            if ((this.currentTime == this.duration))
                 console.log("song ended");
 
         });
         // Player isPlaying
-        player.addEventListener("note", function() {
-           
-           
+        player.addEventListener("note", function () {
+
+
         });
     }
-    changeInstrument(event) { this.setState({instrument: event.target.value});  }
-    changeKey(event) { this.setState({key: event.target.value});  }
-    changeScale(event) { this.setState({scale: event.target.value});  }
+    changeInstrument(event) { this.setState({ instrument: event.target.value }); }
+    changeKey(event) { this.setState({ key: event.target.value }); }
+    changeScale(event) { this.setState({ scale: event.target.value }); }
     changePrivacy = (e, { value }) => this.setState({ privacySettings: value });
     render() {
         return (
 
 
-            <div class="music-generation-bg"> 
+            <div class="music-generation-bg">
                 <Dimmer.Dimmable dimmed={this.state.saving}>
-                <Dimmer active={this.state.saving} page>
-                    <Loader>Uploading</Loader>
-                </Dimmer>
+                    <Dimmer active={this.state.saving} page>
+                        <Loader>Uploading</Loader>
+                    </Dimmer>
 
-                
+
                 </Dimmer.Dimmable>
                 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
                 <script src="https://cdn.jsdelivr.net/combine/npm/tone@14.7.58,npm/@magenta/music@1.22.1/es6/core.js,npm/focus-visible@5,npm/html-midi-player@1.4.0"></script>
                 <div className="nav__button" onClick={this.onShowMenu} onMouseEnter={this.onShowMenu} onMouseLeave={this.onHideMenu}>
                     <i class="material-icons">account_circle</i>
-                    
+
                     <ul className="nav__menu_loggedin" style={{ display: (this.state.showMenu && !this.state.loggedout) ? 'inline-block' : 'none' }}>
                         <li className="nav_menu-item"><a href="#">My Account</a></li>
                         <li className="nav_menu-item"><a href="#">Settings</a></li>
@@ -307,23 +297,23 @@ class MusicGeneration extends Component {
                         <li className="nav_menu-item"><a href="/login">Login</a></li>
                         <li className="nav_menu-item"><a href="#">Help</a></li>
                     </ul>
-                    
+
                 </div>
-                <a id="back" href="/dashboard" style={{display: this.state.loggedout ? 'none': 'inline-block'}}><i class="material-icons" >chevron_left</i> <span>DASHBOARD</span></a>
-                
+                <a id="back" href="/dashboard" style={{ display: this.state.loggedout ? 'none' : 'inline-block' }}><i class="material-icons" >chevron_left</i> <span>DASHBOARD</span></a>
+
                 <div id="headset_selection" class="">
                     <p>{this.state.headsetMode} Mode</p>
                     <i class="material-icons" onClick={this.onSynthetic} style={{ color: (this.state.headsetMode == 'Synthetic') ? 'white' : 'rgba(48,50,54)' }}>memory</i>
                     <i class="material-icons" onClick={this.onGanglion} style={{ color: (this.state.headsetMode == 'Ganglion') ? 'white' : 'rgba(48,50,54)' }}>headset</i>
                 </div>
-    
+
                 <div class="stream">
-                <img id="recording_gif" src={recording_img} class={this.state.recording? 'fadeIn' : 'fadeOut'} alt='logo' />
-                <midi-player style={{display:'none'}}  
-                    src={this.state.midiString} 
+                    <img id="recording_gif" src={recording_img} class={this.state.recording ? 'fadeIn' : 'fadeOut'} alt='logo' />
+                    <midi-player style={{ display: 'none' }}
+                        src={this.state.midiString}
                     >
 
-                </midi-player>
+                    </midi-player>
 
                 </div>
                 <br />
@@ -334,7 +324,7 @@ class MusicGeneration extends Component {
                 <br />
                 <div id="stream-bar">
                     <div class="column">
-                        <div id="rerecord" style={{ display: this.state.saveOptions ? 'inline-block' : 'none'}}>
+                        <div id="rerecord" style={{ display: this.state.saveOptions ? 'inline-block' : 'none' }}>
 
                             <table >
                                 <tr>
@@ -353,7 +343,7 @@ class MusicGeneration extends Component {
                                 <tr>
                                     <th>MODEL</th>
                                     <th>INSTRUMENT</th>
-                                    
+
                                     <th>MIN</th>
                                     <th>MAX</th>
                                 </tr>
@@ -377,20 +367,20 @@ class MusicGeneration extends Component {
                                             <option value="56">Trumpet</option>
                                         </select>
                                     </td>
-                                    <td><i class="material-icons changeOctave noselect" onClick={this.onDecreaseMin}>chevron_left</i> <input  type="text" class="border-input range"  onChange={this.updateRange} value={this.state.minRange} disabled={this.state.recording} /> <i class="material-icons changeOctave noselect" onClick={this.onIncreaseMin}>chevron_right</i></td>
-                                    <td><i class="material-icons changeOctave noselect " onClick={this.onDecreaseMax}>chevron_left</i> <input type="text" class="border-input range"  onChange={this.updateRange} value={this.state.maxRange} disabled={this.state.recording} /> <i class="material-icons changeOctave noselect" onClick={this.onIncreaseMax}>chevron_right</i></td>
-                             
+                                    <td><i class="material-icons changeOctave noselect" onClick={this.onDecreaseMin}>chevron_left</i> <input type="text" class="border-input range" onChange={this.updateRange} value={this.state.minRange} disabled={this.state.recording} /> <i class="material-icons changeOctave noselect" onClick={this.onIncreaseMin}>chevron_right</i></td>
+                                    <td><i class="material-icons changeOctave noselect " onClick={this.onDecreaseMax}>chevron_left</i> <input type="text" class="border-input range" onChange={this.updateRange} value={this.state.maxRange} disabled={this.state.recording} /> <i class="material-icons changeOctave noselect" onClick={this.onIncreaseMax}>chevron_right</i></td>
+
                                 </tr>
                             </table>
                         </div>
                     </div>
-                    <div class="column" style={{width: '10%'}}>
+                    <div class="column" style={{ width: '10%' }}>
                         <div id="play_stream" style={{ display: this.state.saveOptions ? 'block' : 'none' }}>
                             <i class="material-icons" onClick={this.onStartPlaying} style={{ display: this.state.playing ? 'none' : 'inline-block' }}>play_circle_filled</i>
                             <i class="material-icons" onClick={this.onStopPlaying} style={{ display: this.state.playing ? 'inline-block' : 'none' }}>pause</i>
 
                         </div>
-                        <div id="start_stream" style={{ display: this.state.saveOptions ? 'none' : 'block',marginTop: '5px' }}>
+                        <div id="start_stream" style={{ display: this.state.saveOptions ? 'none' : 'block', marginTop: '5px' }}>
                             <i class="material-icons" onClick={this.onStartRecording} style={{ display: this.state.recording ? 'none' : 'inline-block' }}>radio_button_unchecked</i>
                             <i class="material-icons" onClick={this.onStopRecording} style={{ color: 'red', display: this.state.recording ? 'inline-block' : 'none' }}>radio_button_checked</i>
                         </div>
@@ -406,39 +396,39 @@ class MusicGeneration extends Component {
                                         onClose={this.setOpen}
                                         onOpen={this.setOpen}
                                         open={this.state.saveModalOpen}
-                                        trigger={<td style={{ display: (this.state.saved) ? 'block' : 'none' }}><i class="material-icons" >ios_share</i></td>    }
+                                        trigger={<td style={{ display: (this.state.saved) ? 'block' : 'none' }}><i class="material-icons" >ios_share</i></td>}
                                         closeOnDimmerClick={false} >
-                                    <Modal.Header>Track Settings</Modal.Header>
-                                    <Modal.Content text>
-                                        
-                                        <Modal.Description>
-                                        
-                                        <Header>Sharing and Privacy Settings</Header>
-                                        <Checkbox input onChange={this.changePrivacy} value='0' checked={this.state.privacySettings == 0} radio label='Track is visible on MIDI Discover section' />
-                                        <br />
-                                        <Checkbox onChange={this.changePrivacy} value='1' checked={this.state.privacySettings == 1} radio label='Track is only visible to anyone with my link' />
-                                        <br />
-                                        <Checkbox onChange={this.changePrivacy} value='2' checked={this.state.privacySettings == 2} radio label='Track is only visible to me' />
-                                        <br />
-                                        <br />
-                                        
-                                        MIDI Link: <input className="modal_input" value={this.state.trackLink} type="text" readOnly={true}/>
-                                        </Modal.Description>
-                                    </Modal.Content>
-                                    <Modal.Actions>
-                                        <Button color='black' onClick={this.setOpen}>
-                                        Close
-                                        </Button>
-                                        <Button
-                                        content="Save Settings"
-                                        labelPosition='right'
-                                        icon='checkmark'
-                                        onClick={this.onChangeTrackSettings}
-                                        positive
-                                        />
-                                    </Modal.Actions>
+                                        <Modal.Header>Track Settings</Modal.Header>
+                                        <Modal.Content text>
+
+                                            <Modal.Description>
+
+                                                <Header>Sharing and Privacy Settings</Header>
+                                                <Checkbox input onChange={this.changePrivacy} value='0' checked={this.state.privacySettings == 0} radio label='Track is visible on MIDI Discover section' />
+                                                <br />
+                                                <Checkbox onChange={this.changePrivacy} value='1' checked={this.state.privacySettings == 1} radio label='Track is only visible to anyone with my link' />
+                                                <br />
+                                                <Checkbox onChange={this.changePrivacy} value='2' checked={this.state.privacySettings == 2} radio label='Track is only visible to me' />
+                                                <br />
+                                                <br />
+
+                                                MIDI Link: <input className="modal_input" value={this.state.trackLink} type="text" readOnly={true} />
+                                            </Modal.Description>
+                                        </Modal.Content>
+                                        <Modal.Actions>
+                                            <Button color='black' onClick={this.setOpen}>
+                                                Close
+                                            </Button>
+                                            <Button
+                                                content="Save Settings"
+                                                labelPosition='right'
+                                                icon='checkmark'
+                                                onClick={this.onChangeTrackSettings}
+                                                positive
+                                            />
+                                        </Modal.Actions>
                                     </Modal>
-                                    
+
                                 </tr>
                                 <tr>
 
@@ -455,7 +445,7 @@ class MusicGeneration extends Component {
                                     <th>SCALE</th>
                                     <th>TIMING</th>
                                     <th>BPM</th>
-                                 
+
                                 </tr>
                                 <tr>
                                     <td>
@@ -492,7 +482,7 @@ class MusicGeneration extends Component {
                                         </select>
                                     </td>
                                     <td><input id="parameter_bpm" type="text" class="border-input bpm" defaultValue="120" disabled={this.state.recording} /></td>
-                                       </tr>
+                                </tr>
                             </table>
                         </div>
                     </div>

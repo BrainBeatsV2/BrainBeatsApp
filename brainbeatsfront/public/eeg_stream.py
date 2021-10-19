@@ -39,20 +39,20 @@ def configure_eeg_headset(headset_type_name):
                         help='serial number', required=False, default='')
     parser.add_argument('--file', type=str, help='file',
                         required=False, default='')
+    parser.add_argument('-m', type=str, required=False, default='1')
+    parser.add_argument('-eeg', type=str, required=False, default='synthetic')
 
     if headset_type_name == 'ganglion':
         print_debug('EEG Headset determined to be Ganglion')
         parser.add_argument('--serial-port', type=str,
                             help='serial port', required=False, default='COM3')  # COM3
         parser.add_argument('--mac-address', type=str, help='mac address',
-                            required=False, default='d2:a0:57:70:bd:01')  # d2:a0:57:70:bd:01
+                            required=False, default='')  # d2:a0:57:70:bd:01
         parser.add_argument('--board-id', type=int, help='board id, check docs to get a list of supported boards',
                             required=False, default=1)  # 1
         parser.add_argument('--timeout', type=int, help='timeout for device discovery or connection', required=False,
                             default=15)  # 15
     else:
-        print_debug(
-            'EEG Headset is synthetic. If you did not choose this, it means the EEG Headset was not found, not an option, or could not connect.')
         parser.add_argument('--serial-port', type=str,
                             help='serial port', required=False, default='')
         parser.add_argument('--mac-address', type=str,
@@ -147,30 +147,56 @@ def get_relaxation_percent(data, eeg_channels_count, sampling_rate):
 
 
 def main():
+
+    # Process script arguments.
+    argumentList = sys.argv[1:]
+    print_debug(argumentList)
+    user_music_generation_model = 1
+    user_headset = 'synthetic'
+
+    # checking each argument
+    for i in range(len(argumentList)):
+
+        # Music Generation Models Mappings:
+        # 1 = Map Aggregate Band Power to Random Probability
+        # 2 = Map EEG Channels to Music Characteristics
+        # 3 = Complexity Relationship with BPM
+        # 4 = Blue Improvisation
+        # 5 = Chord Progression & Melody Improvisation (LSTM)
+        if (argumentList[i] == "-m" or argumentList[i] == "--model") and i+1 < len(argumentList):
+            if int(argumentList[i+1]) > 0 and int(argumentList[i+1]) < 6:
+                user_music_generation_model = int(argumentList[i+1])
+
+        if (argumentList[i] == "-eeg" or argumentList[i] == "--headset") and i+1 < len(argumentList):
+            user_headset = argumentList[i+1]
+
+    print_debug(str(("usermodel: " + str(user_music_generation_model) +
+                     " userheadset: " + user_headset)))
+
     # Enable loggers
     BoardShim.enable_board_logger()
     DataFilter.enable_data_logger()
     MLModel.enable_ml_logger()
 
-    headset_type_name = ''
-    parser = configure_eeg_headset(headset_type_name)
-    args = parser.parse_args()
+    # Determine EEG Params:
+    parser = configure_eeg_headset(user_headset)
+    eeg_args = parser.parse_args()
 
     # Set configured data within BrainFlowInputParams
     # TODO: Bring to own function?
     params = BrainFlowInputParams()
-    params.ip_port = args.ip_port
-    params.serial_port = args.serial_port
-    params.mac_address = args.mac_address
-    params.other_info = args.other_info
-    params.serial_number = args.serial_number
-    params.ip_address = args.ip_address
-    params.ip_protocol = args.ip_protocol
-    params.timeout = args.timeout
-    params.file = args.file
+    params.ip_port = eeg_args.ip_port
+    params.serial_port = eeg_args.serial_port
+    params.mac_address = eeg_args.mac_address
+    params.other_info = eeg_args.other_info
+    params.serial_number = eeg_args.serial_number
+    params.ip_address = eeg_args.ip_address
+    params.ip_protocol = eeg_args.ip_protocol
+    params.timeout = eeg_args.timeout
+    params.file = eeg_args.file
 
     # Create board object, save important default data about the boards
-    board = BoardShim(args.board_id, params)
+    board = BoardShim(eeg_args.board_id, params)
     master_board_id = board.get_board_id()
     sampling_rate = BoardShim.get_sampling_rate(master_board_id)
     eeg_channels_count = BoardShim.get_eeg_channels(int(master_board_id))
@@ -180,15 +206,14 @@ def main():
     # Starting the streamming session with a buffer of 450000, pausing the script to get the EEG readings
     board.prepare_session()
     print_debug('Preparing to log EEG data')
-    board.start_stream(45000, args.streamer_params)
+    board.start_stream(45000, eeg_args.streamer_params)
     BoardShim.log_message(LogLevels.LEVEL_INFO.value,
                           'start sleeping in the main thread')
-    #time.sleep(4)
+    # time.sleep(4)
     while(True):
         time.sleep(4)
         # TODO This is using only the eeg data from the second channel, in the future it'd be best to average the values between all of the channels
         eeg_channel = eeg_channels_count[1]
-
         data = board.get_board_data()
         band_values = get_band_values(data, sampling_rate, eeg_channel)
         concentration_percent = get_concentration_percent(
@@ -200,7 +225,7 @@ def main():
         print(str(json.dumps(eeg_data)))
         # Required to flush output for python to allow for python to output script!!!
         sys.stdout.flush()
-        #time.sleep(1)
+        # time.sleep(1)
 
 
 def print_debug(string):
