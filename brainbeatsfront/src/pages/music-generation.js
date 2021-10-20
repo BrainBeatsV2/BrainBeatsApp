@@ -64,7 +64,7 @@ class MusicGeneration extends Component {
         this.changeInstrument = this.changeInstrument.bind(this);
         this.changeKey = this.changeKey.bind(this);
         this.changeScale = this.changeScale.bind(this);
-        this.onDownloadMIDI = this.onDownloadMIDI(this);
+        // this.onDownloadMIDI = this.onDownloadMIDI(this);
     }
     // Start MIDI Recording
     onStartRecording() {

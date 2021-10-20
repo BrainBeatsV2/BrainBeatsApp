@@ -135,7 +135,7 @@ ipcMain.on('end_eeg_script', (event, user_key, user_scale, user_minrange, user_m
 
 ipcMain.on('gen_midi', (event, args) => {
   console.log('Loaded midi now')
-  //player.loadDataUri(urlMIDI);
+  // player.loadDataUri(urlMIDI);
 });
 
 ipcMain.on('play_midi', (event, args) => {

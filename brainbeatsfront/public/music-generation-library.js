@@ -3,6 +3,7 @@ const fs = require('fs');
 
 const commonNoteGroupings = [1, 2, 3, 4, 6, 8];
 const commonNoteDurations = ['4', '8', '8t', '16', '16t', '32'];
+const DEBUG = false;
 
 function setInstrument(track, instrument_num) {
     track.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: instrument_num }));
