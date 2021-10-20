@@ -1,5 +1,6 @@
 import React, { Component, useState } from 'react';
 import axios from 'axios';
+import { Redirect } from "react-router-dom";
 import logo from '../images/logo_dev.png';
 import isElectron from '../library/isElectron';
 class Login extends Component {
@@ -16,7 +17,8 @@ class Login extends Component {
 			requestEmail: '',
 			resetCode: '',
 			newPassword: '',
-			confirmedPassword: ''
+			confirmedPassword: '',
+			redirect: null,
 		};
 		this.onShowRegister = this.onShowRegister.bind(this);
 		this.onShowLogin = this.onShowLogin.bind(this);
@@ -30,6 +32,7 @@ class Login extends Component {
 			showLogin: false,
 			showResetPassword: false,
 			showVerify: false,
+			redirect: null,
 		});
 	}
 	onShowLogin() {
@@ -38,6 +41,7 @@ class Login extends Component {
 			showLogin: true,
 			showResetPassword: false,
 			showVerify: false,
+			redirect: null,
 		});
 	}
 	onShowResetPassword() {
@@ -46,6 +50,7 @@ class Login extends Component {
 			showLogin: false,
 			showResetPassword: true,
 			showVerify: false,
+			redirect: null,
 		});
 	}
 
@@ -137,7 +142,10 @@ class Login extends Component {
 
 		axios.post('/api/login', userObject, options)
 			.then((res) => {
-				console.log(res.data)
+				//console.log(res.data)
+				if (res.data === "login successful" || 200) {
+					this.setState({ redirect: "/dashboard" });
+				}
 			}).catch((error) => {
 				console.log(error)
 			});
@@ -160,7 +168,10 @@ class Login extends Component {
 
 		axios.post('/api/register', userObject, options)
 			.then((res) => {
-				console.log(res.data)
+				//console.log(res.data)
+				if (res.data === "Successful Register" || 200) {
+					this.setState({ redirect: "/dashboard" });
+				}
 			}).catch((error) => {
 				console.log(error)
 			});
@@ -180,24 +191,27 @@ class Login extends Component {
 		});
 	}
 	render() {
+		if (this.state.redirect) {
+			return <Redirect to={this.state.redirect} />
+		}
 		return (
 			<div class="container-login100">
-				
 
-					
+
+
 				<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
 				<div class="wrap-login100">
-					<img style={{height:'150px',margin: '0 auto', display: isElectron() ? 'block' : 'none'}} src={logo} alt='logo' />
+					<img style={{ height: '150px', margin: '0 auto', display: isElectron() ? 'block' : 'none' }} src={logo} alt='logo' />
 					<div id="banner" class="alert m-b-38" role="alert"></div>
 					<form id="loginform" action="" method="post" class="login100-form validate-form" style={{ display: this.state.showLogin ? 'block' : 'none' }} onSubmit={this.handleLogin}>
 						<div class="wrap-input100 validate-input" >
 							<input class="input100" placeholder="Username or Email" type="text" name="USERNAME" value={this.state.username} onChange={this.handleUsername} required />
-							
+
 						</div>
 
 						<div class="wrap-input100 validate-input">
 							<input class="input100" placeholder="Password" type="password" name="PASSWORD" value={this.state.password} onChange={this.handlePassword} required />
-							
+
 						</div >
 						<input type="hidden" name="ACTION" value="LOGIN" />
 						<div class="container-login100-form-btn">
@@ -226,20 +240,20 @@ class Login extends Component {
 					<form id="registerform" action="" method="post" class="login100-form validate-form" style={{ display: this.state.showRegister ? 'block' : 'none' }} onSubmit={this.handleRegister}>
 						<div class="wrap-input100 validate-input">
 							<input placeholder="Email" class="input100" type="text" name="EMAIL" value={this.state.email} onChange={this.handleEmail} required />
-						
+
 						</div>
 						<div class="wrap-input100 validate-input">
 							<input placeholder="Username" class="input100" type="text" name="USERNAME" value={this.state.username} onChange={this.handleUsername} required />
-						
+
 						</div>
 						<div class="wrap-input100 validate-input">
 
 							<input class="input100" placeholder="Password" type="password" name="PASSWORD" value={this.state.password} onChange={this.handlePassword} required />
-							
+
 						</div >
 						<div class="wrap-input100 validate-input">
 							<input class="input100" placeholder="Confirm Password" type="password" name="CONFIRM" required />
-							
+
 						</div>
 						<input type="hidden" name="ACTION" value="REGISTER" />
 						<div class="container-login100-form-btn">
@@ -314,7 +328,7 @@ class Login extends Component {
 							</div>
 						</div>
 					</form >
-					<a href="/music-generation" style={{'font-size':'16px',display: isElectron() ? 'block' : 'none'}}> <span style={{'font-size':'12px'}} class="material-icons">arrow_back_ios</span> Go Back </a>
+					<a href="/music-generation" style={{ 'font-size': '16px', display: isElectron() ? 'block' : 'none' }}> <span style={{ 'font-size': '12px' }} class="material-icons">arrow_back_ios</span> Go Back </a>
 				</div >
 			</div >
 		);
