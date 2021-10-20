@@ -35,6 +35,7 @@ class MusicGeneration extends Component {
             saveModalOpen: false,
             saving: false,
             saved: false,
+            downloadMIDI: false,
             privacySettings: 0,
             trackLink: "brainbeats.dev/play/",
             loggedout: 0,
@@ -42,7 +43,6 @@ class MusicGeneration extends Component {
             elapsedTime: 20,
             finalTime: 0,
             midiString: 'data:audio/midi;base64,TVRoZAAAAAYAAAABAIBNVHJrAAAFpADAAQCQPkArgD5AAJA+QCqAPkAAkEBAK4BAQACQPkArgD5AAJA+QCqAPkAAkEBAK4BAQACQQEAggEBAAJA+QCCAPkAAkD5AIIA+QACQQEBAgEBAAJBAQECAQEAAkD5AQIA+QACQQ0BAgENAAJAAQECAAEAAkEVAQIBFQACQAEBAgABAAJBDQECAQ0AAkEVAgQCARUAAkEBAgQCAQEAAkEBAgQCAQEAAkEVAgQCARUAAkABAIIAAQACQRUAggEVAAJBFQCCARUAAkENAIIBDQACQQEAggEBAAJBFQCCARUAAkEVAIIBFQACQQEAQgEBAAJBAQBCAQEAAkD5AEIA+QACQQEAQgEBAAJBDQBCAQ0AAkD5AEIA+QACQQEArgEBAAJBAQECAQEAAkENAQIBDQACQAEBAgABAAJAAQECAAEAAkENAQIBDQACQAEBAgABAAJBFQBWARUAAkENAFYBDQACQRUAWgEVAAJBFQBWARUAAkEVAFYBFQACQQ0AWgENAAJBFQIEAgEVAAJBAQIEAgEBAAJBAQIEAgEBAAJBAQIEAgEBAAJBAQCqAQEAAkEVAK4BFQACQQ0ArgENAAJBDQCqAQ0AAkD5AIIA+QACQQEAggEBAAJBDQCCAQ0AAkEBAIIBAQACQQECBAIBAQACQRUArgEVAAJAAQCuAAEAAkEVAKoBFQACQAEArgABAAJBDQCuAQ0AAkABAKoAAQACQAEArgABAAJBFQCuARUAAkABAFYAAQACQRUAVgEVAAJBFQBaARUAAkEVAFYBFQACQRUAVgEVAAJBDQBaAQ0AAkD5AFYA+QACQPkAVgD5AAJBAQIEAgEBAAJBFQCuARUAAkABAK4AAQACQRUAqgEVAAJAAQCuAAEAAkENAK4BDQACQRUAqgEVAAJBAQBaAQEAAkEBAFYBAQACQRUAVgEVAAJBDQBaAQ0AAkABAIIAAQACQRUAggEVAAJBFQCCARUAAkEVAIIBFQACQQ0AggENAAJBFQCCARUAAkEBAIIBAQACQPkAggD5AAJBAQCqAQEAAkENAK4BDQACQQEArgEBAAJBDQCqAQ0AAkD5AK4A+QACQQEBAgEBAAJBAQECAQEAAkENAQIBDQACQRUBAgEVAAJBAQECAQEAAkEVAQIBFQACQAEBAgABAAJBFQECARUAAkEBAIIBAQACQQEAggEBAAJBAQIEAgEBAAJBAQIEAgEBAAJBDQIEAgENAAJBDQIEAgENAAJBAQIEAgEBAAJBFQIEAgEVAAJBDQIEAgENAAJBFQIEAgEVAAJAAQCCAAEAAkEVAIIBFQACQQEAggEBAAJBDQCCAQ0AAkEBAIIBAQACQQ0AggENAAJBDQBCAQ0AAkABAEIAAQACQQ0AQgENAAJA+QBCAPkAAkEBAFYBAQACQQEAWgEBAAJA+QBWAPkAAkEBAFYBAQACQRUAQgEVAAJBFQBCARUAAkABAEIAAQACQQ0AQgENAAJBDQBCAQ0AAkD5AEIA+QACQQEAQgEBAAJBFQBCARUAAkEVAgQCARUAAkENAgQCAQ0AAkEVAgQCARUAAkABAgQCAAEAAkABAgQCAAEAAkENAgQCAQ0AAkENAgQCAQ0AAkEBAgQCAQEAAkD5AEIA+QACQQ0AWgENAAJBAQBWAQEAAkEVAFYBFQACQQ0ArgENAAJBFQIEAgEVAAJBAQIEAgEBAAJBFQIEAgEVAAJBFQBWARUAAkENAIIBDQACQQ0AggENAAJBAQCCAQEAAkENAIIBDQACQQEAggEBAAJBDQCCAQ0AAkEBAIIBAQACQQ0AggENAAJBAQBCAQEAAkEBAEIBAQACQQ0CBAIBDQACQPkCBAIA+QACQQECBAIBAQACQRUCBAIBFQACQAECBAIAAQACQRUCBAIBFQACQQ0CBAIBDQACQQECBAIBAQAD/LwA='
-
         };
         this.onStartRecording = this.onStartRecording.bind(this);
         this.onStopRecording = this.onStopRecording.bind(this);
@@ -64,7 +64,7 @@ class MusicGeneration extends Component {
         this.changeInstrument = this.changeInstrument.bind(this);
         this.changeKey = this.changeKey.bind(this);
         this.changeScale = this.changeScale.bind(this);
-
+        this.onDownloadMIDI = this.onDownloadMIDI(this);
     }
     // Start MIDI Recording
     onStartRecording() {
@@ -103,7 +103,6 @@ class MusicGeneration extends Component {
             saveOptions: true,
             disabledFields: ''
         });
-
 
         // If EEG Script is running, stop it right now
         if (this.state.isEEGScriptRunning) {
@@ -242,6 +241,15 @@ class MusicGeneration extends Component {
     }
     // Radio Button privacy settings switch
 
+    // Started download function!
+    // onDownloadMIDI() {
+    //     this.setState({
+    //         downloadMIDI: true
+    //     })
+
+    //     window.ipcRenderer.send('download_midi');
+    // }
+
     // Save Settings Button
     onChangeTrackSettings() {
         this.setState({
@@ -274,6 +282,7 @@ class MusicGeneration extends Component {
     changeKey(event) { this.setState({ key: event.target.value }); }
     changeScale(event) { this.setState({ scale: event.target.value }); }
     changePrivacy = (e, { value }) => this.setState({ privacySettings: value });
+
     render() {
         if (!isElectron()) {
             return <Redirect to="/" />
