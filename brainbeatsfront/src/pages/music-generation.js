@@ -1,5 +1,6 @@
 import React, { Component, useState } from 'react';
 import isElectron from '../library/isElectron';
+import { Redirect } from "react-router-dom";
 // const { ipcRenderer } = window.require('electron');
 // const { ipcRenderer } = window.require('electron');
 import 'html-midi-player'
@@ -282,6 +283,10 @@ class MusicGeneration extends Component {
     changeScale(event) { this.setState({scale: event.target.value});  }
     changePrivacy = (e, { value }) => this.setState({ privacySettings: value });
     render() {
+        if(!isElectron())
+        {
+            return <Redirect to="/" />
+        }
         return (
 
 

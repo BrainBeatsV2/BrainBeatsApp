@@ -17,12 +17,19 @@ function App() {
     <Router>
       <Navbar />
 
+
+
       <Switch>
-        <Route path="/" exact component={Home} />
-        <Route path="/login" exact component={Login} />
-        <Route path="/music-generation" exact component={MusicGeneration} />
-        <Route path="/dashboard" exact component={Dashboard} />
+        <Route path="/" exact component={Home} render={props =>
+          (<Home {...props} username={this.state.username} password={this.state.password} email={this.state.email} />)} />
+        <Route path="/login" exact component={Login} render={props =>
+          (<Login {...props} username={this.state.username} password={this.state.password} email={this.state.email} />)} />
+        <Route path="/music-generation" exact component={MusicGeneration} render={props =>
+          (<MusicGeneration {...props} username={this.state.username} password={this.state.password} email={this.state.email} />)} />
+        <Route path="/dashboard" exact component={Dashboard} render={props =>
+          (<Dashboard {...props} username={this.state.username} password={this.state.password} email={this.state.email} />)} />
         <Route path="/play" exact component={Play} />
+        <Route component={Home} />
       </Switch>
     </Router>
   );

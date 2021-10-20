@@ -16,6 +16,7 @@ var port = process.env.MONGO_PORT;
 var dbName = process.env.MONGO_DB ;
 
 var mongo_uri = 'mongodb://' + mongo_username + ':' + mongo_password + '@' + host + ':' + port + '/' + dbName;
+var devPath = 'http://localhost:4000'; //For testing and development on electron, remove paramater for production
 
 function getConnection() {
     mongoose.connect(mongo_uri, { useNewUrlParser: true });
@@ -29,11 +30,11 @@ const User = require('./schemas/user');
 const Midi = require('./schemas/midi');
 const Model = require('./schemas/model');
 
-app.get('/api', (req, res) => {
+app.get(devPath + '/api', (req, res) => {
     res.send("hello world");
 })
 
-app.get('/api/users', (req, res) => {
+app.get(devPath + '/api/users', (req, res) => {
     var conn = getConnection();
     var db = conn.db;
 
@@ -54,7 +55,7 @@ app.get('/api/users', (req, res) => {
         Response- 200 OK
     * You MUST supply the exact Content-Type above, or it won't work.
 */
-app.post('/api/requestreset', function(req, res) {
+app.post(devPath + '/api/requestreset', function(req, res) {
     var body = req.body;
 
     var email = body.email;
@@ -94,7 +95,7 @@ app.post('/api/requestreset', function(req, res) {
         Response- 200 OK
     * You MUST supply the exact Content-Type above, or it won't work.
 */
-app.post('/api/resetpassword', function(req, res) {
+app.post(devPath + '/api/resetpassword', function(req, res) {
     var body = req.body;
     var email = body.email;
     var token = body.token;
@@ -123,7 +124,7 @@ app.post('/api/resetpassword', function(req, res) {
     Validates user's username and password
     Will likely return a JWT token depending on which authorization route we go
 */
-app.post('/api/login', function (req, res) {
+app.post(devPath + '/api/login', function (req, res) {
     var body = req.body;
     var username = body.username;
     var password = body.password;
@@ -157,7 +158,7 @@ app.post('/api/login', function (req, res) {
     Checks if username or email are already registered to another user if not saves
     information for new user
 */
-app.post('/api/register', function (req, res) {
+app.post(devPath + '/api/register', function (req, res) {
     var conn = getConnection();
     var body = req.body;
     var email = body.email;
@@ -187,7 +188,7 @@ app.post('/api/register', function (req, res) {
                 "email": email,
                 "password": password,
             });
-
+            res.status(200).send("Successful Register");
             postUser.save();
             return res.status(200).json("Successful Register");
         }
@@ -208,7 +209,7 @@ app.post('/api/register', function (req, res) {
         Response- 200 OK
     * You MUST supply the exact Content-Type above, or it won't work.
 */
-app.get('/api/models', function(req, res) {
+app.get(devPath + '/api/models', function(req, res) {
     var conn = getConnection();
 
     Model.find().then(function(doc) {
@@ -229,7 +230,7 @@ app.get('/api/models', function(req, res) {
         Response- 200 OK
     * You MUST supply the exact Content-Type above, or it won't work.
 */
-app.get('/api/models/all', function(req, res) {
+app.get(devPath + '/api/models/all', function(req, res) {
     var conn = getConnection();
 
     Model.find().then(function(doc) {
@@ -248,7 +249,7 @@ app.get('/api/models/all', function(req, res) {
         Response- 200 OK
     * You MUST supply the exact Content-Type above, or it won't work.
 */
-app.get('/api/models/:model_name', function(req, res) {
+app.get(devPath + '/api/models/:model_name', function(req, res) {
     var conn = getConnection();
 
     var model_name = req.params.model_name;
@@ -274,7 +275,7 @@ app.get('/api/models/:model_name', function(req, res) {
     *
     * @TODO - this feels bad. I don't like the various nested levels. fix it at some point.
 */
-app.post('/api/midis', async function(req, res) {
+app.post(devPath + '/api/midis', async function(req, res) {
     var body = req.body;
     var email = body.email;
     var password = body.password;
@@ -304,7 +305,7 @@ app.post('/api/midis', async function(req, res) {
     * You MUST supply the exact Content-Type above, or it won't work.
     * Note the user's account info in the body.
 */
-app.post('/api/midis/create', async function(req, res) {
+app.post(devPath + '/api/midis/create', async function(req, res) {
     var body = req.body;
     var email = body.email;
     var password = body.password;
@@ -368,7 +369,7 @@ app.post('/api/midis/create', async function(req, res) {
     * You MUST supply the exact Content-Type above, or it won't work.
     * User account info not needed if MIDI is public
 */
-app.post('/api/midis/:midi_id', async function(req, res) {
+app.post(devPath + '/api/midis/:midi_id', async function(req, res) {
     var midi_id = req.params.midi_id;
 
     // fetch midi
@@ -405,7 +406,7 @@ app.post('/api/midis/:midi_id', async function(req, res) {
     * You MUST supply the exact Content-Type above, or it won't work. 
     * User account info not needed if MIDI is public
 */
-app.post('/download/midi/:midi_id', async function(req, res) {
+app.post(devPath + '/download/midi/:midi_id', async function(req, res) {
     var midi_id = req.params.midi_id;
 
     // fetch midi
@@ -441,7 +442,7 @@ app.post('/download/midi/:midi_id', async function(req, res) {
     * You MUST supply the exact Content-Type above, or it won't work. 
     * User account info not needed if MIDI is public
 */
-app.get('/download/midi/:midi_id', async function(req, res) {
+app.get(devPath + '/download/midi/:midi_id', async function(req, res) {
     var midi_id = req.params.midi_id;
 
     // fetch midi
@@ -465,7 +466,7 @@ app.get('/download/midi/:midi_id', async function(req, res) {
         Body- {"email": "harry@hsauers.net", "password": "Passwd123!"}
         Response- 200 OK
 */
-app.post('/api/midis/:midi_id/update', async function(req, res) {
+app.post(devPath + '/api/midis/:midi_id/update', async function(req, res) {
     var midi_id = req.params.midi_id;
     var body = req.body;
     var email = body.email;
