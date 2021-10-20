@@ -255,26 +255,27 @@ class MusicGeneration extends Component {
     };
     componentDidMount() {
         var player = document.querySelector("midi-player");
+        if (player != null) {
 
-        // Player Stops
-        player.addEventListener("stop", function () {
-            if ((this.currentTime == this.duration))
-                console.log("song ended");
+            // Player Stops
+            player.addEventListener("stop", function () {
+                if ((this.currentTime == this.duration))
+                    console.log("song ended");
 
-        });
-        // Player isPlaying
-        player.addEventListener("note", function () {
+            });
+            // Player isPlaying
+            player.addEventListener("note", function () {
 
 
-        });
+            });
+        }
     }
     changeInstrument(event) { this.setState({ instrument: event.target.value }); }
     changeKey(event) { this.setState({ key: event.target.value }); }
     changeScale(event) { this.setState({ scale: event.target.value }); }
     changePrivacy = (e, { value }) => this.setState({ privacySettings: value });
     render() {
-        if(!isElectron())
-        {
+        if (!isElectron()) {
             return <Redirect to="/" />
         }
         return (
