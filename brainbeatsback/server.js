@@ -3,6 +3,9 @@ const app = express();
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
+const jwt = require('jsonwebtoken');
+
+const Timidity = require('timidity')
 
 const PORT = 4000;
 
@@ -13,6 +16,7 @@ var port = process.env.MONGO_PORT;
 var dbName = process.env.MONGO_DB ;
 
 var mongo_uri = 'mongodb://' + mongo_username + ':' + mongo_password + '@' + host + ':' + port + '/' + dbName;
+var devPath = 'http://localhost:4000'; //For testing and development on electron, remove paramater for production
 
 function getConnection() {
     mongoose.connect(mongo_uri, { useNewUrlParser: true });
@@ -26,14 +30,14 @@ const User = require('./schemas/user');
 const Midi = require('./schemas/midi');
 const Model = require('./schemas/model');
 
-app.get('/api', (req, res) => {
+app.get(devPath + '/api', (req, res) => {
     res.send("hello world");
 })
 
-app.get('/api/users', (req, res) => {
+app.get(devPath + '/api/users', (req, res) => {
     var conn = getConnection();
     var db = conn.db;
-        
+
     db.collection("users").find().toArray(function (err, data) {
         if (err) {
             console.log(err);
@@ -44,14 +48,14 @@ app.get('/api/users', (req, res) => {
 })
 
 /*
-    Example: 
+    Example:
         POST localhost:4000/api/requestreset
         Headers- Content-Type: application/json; charset=utf-8
         Body- {"email": "harry@hsauers.net"}
         Response- 200 OK
-    * You MUST supply the exact Content-Type above, or it won't work. 
+    * You MUST supply the exact Content-Type above, or it won't work.
 */
-app.post('/api/requestreset', function(req, res) {
+app.post(devPath + '/api/requestreset', function(req, res) {
     var body = req.body;
 
     var email = body.email;
@@ -63,7 +67,7 @@ app.post('/api/requestreset', function(req, res) {
         if (doc == null) {
             res.status(404).send("Account does not exist.");
         } else {
-            res.status(200).send("Please check your email for a password reset link.");
+            res.status(200).send("Please check your email for a password reset token.");
 
             // generate token
             function genNumber() {
@@ -79,21 +83,21 @@ app.post('/api/requestreset', function(req, res) {
             // send email
             var email_text = "Your password reset token is: " + token;
             sendMail(doc.email, "hsauers@knights.ucf.edu", "Reset your Password", email_text, email_text);
-        }   
+        }
     });
 })
 
 /*
-    Example: 
+    Example:
         POST localhost:4000/api/resetpassword
         Headers- Content-Type: application/json; charset=utf-8
         Body- {"email": "harry@hsauers.net", "token": "1234", "new_password": "Passwd123!"}
         Response- 200 OK
-    * You MUST supply the exact Content-Type above, or it won't work. 
+    * You MUST supply the exact Content-Type above, or it won't work.
 */
-app.post('/api/resetpassword', function(req, res) {
+app.post(devPath + '/api/resetpassword', function(req, res) {
     var body = req.body;
-    var email = body.email; 
+    var email = body.email;
     var token = body.token;
     var new_password = body.new_password;
 
@@ -117,10 +121,10 @@ app.post('/api/resetpassword', function(req, res) {
 })
 
 /*
-    Validates user's username and password 
+    Validates user's username and password
     Will likely return a JWT token depending on which authorization route we go
 */
-app.post('/api/login', function (req, res) {
+app.post(devPath + '/api/login', function (req, res) {
     var body = req.body;
     var username = body.username;
     var password = body.password;
@@ -129,10 +133,23 @@ app.post('/api/login', function (req, res) {
 
     User.findOne({"username": username}).then(function(doc) {
         if (doc == null) {
-            res.status(400).send("Invalid username or password");    
+            User.findOne({"email": username}).then(function(doc) {
+                if (doc == null) {
+                    res.status(400).send("Invalid username or password");
+                } else if (doc.password != password) {
+                    res.status(400).send("Invalid username or password");
+                }
+                else if (doc.password == password) {
+                    res.status(200).send("login successful");
+                }
+            });
         }
         else if (doc.password != password) {
-            res.status(400).send("Invalid username or password")
+            res.status(400).send("Invalid username or password");
+        }
+        else if (doc.password == password)
+        {
+            res.status(200).send("login successful");
         }
     });
 });
@@ -141,11 +158,9 @@ app.post('/api/login', function (req, res) {
     Checks if username or email are already registered to another user if not saves
     information for new user
 */
-app.post('/api/register', function (req, res) {
+app.post(devPath + '/api/register', function (req, res) {
     var conn = getConnection();
     var body = req.body;
-    var firstName = body.firstName;
-    var lastName = body.lastName;
     var email = body.email;
     var username = body.username;
     var password = body.password;
@@ -172,11 +187,10 @@ app.post('/api/register', function (req, res) {
                 "username": username,
                 "email": email,
                 "password": password,
-                "firstName": firstName,
-                "lastName": lastName
             });
-
+            res.status(200).send("Successful Register");
             postUser.save();
+            return res.status(200).json("Successful Register");
         }
     })
     .catch(err => {
@@ -189,13 +203,13 @@ app.post('/api/register', function (req, res) {
 });
 
 /*
-    Example: 
+    Example:
         GET localhost:4000/api/models
         Headers- Content-Type: application/json; charset=utf-8
         Response- 200 OK
-    * You MUST supply the exact Content-Type above, or it won't work. 
+    * You MUST supply the exact Content-Type above, or it won't work.
 */
-app.get('/api/models', function(req, res) {
+app.get(devPath + '/api/models', function(req, res) {
     var conn = getConnection();
 
     Model.find().then(function(doc) {
@@ -210,13 +224,13 @@ app.get('/api/models', function(req, res) {
 })
 
 /*
-    Example: 
+    Example:
         GET localhost:4000/api/models/all
         Headers- Content-Type: application/json; charset=utf-8
         Response- 200 OK
-    * You MUST supply the exact Content-Type above, or it won't work. 
+    * You MUST supply the exact Content-Type above, or it won't work.
 */
-app.get('/api/models/all', function(req, res) {
+app.get(devPath + '/api/models/all', function(req, res) {
     var conn = getConnection();
 
     Model.find().then(function(doc) {
@@ -229,13 +243,13 @@ app.get('/api/models/all', function(req, res) {
 })
 
 /*
-    Example: 
+    Example:
         GET localhost:4000/api/models/MODEL_NAME
         Headers- Content-Type: application/json; charset=utf-8
         Response- 200 OK
-    * You MUST supply the exact Content-Type above, or it won't work. 
+    * You MUST supply the exact Content-Type above, or it won't work.
 */
-app.get('/api/models/:model_name', function(req, res) {
+app.get(devPath + '/api/models/:model_name', function(req, res) {
     var conn = getConnection();
 
     var model_name = req.params.model_name;
@@ -251,17 +265,17 @@ app.get('/api/models/:model_name', function(req, res) {
 
 
 /*
-    Example: 
-        GET localhost:4000/api/midis
+    Example:
+        POST localhost:4000/api/midis
         Headers- Content-Type: application/json; charset=utf-8
         Body- {"email": "harry@hsauers.net", "password": "Passwd123!"}
         Response- 200 OK
-    * You MUST supply the exact Content-Type above, or it won't work. 
-    * Note the user's account info in the body. 
-    * 
-    * @TODO - this feels bad. I don't like the various nested levels. fix it at some point. 
+    * You MUST supply the exact Content-Type above, or it won't work.
+    * Note the user's account info in the body.
+    *
+    * @TODO - this feels bad. I don't like the various nested levels. fix it at some point.
 */
-app.post('/api/midis', async function(req, res) {
+app.post(devPath + '/api/midis', async function(req, res) {
     var body = req.body;
     var email = body.email;
     var password = body.password;
@@ -272,7 +286,7 @@ app.post('/api/midis', async function(req, res) {
             res.status(401).send("Incorrect account credentials.");
         } else {
             // send all midi data
-            Midi.find({"user_email": email}).then(function(doc) {
+            Midi.find({"username": email}).then(function(doc) {
                 res.status(200).send(doc);
             });
         }
@@ -280,17 +294,18 @@ app.post('/api/midis', async function(req, res) {
 })
 
 /*
-    Example: 
+    Example:
         GET localhost:4000/api/midis/create
         Headers- Content-Type: application/json; charset=utf-8
-        Body- {"email": "harry@hsauers.net", "password": "Passwd123!", 
-                "midi_name": "midi_name1", "midi_data", "12345", 
-                "midi_privacy": "private", "midi_notes": "lorem ipsum"}
+        Body- {"email": "harry@hsauers.net", "password": "Passwd123!",
+                "midi_name": "midi_name1", "midi_data", "12345",
+                "midi_privacy": "private", "midi_notes": "lorem ipsum"
+                "midi_bpm": "123" }
         Response- 200 OK
-    * You MUST supply the exact Content-Type above, or it won't work. 
-    * Note the user's account info in the body. 
+    * You MUST supply the exact Content-Type above, or it won't work.
+    * Note the user's account info in the body.
 */
-app.post('/api/midis/create', async function(req, res) {
+app.post(devPath + '/api/midis/create', async function(req, res) {
     var body = req.body;
     var email = body.email;
     var password = body.password;
@@ -301,6 +316,7 @@ app.post('/api/midis/create', async function(req, res) {
     var midi_model_id = body.midi_model_id;
     var midi_privacy = body.midi_privacy;
     var midi_notes = body.midi_notes;
+    var midi_bpm = body.midi_bpm;
 
     // validate input
     if (midi_name == null || midi_name == "") {
@@ -318,22 +334,25 @@ app.post('/api/midis/create', async function(req, res) {
 
     // check credentials
     User.findOne({"email": email}).then(function(doc) {
-        if (doc == null || doc.password != password) {
-            res.status(401).send("Incorrect account credentials.");
+        if (doc == null) {
+            res.status(401).send("Incorrect account username.");
+        } else if (doc.password != password) {
+            res.status(401).send("Incorrect account password.");
         } else {
             // create new midi
             var newMidi = Midi({
-                "user_email": email, 
-                "name": midi_name, 
-                "midi_data": midi_data, 
-                "model_id": midi_model_id, 
-                "privacy": midi_privacy, 
-                "notes": midi_notes, 
+                "user_email": email,
+                "name": midi_name,
+                "midi_data": midi_data,
+                "model_id": midi_model_id,
+                "privacy": midi_privacy,
+                "notes": midi_notes,
+                "bpm": midi_bpm, 
             });
 
             newMidi.save();
             res.status(200).send({
-                "message": "MIDI uploaded successfully!", 
+                "message": "MIDI uploaded successfully!",
                 "id": newMidi._id
             });
         }
@@ -342,19 +361,15 @@ app.post('/api/midis/create', async function(req, res) {
 
 
 /*
-    Example: 
+    Example:
         GET localhost:4000/api/midis/606e1726f9d7edf2fe715ee6
         Headers- Content-Type: application/json; charset=utf-8
         Body- {"email": "harry@hsauers.net", "password": "Passwd123!"}
         Response- 200 OK
-    * You MUST supply the exact Content-Type above, or it won't work. 
+    * You MUST supply the exact Content-Type above, or it won't work.
     * User account info not needed if MIDI is public
 */
-app.post('/api/midis/:midi_id', async function(req, res) {
-    var body = req.body;
-    var email = body.email;
-    var password = body.password;
-
+app.post(devPath + '/api/midis/:midi_id', async function(req, res) {
     var midi_id = req.params.midi_id;
 
     // fetch midi
@@ -363,8 +378,12 @@ app.post('/api/midis/:midi_id', async function(req, res) {
             // send midi data
             res.status(200).send(midi_doc);
         } else {
+            var body = req.body;
+            var email = body.email;
+            var password = body.password;
+            
             User.findOne({"email": email}).then(function(doc) {
-                if (doc == null || doc.password != password || midi_doc.user_email != email) {
+                if (doc == null || doc.password != password || midi_doc.username != email) {
                     res.status(401).send("Incorrect account credentials.");
                 } else {
                     // send midi data
@@ -372,9 +391,128 @@ app.post('/api/midis/:midi_id', async function(req, res) {
                 }
             });
         }
+
+    });
+})
+
+
+/*
+    Download of raw MIDI file
+    Example: 
+        GET localhost:4000/download/midi/606e1726f9d7edf2fe715ee6
+        Headers- Content-Type: application/json; charset=utf-8
+        Body- {"email": "harry@hsauers.net", "password": "Passwd123!"}
+        Response- 200 OK
+    * You MUST supply the exact Content-Type above, or it won't work. 
+    * User account info not needed if MIDI is public
+*/
+app.post(devPath + '/download/midi/:midi_id', async function(req, res) {
+    var midi_id = req.params.midi_id;
+
+    // fetch midi
+    Midi.findOne({"_id": midi_id}).then(function(midi_doc) {
+        if (midi_doc.privacy != "private") {
+            // send midi data
+            res.status(200).send(midi_doc['midiData']);
+        } else {
+            var body = req.body;
+            var email = body.email;
+            var password = body.password;
+
+            User.findOne({"email": email}).then(function(doc) {
+                if (doc == null || doc.password != password || midi_doc.username != email) {
+                    res.status(401).send("Incorrect account credentials.");
+                } else {
+                    // send midi data
+                    res.status(200).send(midi_doc['midiData']);
+                }
+            });
+        }
         
     });
 })
+
+/*
+    Download of raw MIDI file
+    Example: 
+        GET localhost:4000/download/midi/606e1726f9d7edf2fe715ee6
+        Headers- Content-Type: application/json; charset=utf-8
+        Body- {"email": "harry@hsauers.net", "password": "Passwd123!"}
+        Response- 200 OK
+    * You MUST supply the exact Content-Type above, or it won't work. 
+    * User account info not needed if MIDI is public
+*/
+app.get(devPath + '/download/midi/:midi_id', async function(req, res) {
+    var midi_id = req.params.midi_id;
+
+    // fetch midi
+    Midi.findOne({"_id": midi_id}).then(function(midi_doc) {
+        if (midi_doc.privacy != "private") {
+            // send midi data
+            res.status(200).send(midi_doc['midiData']);
+        } else {
+            res.status(401).send("Unauthorized.");
+        }
+        
+    });
+})
+
+
+/*
+    Update MIDI file
+    Example: 
+        GET localhost:4000/download/midi/606e1726f9d7edf2fe715ee6
+        Headers- Content-Type: application/json; charset=utf-8
+        Body- {"email": "harry@hsauers.net", "password": "Passwd123!"}
+        Response- 200 OK
+*/
+app.post(devPath + '/api/midis/:midi_id/update', async function(req, res) {
+    var midi_id = req.params.midi_id;
+    var body = req.body;
+    var email = body.email;
+    var password = body.password;
+
+    // midi-specific vars
+    var midi_name = body.midi_name;
+    var midi_privacy = body.midi_privacy;
+    var midi_notes = body.midi_notes;
+
+    // check credentials
+    User.findOne({"email": email}).then(function(doc) {
+        if (doc == null) {
+            res.status(401).send("Incorrect account username.");
+        } else if (doc.password != password) {
+            res.status(401).send("Incorrect account password.");
+        } else {
+            // update midi
+            var newMidiValues = {};
+            
+            if (midi_name != null) { 
+                newMidiValues["name"] = midi_name;
+            }
+            if (midi_privacy != null) { 
+                newMidiValues["privacy"] = midi_privacy;
+            } 
+            if (midi_notes != null) { 
+                newMidiValues["notes"] = midi_notes;
+            } 
+            
+            Midi.updateOne({"_id": midi_id}, newMidiValues).then(function(err) {
+                if (err.ok != 1) {
+                    res.status(400).send("bad request");
+                } else {
+                    res.status(200).send({
+                        "message": "MIDI updated successfully!",
+                        "id": midi_id
+                    });
+                }
+              });
+        }
+    });
+});
+
+
+
 
 // start app
 app.listen(PORT, () => console.log("Running on"), PORT);
@@ -387,10 +525,10 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
 function sendMail(to, from, subject, text, html) {
     var msg = {
-        to: to, 
-        from: from, 
-        subject: subject, 
-        text: text, 
+        to: to,
+        from: from,
+        subject: subject,
+        text: text,
         html: html
     }
     sgMail.send(msg).then(() => {

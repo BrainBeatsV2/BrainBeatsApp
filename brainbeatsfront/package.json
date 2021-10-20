@@ -1,24 +1,42 @@
 {
   "name": "brainbeatsfront",
   "version": "0.1.0",
-  "private": true,
+  "license": "",
   "main": "public/electron.js",
+  "type": "commonjs",
+  "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^5.11.9",
     "@testing-library/react": "^11.2.5",
     "@testing-library/user-event": "^12.7.1",
     "axios": "^0.21.4",
+    "child_process": "^1.0.2",
     "concurrently": "^6.2.1",
     "cross-env": "^7.0.3",
-    "electron": "^12.1.0",
+    "csvtojson": "^2.0.10",
+    "electron": "^14.0.1",
     "electron-builder": "^22.11.7",
     "electron-is-dev": "^2.0.0",
+    "electron-log": "^4.4.1",
+    "html-midi-player": "^1.4.0",
+    "is-electron": "^2.2.0",
+    "midi-player-js": "^2.0.16",
+    "midi-writer-js": "^2.0.1",
+    "plotly.js": "^2.5.1",
+    "python-shell": "^3.0.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-icons": "^4.2.0",
+    "react-plotly.js": "^2.5.1",
     "react-router-dom": "^5.3.0",
     "react-scripts": "4.0.2",
+    "reactjs-popup": "^2.0.5",
+    "semantic-ui-css": "^2.4.1",
+    "semantic-ui-react": "^2.0.4",
+    "serve": "^12.0.1",
     "styled-components": "^5.3.1",
+    "timidity": "^1.3.0",
+    "tree-kill": "^1.2.2",
     "wait-on": "^6.0.0",
     "web-vitals": "^1.1.0",
     "yarn": "^1.22.11"
@@ -47,5 +65,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "craco": "^0.0.3"
   }
 }
