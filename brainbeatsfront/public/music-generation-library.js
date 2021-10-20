@@ -84,26 +84,37 @@ let createNoteDistribution = (numberOfNotesToGenerate, currentPitch) => {
     console.log(distribution);
     return distribution;
 }
-
+function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 function createNotes(totalNoteGroupingsDurations) {
     var noteEvents = [];
     var currentPitch = 3;
+    // Want: IntervalPitchMap length amount
     for (var i = 0; i < totalNoteGroupingsDurations; i++) {
         // pick a random note grouping and duration and generate that many notes
         var numberOfNotesToGenerate = commonNoteGroupings[Math.floor(Math.random() * commonNoteGroupings.length)];
+        console.log("CommonNoteGroupingsLength :: " + commonNoteGroupings.length);
         var duration = commonNoteDurations[Math.floor(Math.random() * commonNoteDurations.length)];
+        console.log("CommongNoteDurationsLength :: " + commonNoteDurations.length);
+        console.log("numberOfNotesToGenerate :: " + numberOfNotesToGenerate);
         var pitches = [];
         for (var j = 0; j < numberOfNotesToGenerate; j++) {
             var distribution = createNoteDistribution(numberOfNotesToGenerate, currentPitch);
             var randomIndex = Math.floor(Math.random() * 100);
             var nextPitch = distribution[randomIndex];
             pitches.push(nextPitch);
-            currentPitch = nextPitch;
+            // currentPitch needs to select from internvalpitchmap 
+           // currentPitch = nextPitch;
+            console.log("Interval Pitch Length :: " + (intervalPitchMap.size - 1));
+            currentPitch = getRandomInt(0,(intervalPitchMap.size - 1));
         }
-
+        
         var pitchesAsNotes = [];
         pitches.forEach(pitch => {
             pitchesAsNotes.push(intervalPitchMap.get(pitch));
+            console.log("Interval Pitch Map:: Pitch[" + pitch + "] :: IntervalPitchMap[" + intervalPitchMap.get(pitch) + "]");
+
         });
         noteEvents.push(new MidiWriter.NoteEvent({ pitch: pitchesAsNotes, duration: duration.toString() }));
     }
@@ -122,9 +133,73 @@ function addNotesToTrack(track, noteEvents) {
 }
 
 // Ideally will have further Note options and scales with more features added
-function getScaleNotes(selection) {
-    pentatonic_notes = ['C4', 'D4', 'E4', 'G4', 'A4']
-    return pentatonic_notes;
+
+function getScaleNotes(selection, scale, minRange, maxRange) {
+    var notes = {C: 1, Db: 1.5, D: 2, Eb: 2.5, E: 3, F: 3.5, Gb: 4, G: 4.5, Ab: 5, A: 5.5, Bb: 6, B: 6.5};
+    var major = [1,1,0.5,1,1,1,0.5];
+    var minor = [1,0.5,1,1,0.5,1,1];
+    var chromatic = [0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5];
+    var pentatonic = [1,1,1.5,1];
+    var singular = [1,1];
+    var scale_to_use = [];
+    var usable_notes = [];
+	var finalnotes = [];
+    var i = 0;
+    var j = notes[selection];
+    var max_steps = 0;
+	switch(scale)
+    {
+        case "major":
+            scale_to_use = major;
+            max_steps = 7;
+        break;
+        case "minor":
+            scale_to_use = minor;
+            max_steps = 7;
+        break;
+        case "chromatic":
+            scale_to_use = chromatic;
+            max_steps = 12;
+        break;
+        case "pentatonic":
+            scale_to_use = pentatonic;
+            max_steps = 5;
+        break;
+        case "singular":
+            scale_to_use = singular;
+            max_steps = 1;
+        break;
+    }
+
+    // Get usable notes within scale
+    for(i = 0;i < max_steps; i++)
+    {
+        // Ensures that once a note reaches the end of octave it wraps around  
+        if (j > 6.5)
+        {
+            j = (j-6);
+        }
+        usable_notes.push(getKeyByValue(notes,j));
+        j = j + scale_to_use[i];
+    }
+    // Set all available notes within range
+    for(i = minRange; i <= maxRange; i++)
+    {
+        for (j = 0; j < usable_notes.length; j++)
+        {
+        console.log(usable_notes[j] + i);
+        finalnotes.push(usable_notes[j] + i);
+        }
+    	
+    }
+	
+    
+    console.log(finalnotes);
+    //pentatonic_notes = ['C4', 'D4', 'E4', 'G4', 'A4']
+    return finalnotes;
+}
+function getKeyByValue(object, value) {
+  return Object.keys(object).find(key => object[key] === value);
 }
 
 module.exports = {

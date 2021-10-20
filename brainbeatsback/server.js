@@ -67,7 +67,7 @@ app.post(devPath + '/api/requestreset', function(req, res) {
         if (doc == null) {
             res.status(404).send("Account does not exist.");
         } else {
-            res.status(200).send("Please check your email for a password reset link.");
+            res.status(200).send("Please check your email for a password reset token.");
 
             // generate token
             function genNumber() {
@@ -190,6 +190,7 @@ app.post(devPath + '/api/register', function (req, res) {
             });
             res.status(200).send("Successful Register");
             postUser.save();
+            return res.status(200).json("Successful Register");
         }
     })
     .catch(err => {
@@ -298,7 +299,8 @@ app.post(devPath + '/api/midis', async function(req, res) {
         Headers- Content-Type: application/json; charset=utf-8
         Body- {"email": "harry@hsauers.net", "password": "Passwd123!",
                 "midi_name": "midi_name1", "midi_data", "12345",
-                "midi_privacy": "private", "midi_notes": "lorem ipsum"}
+                "midi_privacy": "private", "midi_notes": "lorem ipsum"
+                "midi_bpm": "123" }
         Response- 200 OK
     * You MUST supply the exact Content-Type above, or it won't work.
     * Note the user's account info in the body.
@@ -314,6 +316,7 @@ app.post(devPath + '/api/midis/create', async function(req, res) {
     var midi_model_id = body.midi_model_id;
     var midi_privacy = body.midi_privacy;
     var midi_notes = body.midi_notes;
+    var midi_bpm = body.midi_bpm;
 
     // validate input
     if (midi_name == null || midi_name == "") {
@@ -344,6 +347,7 @@ app.post(devPath + '/api/midis/create', async function(req, res) {
                 "model_id": midi_model_id,
                 "privacy": midi_privacy,
                 "notes": midi_notes,
+                "bpm": midi_bpm, 
             });
 
             newMidi.save();
