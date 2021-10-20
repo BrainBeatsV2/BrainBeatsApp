@@ -301,7 +301,7 @@ app.get('/api/midis/public', async function(req, res) {
         limit = req.params.limit;
     }
     
-    Midi.find({"privacy": "public"}).skip(skip).limit(limit).then(function(doc) {
+    Midi.find({"privacy":"public"}).skip(skip).limit(limit).then(function(doc) {
         res.status(200).send(doc);
     });
 })
@@ -364,8 +364,13 @@ app.post(devPath + '/api/midis/create', async function (req, res) {
     var midi_notes = body.midi_notes;
     var midi_bpm = body.midi_bpm;
     var midi_time_signature = body.midi_time_signature;
+<<<<<<< HEAD
     var midi_scale = body.midi_scale;
     var midi_key = body.midi_key;
+=======
+    var midi_scale = body.midi_scale; 
+    var midi_key = body.midi_key; 
+>>>>>>> Update API endpoints
 
     // validate input
     if (midi_name == null || midi_name == "") {
@@ -396,8 +401,13 @@ app.post(devPath + '/api/midis/create', async function (req, res) {
                 "midiData": midi_data,
                 "privacy": midi_privacy,
                 "notes": midi_notes,
+<<<<<<< HEAD
                 "bpm": midi_bpm,
                 "timeSignature": midi_time_signature,
+=======
+                "bpm": midi_bpm, 
+                "timeSignature": midi_time_signature, 
+>>>>>>> Update API endpoints
                 "scale": midi_scale,
                 "key": midi_key
             });
@@ -634,8 +644,14 @@ app.post('/api/midis/:midi_id/delete', async function(req, res) {
 >>>>>>> Update MIDI schema and allow fetch public MIDIs
 
 
+
+
 // start app
 app.listen(PORT, () => console.log("Running on"), PORT);
+
+
+
+
 
 
 /* Send Mail functionality - using SendGrid */
