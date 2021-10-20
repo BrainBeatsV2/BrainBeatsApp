@@ -268,6 +268,7 @@ app.get(devPath + '/api/models/:model_name', function (req, res) {
         Headers- Content-Type: application/json; charset=utf-8
         Response- 200 OK
 */
+<<<<<<< HEAD
 
 app.get('/api/midis/public', async function (req, res) {
     // send public midi data
@@ -286,6 +287,26 @@ app.get('/api/midis/public', async function (req, res) {
         res.status(200).send(doc);
     });
 })
+=======
+app.get('/api/midis/public', async function(req, res) {
+    // send public midi data
+    var skip = 0;
+    var limit = 0;
+    
+    if (req.params.skip) {
+        skip = req.params.skip;
+    }
+    
+    if (req.params.limit) {
+        limit = req.params.limit;
+    }
+    
+    Midi.find({"privacy": "public"}).skip(skip).limit(limit).then(function(doc) {
+        res.status(200).send(doc);
+    });
+})
+
+>>>>>>> Update MIDI schema and allow fetch public MIDIs
 
 /*
     Example:
@@ -296,7 +317,11 @@ app.get('/api/midis/public', async function (req, res) {
     * You MUST supply the exact Content-Type above, or it won't work.
     * Note the user's account info in the body.
 */
+<<<<<<< HEAD
 app.post(devPath + '/api/midis/mine', async function (req, res) {
+=======
+app.post('/api/midis/mine', async function(req, res) {
+>>>>>>> Update MIDI schema and allow fetch public MIDIs
     var body = req.body;
     var email = body.email;
     var password = body.password;
@@ -552,15 +577,39 @@ app.post('/api/midis/:midi_id/delete', async function (req, res) {
     var email = body.email;
     var password = body.password;
 
+<<<<<<< HEAD
     // check credentials
     User.findOne({ "email": email }).then(function (doc) {
+=======
+/*
+    Delete MIDI file
+    Example: 
+        GET localhost:4000/api/midis/606e1726f9d7edf2fe715ee6/delete
+        Headers- Content-Type: application/json; charset=utf-8
+        Body- {"email": "harry@hsauers.net", "password": "Passwd123!"}
+        Response- 200 OK
+*/
+app.post('/api/midis/:midi_id/delete', async function(req, res) {
+    var midi_id = req.params.midi_id;
+    var body = req.body;
+    var email = body.email;
+    var password = body.password;
+
+    // check credentials
+    User.findOne({"email": email}).then(function(doc) {
+>>>>>>> Update MIDI schema and allow fetch public MIDIs
         if (doc == null) {
             res.status(401).send("Incorrect account username.");
         } else if (doc.password != password) {
             res.status(401).send("Incorrect account password.");
         } else {
+<<<<<<< HEAD
 
             Midi.deleteOne({ "_id": midi_id },).then(function (err) {
+=======
+            
+            Midi.deleteOne({"_id": midi_id},).then(function(err) {
+>>>>>>> Update MIDI schema and allow fetch public MIDIs
                 if (err.ok != 1) {
                     res.status(400).send("bad request");
                 } else {
@@ -569,10 +618,20 @@ app.post('/api/midis/:midi_id/delete', async function (req, res) {
                         "id": midi_id
                     });
                 }
+<<<<<<< HEAD
             });
         }
     });
 });
+=======
+              });
+        }
+    });
+});
+
+
+
+>>>>>>> Update MIDI schema and allow fetch public MIDIs
 
 
 // start app

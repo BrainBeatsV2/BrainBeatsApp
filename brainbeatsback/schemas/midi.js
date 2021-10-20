@@ -24,6 +24,7 @@ const Midi = mongoose.Schema({
         type: String,
     },
     bpm: {
+<<<<<<< HEAD
         type: String,
     },
     timeSignature: {
@@ -35,6 +36,19 @@ const Midi = mongoose.Schema({
     key: {
         type: String,
     },
+=======
+        type: String, 
+    }, 
+    timeSignature: {
+        type: String, 
+    }, 
+    scale: {
+        type: String, 
+    }, 
+    key: {
+        type: String, 
+    }, 
+>>>>>>> Update MIDI schema and allow fetch public MIDIs
     createdAt: {
         type: Date,
         default: Date.now(),
