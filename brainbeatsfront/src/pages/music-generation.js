@@ -276,6 +276,7 @@ class MusicGeneration extends Component {
     componentDidMount() {
         var player = document.querySelector("midi-player");
         if (player != null) {
+<<<<<<< HEAD
 
             // Player Stops
             player.addEventListener("stop", function () {
@@ -287,6 +288,16 @@ class MusicGeneration extends Component {
             player.addEventListener("note", function () {
 
 
+=======
+            // Player Stops
+            player.addEventListener("stop", function () {
+                if ((this.currentTime == this.duration))
+                    console.log("song ended");
+
+            });
+            // Player isPlaying
+            player.addEventListener("note", function () {
+>>>>>>> Fixed tiny bug with midi player on web pages
             });
         }
     }
