@@ -28,11 +28,52 @@ db.users.insertOne(
 db.midi.insertOne(
     {
         "username": "harry@hsauers.net", 
-        "name": "fakepass", 
+        "name": "Midi Name", 
         "midiData": "fakedata", 
         "modelId": "1", 
-        "privacy": "datatype?", 
+        "privacy": "public", 
         "notes": "fakenotes"
+    }
+);
+
+db.midi.insertOne(
+    {
+        "username": "harry@hsauers.net", 
+        "name": "NickName1", 
+        "midiData": "fakedata", 
+        "modelId": "1", 
+        "privacy": "private", 
+        "notes": "fakenotes"
+    }
+);
+
+db.midi.insertOne(
+    {
+        "username": "harry@hsauers.net", 
+        "name": "NickName2", 
+        "midiData": "fakedata", 
+        "modelId": "1", 
+        "privacy": "private", 
+        "notes": "fakenotes", 
+        "bpm": "60", 
+        "timeSignature": "4/4", 
+        "scale": "Bb", 
+        "key": "Bb"
+    }
+);
+
+db.midi.insertOne(
+    {
+        "username": "harry@hsauers.net", 
+        "name": "NickName3", 
+        "midiData": "fakedata", 
+        "modelId": "1", 
+        "privacy": "private", 
+        "notes": "fakenotes", 
+        "bpm": "60", 
+        "timeSignature": "4/4", 
+        "scale": "Bb", 
+        "key": "Bb"
     }
 );
 
