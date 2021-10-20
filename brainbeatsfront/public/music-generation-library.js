@@ -2,7 +2,8 @@ var MidiWriter = require('midi-writer-js')
 const fs = require('fs');
 
 const commonNoteGroupings = [1, 2, 3, 4, 6, 8];
-const commonNoteDurations = ['4', '8', '8t', '16', '16t', '32'];
+const commonNoteDurations = ['2', '4', '8', '8t', '16', '16t'];
+
 const DEBUG = false;
 
 function setInstrument(track, instrument_num) {
@@ -103,9 +104,11 @@ function createNotes(totalNoteGroupingsDurations, scale, intervalPitchMap) {
         var numberOfNotesToGenerate = commonNoteGroupings[Math.floor(Math.random() * commonNoteGroupings.length)];
         debug_print("CommonNoteGroupingsLength :: " + commonNoteGroupings.length);
         var duration = commonNoteDurations[Math.floor(Math.random() * commonNoteDurations.length)];
+
         debug_print("CommongNoteDurationsLength :: " + commonNoteDurations.length);
         debug_print("numberOfNotesToGenerate :: " + numberOfNotesToGenerate);
         var pitches = [];
+
         for (var j = 0; j < numberOfNotesToGenerate; j++) {
             var distribution = createNoteDistribution(numberOfNotesToGenerate, currentPitch);
             var randomIndex = Math.floor(Math.random() * 100);
@@ -131,6 +134,8 @@ function createNotes(totalNoteGroupingsDurations, scale, intervalPitchMap) {
 }
 
 function addNotesToTrack(track, noteEvents) {
+    debug_print(noteEvents);
+
     track.addEvent(noteEvents, function (event, index) {
         return { sequential: true };
     });
@@ -212,6 +217,38 @@ function debug_print(string) {
     return;
 }
 
+function getBeatsPerSec(bpm) {
+    return bpm / 60;
+}
+
+function roundTwoDecimalPoints(num) {
+    return Math.round((num + Number.EPSILON) * 100) / 100;
+}
+
+function getBeatValues(bpm, time_signature) {
+    beatsPerSecond = getBeatsPerSec(bpm);
+    beatValue = time_signature.split('/')[1];
+
+    var noteDurationsPerSecond = [];
+    for (var i = 0; i < commonNoteDurations.length; i++) {
+        var note = commonNoteDurations[i];
+        var beatPerNoteDuration = roundTwoDecimalPoints(beatValue / note);
+
+        // Update these values for triplets:
+        if (note == '8t' || note == '16t') {
+            note = note.substring(0, note.length - 1);
+            beatPerNoteDuration = roundTwoDecimalPoints(beatValue / note * 3);
+        }
+        var numBeatPerNotePerSecond = roundTwoDecimalPoints(beatPerNoteDuration / beatsPerSecond);
+        noteDurationsPerSecond.push({
+            duration: commonNoteDurations[i],
+            beats: beatPerNoteDuration,
+            seconds: numBeatPerNotePerSecond,
+        });
+    }
+    return noteDurationsPerSecond;
+}
+
 module.exports = {
     setInstrument: setInstrument,
     getScaleNotes: getScaleNotes,
@@ -220,4 +257,5 @@ module.exports = {
     addNotesToTrack: addNotesToTrack,
     getMidiString: getMidiString,
     writeMIDIfile: writeMIDIfile,
+    getBeatValues: getBeatValues,
 }

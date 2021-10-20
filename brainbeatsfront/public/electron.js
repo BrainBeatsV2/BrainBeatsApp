@@ -1,4 +1,4 @@
-const { setInstrument, getScaleNotes, createIntervalPitchMap, createNotes, addNotesToTrack, getMidiString, writeMIDIfile } = require('./music-generation-library');
+const { setInstrument, getScaleNotes, createIntervalPitchMap, createNotes, addNotesToTrack, getMidiString, writeMIDIfile, getBeatValues, } = require('./music-generation-library');
 var MidiWriter = require('midi-writer-js')
 var MidiPlayer = require('midi-player-js');
 const { app, BrowserWindow, ipcMain } = require('electron');
@@ -99,7 +99,7 @@ ipcMain.on('start_eeg_script', (event, arguments) => {
 });
 
 
-ipcMain.on('end_eeg_script', (event, user_key, user_scale, user_minrange, user_maxrange) => {
+ipcMain.on('end_eeg_script', (event, user_key, user_scale, user_minrange, user_maxrange, user_bpm, user_time_signature) => {
   if (pyshell == null || pyshell == undefined) {
     return
   }
@@ -125,7 +125,17 @@ ipcMain.on('end_eeg_script', (event, user_key, user_scale, user_minrange, user_m
   midiString = getMidiString(write);
   event.sender.send('end_eeg_script', midiString);
   writeMIDIfile(write);
+  console.log("EEG Data Len: " + eegDataQueue.length);
+  console.log("Seconds recorded: " + secondsRecorded);
+  console.log("User BPM: " + user_bpm + " User Time Signature: " + user_time_signature);
+  var noteDurationsPerSecond = getBeatValues(user_bpm, user_time_signature);
+  console.log("Note durations Per Second:");
+  console.log(noteDurationsPerSecond);
 });
+
+
+
+// function getBeat
 
 // TODO Handle download of midi files from dashboard
 // ipcMain.on('download_midi', (event, args) => {

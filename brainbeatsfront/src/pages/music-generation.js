@@ -78,7 +78,6 @@ class MusicGeneration extends Component {
         // If not running the EEG Script, then run it!
         if (!this.state.isEEGScriptRunning) {
             console.log('Started recording!');
-            console.log(this.state.instrument);
 
             // Sets the MIDI instrument for MIDI writer
             window.ipcRenderer.send('set_instrument', this.state.instrument);
@@ -109,7 +108,7 @@ class MusicGeneration extends Component {
 
             console.log('Ended recording!')
             // Parameters: key,scale
-            window.ipcRenderer.send('end_eeg_script', this.state.key, this.state.scale, this.state.minRange, this.state.maxRange);
+            window.ipcRenderer.send('end_eeg_script', this.state.key, this.state.scale, this.state.minRange, this.state.maxRange, this.state.bpm, this.state.timing);
             window.ipcRenderer.on('end_eeg_script', (event, args) => {
                 console.log(args)
                 this.setState({ midiString: 'data:audio/midi;base64,' + args })
