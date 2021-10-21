@@ -1,4 +1,4 @@
-const { setInstrument, musicGenerationDriver, getScaleMap, createNotes, addNotesToTrack, getMidiString, writeMIDIfile, getNoteDurationsPerBeatPerSecond, roundTwoDecimalPoints } = require('./music-generation-library');
+const { setInstrument, musicGenerationDriver, getOctaveRangeMap, getScaleMap, createNotes, addNotesToTrack, getMidiString, writeMIDIfile, getNoteDurationsPerBeatPerSecond, roundTwoDecimalPoints } = require('./music-generation-library');
 var MidiWriter = require('midi-writer-js')
 var MidiPlayer = require('midi-player-js');
 const { app, BrowserWindow, ipcMain } = require('electron');
@@ -111,12 +111,11 @@ ipcMain.on('end_eeg_script', (event, musicGenerationModel, key, scale, minRange,
 
   var noteDurationsPerBeatPerSecond = getNoteDurationsPerBeatPerSecond(BPM, timeSignature);
   var scaleMap = getScaleMap(key, scale, minRange, maxRange);
-  var octaveRangeMap = 0; // = getRangeMap(minRange, maxRange);
+  var octaveRangeMap = getOctaveRangeMap(minRange, maxRange);
 
   eegDataQueue.forEach(eegDataPoint => {
     var secondsForThisSnapshot = secondsPerEEGSnapShot + remainderSeconds;
-
-    musicGenerationDriver(musicGenerationModel, scaleMap, octaveRangeMap, secondsForThisSnapshot);
+    // musicGenerationDriver(musicGenerationModel, scaleMap, octaveRangeMap, secondsForThisSnapshot);
 
     noteEvents = createNotes(secondsForThisSnapshot, scaleMap);
     track = addNotesToTrack(track, noteEvents);

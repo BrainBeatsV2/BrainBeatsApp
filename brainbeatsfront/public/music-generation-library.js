@@ -6,14 +6,24 @@ const commonNoteDurations = ['2', '4', '8', '8t', '16', '16t'];
 
 const DEBUG = false;
 
+// TODO: Are sharps and flats being handled?
+// TODO: Mean aggregate of the EEG data
+
+// Note (Scale) = Letter
+// Duration (commonNoteDurations)
+// Repetition (commonNoteGroupings)
+// Pitch (Jumps within octave ranges)
+// Loudness 
+
 function musicGenerationDriver(musicGenerationModel, scaleMap, pitchMap, secondsForThisSnapshot) {
+    if (musicGenerationModel == 1) {
+
+    }
     // if this model: go through this pipeline: 
     // all pipelines have the build note events from the scale and pitch maps and other things we said in the powerpoint thingie
     // noteEvents -> createNotes
     // addNotesToTrack(track, noteEvents);
 }
-
-
 
 function setInstrument(track, instrument_num) {
     track.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: instrument_num }));
@@ -21,24 +31,89 @@ function setInstrument(track, instrument_num) {
     return track;
 }
 
-function getMidiString(write) {
-    debug_print(write.base64());
-    return write.base64()
+function getBeatsPerSec(bpm) {
+    return bpm / 60;
 }
 
-function writeMIDIfile(write) {
-    filename = Date.now()
-    const buffer = new Buffer.from(write.buildFile());
-    debug_print(write.buildFile());
-    debug_print(buffer);
-    fs.writeFile(filename + '.mid', buffer, function (err) {
-        if (err) {
-            console.log(err)
-            debug_print(err)
-            throw err;
+function getNoteDurationsPerBeatPerSecond(bpm, time_signature) {
+    beatsPerSecond = getBeatsPerSec(bpm);
+    beatValue = time_signature.split('/')[1];
+
+    var noteDurationsPerBeatPerSecond = [];
+    for (var i = 0; i < commonNoteDurations.length; i++) {
+        var note = commonNoteDurations[i];
+        var beatPerNoteDuration = roundTwoDecimalPoints(beatValue / note);
+
+        // Update these values for triplets:
+        if (note == '8t' || note == '16t') {
+            note = note.substring(0, note.length - 1);
+            beatPerNoteDuration = roundTwoDecimalPoints(beatValue / note * 3);
         }
-    });
-    debug_print('MIDI file created')
+        var numBeatPerNotePerSecond = roundTwoDecimalPoints(beatPerNoteDuration / beatsPerSecond);
+        noteDurationsPerBeatPerSecond.push({
+            duration: commonNoteDurations[i],
+            beats: beatPerNoteDuration,
+            seconds: numBeatPerNotePerSecond,
+        });
+    }
+    return noteDurationsPerBeatPerSecond;
+}
+
+// Ideally will have further Note options and scales with more features added
+function getScaleNotes(selection, scale, minRange, maxRange) {
+    var notes = { C: 1, Db: 1.5, D: 2, Eb: 2.5, E: 3, F: 3.5, Gb: 4, G: 4.5, Ab: 5, A: 5.5, Bb: 6, B: 6.5 };
+    var major = [1, 1, 0.5, 1, 1, 1, 0.5];
+    var minor = [1, 0.5, 1, 1, 0.5, 1, 1];
+    var chromatic = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
+    var pentatonic = [1, 1, 1.5, 1];
+    var singular = [1, 1];
+    var scale_to_use = [];
+    var usable_notes = [];
+    var finalnotes = [];
+    var i = 0;
+    var j = notes[selection];
+    var max_steps = 0;
+    switch (scale) {
+        case "major":
+            scale_to_use = major;
+            max_steps = 7;
+            break;
+        case "minor":
+            scale_to_use = minor;
+            max_steps = 7;
+            break;
+        case "chromatic":
+            scale_to_use = chromatic;
+            max_steps = 12;
+            break;
+        case "pentatonic":
+            scale_to_use = pentatonic;
+            max_steps = 5;
+            break;
+        case "singular":
+            scale_to_use = singular;
+            max_steps = 1;
+            break;
+    }
+
+    // Get usable notes within scale
+    for (i = 0; i < max_steps; i++) {
+        // Ensures that once a note reaches the end of octave it wraps around  
+        if (j > 6.5) {
+            j = (j - 6);
+        }
+        usable_notes.push(getKeyByValue(notes, j));
+        j = j + scale_to_use[i];
+    }
+    // Set all available notes within range
+    for (i = minRange; i <= maxRange; i++) {
+        for (j = 0; j < usable_notes.length; j++) {
+            debug_print(usable_notes[j] + i);
+            finalnotes.push(usable_notes[j] + i);
+        }
+    }
+    debug_print(finalnotes);
+    return finalnotes;
 }
 
 function getScaleMap(key, scale, minRange, maxRange) {
@@ -53,6 +128,19 @@ function getScaleMap(key, scale, minRange, maxRange) {
     return scaleMap;
 }
 
+function getOctaveRangeMap(minRange, maxRange) {
+    var octaveRangeMap = new Map();
+    let index = 0;
+    for (let octave = minRange; octave <= maxRange; octave++) {
+        octaveRangeMap.set(index, octave);
+        index++;
+    }
+    debug_print('Octave Range Map');
+    debug_print(octaveRangeMap);
+    return octaveRangeMap;
+}
+
+// TODO: Reorganize this!
 let createNoteDistribution = (numberOfNotesToGenerate, currentPitch) => {
     for (var j = 0; j < numberOfNotesToGenerate; j++) {
         distribution = [];
@@ -101,11 +189,7 @@ let createNoteDistribution = (numberOfNotesToGenerate, currentPitch) => {
     return distribution;
 }
 
-function getRandomInt(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-/// TOOODOOOOOOOOOO
+// TODO: Reorganize this!
 function createNotes(totalNoteGroupingsDurations, scaleMap) {
     // totalNoteGroupingsDurations = time;
 
@@ -165,66 +249,24 @@ function addNotesToTrack(track, noteEvents) {
     return track;
 }
 
-// Ideally will have further Note options and scales with more features added
-function getScaleNotes(selection, scale, minRange, maxRange) {
-    var notes = { C: 1, Db: 1.5, D: 2, Eb: 2.5, E: 3, F: 3.5, Gb: 4, G: 4.5, Ab: 5, A: 5.5, Bb: 6, B: 6.5 };
-    var major = [1, 1, 0.5, 1, 1, 1, 0.5];
-    var minor = [1, 0.5, 1, 1, 0.5, 1, 1];
-    var chromatic = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
-    var pentatonic = [1, 1, 1.5, 1];
-    var singular = [1, 1];
-    var scale_to_use = [];
-    var usable_notes = [];
-    var finalnotes = [];
-    var i = 0;
-    var j = notes[selection];
-    var max_steps = 0;
-    switch (scale) {
-        case "major":
-            scale_to_use = major;
-            max_steps = 7;
-            break;
-        case "minor":
-            scale_to_use = minor;
-            max_steps = 7;
-            break;
-        case "chromatic":
-            scale_to_use = chromatic;
-            max_steps = 12;
-            break;
-        case "pentatonic":
-            scale_to_use = pentatonic;
-            max_steps = 5;
-            break;
-        case "singular":
-            scale_to_use = singular;
-            max_steps = 1;
-            break;
-    }
-
-    // Get usable notes within scale
-    for (i = 0; i < max_steps; i++) {
-        // Ensures that once a note reaches the end of octave it wraps around  
-        if (j > 6.5) {
-            j = (j - 6);
-        }
-        usable_notes.push(getKeyByValue(notes, j));
-        j = j + scale_to_use[i];
-    }
-    // Set all available notes within range
-    for (i = minRange; i <= maxRange; i++) {
-        for (j = 0; j < usable_notes.length; j++) {
-            debug_print(usable_notes[j] + i);
-            finalnotes.push(usable_notes[j] + i);
-        }
-    }
-
-    debug_print(finalnotes);
-    return finalnotes;
+function getMidiString(write) {
+    debug_print(write.base64());
+    return write.base64()
 }
 
-function getKeyByValue(object, value) {
-    return Object.keys(object).find(key => object[key] === value);
+function writeMIDIfile(write) {
+    filename = Date.now()
+    const buffer = new Buffer.from(write.buildFile());
+    debug_print(write.buildFile());
+    debug_print(buffer);
+    fs.writeFile(filename + '.mid', buffer, function (err) {
+        if (err) {
+            console.log(err)
+            debug_print(err)
+            throw err;
+        }
+    });
+    debug_print('MIDI file created')
 }
 
 function debug_print(string) {
@@ -234,36 +276,16 @@ function debug_print(string) {
     return;
 }
 
-function getBeatsPerSec(bpm) {
-    return bpm / 60;
-}
-
 function roundTwoDecimalPoints(num) {
     return Math.round((num + Number.EPSILON) * 100) / 100;
 }
 
-function getNoteDurationsPerBeatPerSecond(bpm, time_signature) {
-    beatsPerSecond = getBeatsPerSec(bpm);
-    beatValue = time_signature.split('/')[1];
+function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 
-    var noteDurationsPerBeatPerSecond = [];
-    for (var i = 0; i < commonNoteDurations.length; i++) {
-        var note = commonNoteDurations[i];
-        var beatPerNoteDuration = roundTwoDecimalPoints(beatValue / note);
-
-        // Update these values for triplets:
-        if (note == '8t' || note == '16t') {
-            note = note.substring(0, note.length - 1);
-            beatPerNoteDuration = roundTwoDecimalPoints(beatValue / note * 3);
-        }
-        var numBeatPerNotePerSecond = roundTwoDecimalPoints(beatPerNoteDuration / beatsPerSecond);
-        noteDurationsPerBeatPerSecond.push({
-            duration: commonNoteDurations[i],
-            beats: beatPerNoteDuration,
-            seconds: numBeatPerNotePerSecond,
-        });
-    }
-    return noteDurationsPerBeatPerSecond;
+function getKeyByValue(object, value) {
+    return Object.keys(object).find(key => object[key] === value);
 }
 
 module.exports = {
@@ -271,6 +293,7 @@ module.exports = {
     setInstrument: setInstrument,
     getScaleNotes: getScaleNotes,
     getScaleMap: getScaleMap,
+    getOctaveRangeMap: getOctaveRangeMap,
     createNotes: createNotes,
     addNotesToTrack: addNotesToTrack,
     getMidiString: getMidiString,
