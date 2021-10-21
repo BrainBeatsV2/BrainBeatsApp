@@ -115,7 +115,7 @@ ipcMain.on('end_eeg_script', (event, musicGenerationModel, key, scale, minRange,
 
   eegDataQueue.forEach(eegDataPoint => {
     var secondsForThisSnapshot = secondsPerEEGSnapShot + remainderSeconds;
-    // musicGenerationDriver(musicGenerationModel, scaleMap, octaveRangeMap, secondsForThisSnapshot);
+    musicGenerationDriver(musicGenerationModel, scaleMap, octaveRangeMap, eegDataPoint, noteDurationsPerBeatPerSecond, secondsForThisSnapshot);
 
     noteEvents = createNotes(secondsForThisSnapshot, scaleMap);
     track = addNotesToTrack(track, noteEvents);
