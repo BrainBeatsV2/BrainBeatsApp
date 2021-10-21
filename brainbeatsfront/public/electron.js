@@ -1,4 +1,4 @@
-const { setInstrument, getScaleNotes, createIntervalPitchMap, createNotes, addNotesToTrack, getMidiString, writeMIDIfile, getBeatValues, } = require('./music-generation-library');
+const { setInstrument, musicGenerationDriver, getScaleMap, createNotes, addNotesToTrack, getMidiString, writeMIDIfile, getNoteDurationsPerBeatPerSecond, roundTwoDecimalPoints } = require('./music-generation-library');
 var MidiWriter = require('midi-writer-js')
 var MidiPlayer = require('midi-player-js');
 const { app, BrowserWindow, ipcMain } = require('electron');
@@ -65,8 +65,10 @@ function clearMidiWriter() {
 
 function stopEEGScript() {
   kill(pyshell.childProcess.pid);
-  return
+  console.log('Terminated EEG Python script');
+  return;
 }
+
 
 
 ipcMain.on('set_instrument', (event, args) => {
@@ -89,7 +91,6 @@ ipcMain.on('start_eeg_script', (event, arguments) => {
       if (eeg_data == undefined || eeg_data == null) {
         return
       }
-      console.log(eeg_data);
       eegDataQueue.push(eeg_data);
       sendEEGDataToNode(eeg_data);
     } catch (error) {
@@ -99,52 +100,54 @@ ipcMain.on('start_eeg_script', (event, arguments) => {
 });
 
 
-ipcMain.on('end_eeg_script', (event, user_key, user_scale, user_minrange, user_maxrange, user_bpm, user_time_signature) => {
-  if (pyshell == null || pyshell == undefined) {
-    return
-  }
-
-  var endTime = new Date();
-  var secondsRecorded = Math.round((endTime - startTime) / 1000);
-  console.log("Seconds Recorded: " + secondsRecorded);
-
+ipcMain.on('end_eeg_script', (event, musicGenerationModel, key, scale, minRange, maxRange, BPM, timeSignature) => {
+  if (pyshell == null || pyshell == undefined) return;
   stopEEGScript();
-  console.log('Terminated EEG Python script')
 
-  // Calculate total eegdata points for how many seconds of recording?
+  // Time Tracking: 
+  var secondsRecorded = getMaxTimeRecorded(new Date());
+  var secondsPerEEGSnapShot = roundTwoDecimalPoints(secondsRecorded / eegDataQueue.length);
+  var remainderSeconds = 0;
+
+  var noteDurationsPerBeatPerSecond = getNoteDurationsPerBeatPerSecond(BPM, timeSignature);
+  var scaleMap = getScaleMap(key, scale, minRange, maxRange);
+  var octaveRangeMap = 0; // = getRangeMap(minRange, maxRange);
+
   eegDataQueue.forEach(eegDataPoint => {
-    scale = getScaleNotes(user_key, user_scale, user_minrange, user_maxrange);
-    intervalPitchMap = createIntervalPitchMap(scale.length, scale);
-    noteEvents = createNotes(secondsRecorded, scale, intervalPitchMap);
+    var secondsForThisSnapshot = secondsPerEEGSnapShot + remainderSeconds;
+
+    musicGenerationDriver(musicGenerationModel, scaleMap, octaveRangeMap, secondsForThisSnapshot);
+
+    noteEvents = createNotes(secondsForThisSnapshot, scaleMap);
     track = addNotesToTrack(track, noteEvents);
+
+    // remainderSeconds = update the remainder
   });
 
+  // Output MIDI file
   write = new MidiWriter.Writer(track);
   urlMIDI = write.dataUri();
   player.loadDataUri(urlMIDI);
   midiString = getMidiString(write);
   event.sender.send('end_eeg_script', midiString);
   writeMIDIfile(write);
-  console.log("EEG Data Len: " + eegDataQueue.length);
-  console.log("Seconds recorded: " + secondsRecorded);
-  console.log("User BPM: " + user_bpm + " User Time Signature: " + user_time_signature);
-  var noteDurationsPerSecond = getBeatValues(user_bpm, user_time_signature);
-  console.log("Note durations Per Second:");
-  console.log(noteDurationsPerSecond);
 });
 
+function getMaxTimeRecorded(endTime) {
+  // Compares recording time rounded by whole number & by two decimal points
+  totalTime = (endTime - startTime) / 1000;
+  return Math.max(Math.round(totalTime), roundTwoDecimalPoints(totalTime));
+}
 
 
-// function getBeat
+function sendEEGDataToNode(eeg_data) {
+  mainWindow.webContents.send('start_eeg_script', eeg_data)
+  return
+}
 
-// TODO Handle download of midi files from dashboard
-// ipcMain.on('download_midi', (event, args) => {
-//   console.log('Downloading midi');
-//   writeMIDIfile(write);
-// });
 
 ipcMain.on('gen_midi', (event, args) => {
-  console.log('Loaded midi now')
+  // console.log('Loaded midi now')
   // player.loadDataUri(urlMIDI);
 });
 

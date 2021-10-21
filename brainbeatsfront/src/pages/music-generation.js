@@ -108,7 +108,7 @@ class MusicGeneration extends Component {
 
             console.log('Ended recording!')
             // Parameters: key,scale
-            window.ipcRenderer.send('end_eeg_script', this.state.key, this.state.scale, this.state.minRange, this.state.maxRange, this.state.bpm, this.state.timing);
+            window.ipcRenderer.send('end_eeg_script', this.state.model, this.state.key, this.state.scale, this.state.minRange, this.state.maxRange, this.state.bpm, this.state.timing);
             window.ipcRenderer.on('end_eeg_script', (event, args) => {
                 console.log(args)
                 this.setState({ midiString: 'data:audio/midi;base64,' + args })

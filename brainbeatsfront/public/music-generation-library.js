@@ -6,6 +6,15 @@ const commonNoteDurations = ['2', '4', '8', '8t', '16', '16t'];
 
 const DEBUG = false;
 
+function musicGenerationDriver(musicGenerationModel, scaleMap, pitchMap, secondsForThisSnapshot) {
+    // if this model: go through this pipeline: 
+    // all pipelines have the build note events from the scale and pitch maps and other things we said in the powerpoint thingie
+    // noteEvents -> createNotes
+    // addNotesToTrack(track, noteEvents);
+}
+
+
+
 function setInstrument(track, instrument_num) {
     track.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: instrument_num }));
     debug_print('Set instrument to track')
@@ -32,14 +41,16 @@ function writeMIDIfile(write) {
     debug_print('MIDI file created')
 }
 
-function createIntervalPitchMap(notesNum, notesArray) {
-    var intervalPitchMap = new Map();
-    for (let i = 0; i < notesNum; i++) {
-        intervalPitchMap.set(i, notesArray[i]);
+function getScaleMap(key, scale, minRange, maxRange) {
+    var scaleNotes = getScaleNotes(key, scale, minRange, maxRange);
+
+    var scaleMap = new Map();
+    for (let i = 0; i < scaleNotes.length; i++) {
+        scaleMap.set(i, scaleNotes[i]);
     }
-    debug_print('Interval Pitch Map');
-    debug_print(intervalPitchMap);
-    return intervalPitchMap;
+    debug_print('Scale Map');
+    debug_print(scaleMap);
+    return scaleMap;
 }
 
 let createNoteDistribution = (numberOfNotesToGenerate, currentPitch) => {
@@ -94,36 +105,48 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function createNotes(totalNoteGroupingsDurations, scale, intervalPitchMap) {
+/// TOOODOOOOOOOOOO
+function createNotes(totalNoteGroupingsDurations, scaleMap) {
+    // totalNoteGroupingsDurations = time;
+
     var noteEvents = [];
     var currentPitch = 3;
-    // Want: IntervalPitchMap length amount
+    // Want: scaleMap length amount
 
     for (var i = 0; i < totalNoteGroupingsDurations; i++) {
         // pick a random note grouping and duration and generate that many notes
         var numberOfNotesToGenerate = commonNoteGroupings[Math.floor(Math.random() * commonNoteGroupings.length)];
+
         debug_print("CommonNoteGroupingsLength :: " + commonNoteGroupings.length);
+
         var duration = commonNoteDurations[Math.floor(Math.random() * commonNoteDurations.length)];
 
         debug_print("CommongNoteDurationsLength :: " + commonNoteDurations.length);
         debug_print("numberOfNotesToGenerate :: " + numberOfNotesToGenerate);
+
         var pitches = [];
 
         for (var j = 0; j < numberOfNotesToGenerate; j++) {
+
             var distribution = createNoteDistribution(numberOfNotesToGenerate, currentPitch);
+
             var randomIndex = Math.floor(Math.random() * 100);
             var nextPitch = distribution[randomIndex];
             pitches.push(nextPitch);
+
             // currentPitch needs to select from internvalpitchmap 
             // currentPitch = nextPitch;
-            debug_print("Interval Pitch Length :: " + (intervalPitchMap.size - 1));
-            currentPitch = getRandomInt(0, (intervalPitchMap.size - 1));
+            debug_print("Scale Map Length :: " + (scaleMap.size - 1));
+
+            currentPitch = getRandomInt(0, (scaleMap.size - 1));
         }
 
         var pitchesAsNotes = [];
         pitches.forEach(pitch => {
-            pitchesAsNotes.push(intervalPitchMap.get(pitch));
-            debug_print("Interval Pitch Map:: Pitch[" + pitch + "] :: IntervalPitchMap[" + intervalPitchMap.get(pitch) + "]");
+
+            pitchesAsNotes.push(scaleMap.get(pitch));
+
+            debug_print("Interval Pitch Map:: Pitch[" + pitch + "] :: scaleMap[" + scaleMap.get(pitch) + "]");
 
         });
         noteEvents.push(new MidiWriter.NoteEvent({ pitch: pitchesAsNotes, duration: duration.toString() }));
@@ -134,18 +157,15 @@ function createNotes(totalNoteGroupingsDurations, scale, intervalPitchMap) {
 }
 
 function addNotesToTrack(track, noteEvents) {
-    debug_print(noteEvents);
-
+    debug_print('Add Notes to track');
     track.addEvent(noteEvents, function (event, index) {
         return { sequential: true };
     });
-    debug_print('addnotes to track');
     debug_print(track);
     return track;
 }
 
 // Ideally will have further Note options and scales with more features added
-
 function getScaleNotes(selection, scale, minRange, maxRange) {
     var notes = { C: 1, Db: 1.5, D: 2, Eb: 2.5, E: 3, F: 3.5, Gb: 4, G: 4.5, Ab: 5, A: 5.5, Bb: 6, B: 6.5 };
     var major = [1, 1, 0.5, 1, 1, 1, 0.5];
@@ -197,12 +217,9 @@ function getScaleNotes(selection, scale, minRange, maxRange) {
             debug_print(usable_notes[j] + i);
             finalnotes.push(usable_notes[j] + i);
         }
-
     }
 
-
     debug_print(finalnotes);
-    //pentatonic_notes = ['C4', 'D4', 'E4', 'G4', 'A4']
     return finalnotes;
 }
 
@@ -225,11 +242,11 @@ function roundTwoDecimalPoints(num) {
     return Math.round((num + Number.EPSILON) * 100) / 100;
 }
 
-function getBeatValues(bpm, time_signature) {
+function getNoteDurationsPerBeatPerSecond(bpm, time_signature) {
     beatsPerSecond = getBeatsPerSec(bpm);
     beatValue = time_signature.split('/')[1];
 
-    var noteDurationsPerSecond = [];
+    var noteDurationsPerBeatPerSecond = [];
     for (var i = 0; i < commonNoteDurations.length; i++) {
         var note = commonNoteDurations[i];
         var beatPerNoteDuration = roundTwoDecimalPoints(beatValue / note);
@@ -240,22 +257,24 @@ function getBeatValues(bpm, time_signature) {
             beatPerNoteDuration = roundTwoDecimalPoints(beatValue / note * 3);
         }
         var numBeatPerNotePerSecond = roundTwoDecimalPoints(beatPerNoteDuration / beatsPerSecond);
-        noteDurationsPerSecond.push({
+        noteDurationsPerBeatPerSecond.push({
             duration: commonNoteDurations[i],
             beats: beatPerNoteDuration,
             seconds: numBeatPerNotePerSecond,
         });
     }
-    return noteDurationsPerSecond;
+    return noteDurationsPerBeatPerSecond;
 }
 
 module.exports = {
+    musicGenerationDriver: musicGenerationDriver,
     setInstrument: setInstrument,
     getScaleNotes: getScaleNotes,
-    createIntervalPitchMap: createIntervalPitchMap,
+    getScaleMap: getScaleMap,
     createNotes: createNotes,
     addNotesToTrack: addNotesToTrack,
     getMidiString: getMidiString,
     writeMIDIfile: writeMIDIfile,
-    getBeatValues: getBeatValues,
+    getNoteDurationsPerBeatPerSecond: getNoteDurationsPerBeatPerSecond,
+    roundTwoDecimalPoints: roundTwoDecimalPoints,
 }
