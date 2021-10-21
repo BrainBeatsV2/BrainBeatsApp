@@ -1,6 +1,7 @@
 var MidiWriter = require('midi-writer-js')
 const fs = require('fs');
 
+const brainwaves = ['delta', 'theta', 'alpha', 'beta', 'gamma'];
 const commonNoteGroupings = [1, 2, 3, 4, 6, 8];
 const commonNoteDurations = ['2', '4', '8', '8t', '16', '16t'];
 
@@ -24,8 +25,9 @@ function musicGenerationDriver(musicGenerationModel, scaleMap, octaveRangeMap, e
 
     // Map Aggregate Band Power to Random Probability
     if (musicGenerationModel == 1) {
-        durations = durationRandomProbabilityDriver(eegDataPoint['band_values'])
-
+        brainwaveRanges = getBrainwaveBandPowerRangesFromPercent(eegDataPoint);
+        console.log(brainwaveRanges);
+        // durations = durationRandomProbabilityDriver(eegDataPoint['band_values'])
         // Keep time in mind!!!
         // notesRandomProbabilityDriver
         // repetitionRandomProbabilityDriver
@@ -41,32 +43,35 @@ function musicGenerationDriver(musicGenerationModel, scaleMap, octaveRangeMap, e
 
 function durationRandomProbabilityDriver(eegData) {
     // 
-    bandValuePercents = getPercents(eegData);
+    //  = getPercents(eegData);
     // calculate percents for Band Powers (EEG data)
     // add give number ranges 
     // have random number generate 
 }
 
-function getBrainwavePercents(delta, theta, alpha, beta, gamma) {
-    var total = delta + theta + alpha + beta + gamma;
-    var brainwaves = ['delta', 'theta', 'alpha', 'beta', 'gamma'];
-    var brainwaveData = [delta, theta, alpha, beta, gamma];
+function getBrainwaveBandPowerRangesFromPercent(eegData) {
+    var bandPowerValues = eegData['band_values'];
+    var brainwaveData = [bandPowerValues['delta'], bandPowerValues['theta'], bandPowerValues['alpha'], bandPowerValues['beta'], bandPowerValues['gamma']];
+    var totalBandPower = roundTwoDecimalPoints(bandPowerValues['delta'] + bandPowerValues['theta'] + bandPowerValues['alpha'] + bandPowerValues['beta'] + bandPowerValues['gamma']);
 
-    var brainwavePercents = [];
+    var brainwaveRanges = [];
+    var curLowerRange = 0;
     for (let i = 0; i < brainwaves.length; i++) {
-        brainwavePercents.push({
+        var curBrainwavePercent = roundTwoDecimalPoints(brainwaveData[i] / totalBandPower * 100);
+        var curUpperRange = roundTwoDecimalPoints(curLowerRange + curBrainwavePercent);
+
+        // If we are at the last brainwave, just make sure it's upperRange is 100.
+        if (i == brainwaves.length - 1) curUpperRange = 100.00;
+        brainwaveRanges.push({
             brainwave: brainwaves[i],
-            percent: roundTwoDecimalPoints(brainwaveData[i] / total * 100),
-        })
+            lowerRange: curLowerRange,
+            upperRange: curUpperRange,
+        });
+        curLowerRange = curUpperRange + 0.001;
     }
 
-    return brainwavePercents;
+    return brainwaveRanges;
 }
-
-function determineNumberRanges() {
-
-}
-
 
 function setInstrument(track, instrument_num) {
     track.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: instrument_num }));

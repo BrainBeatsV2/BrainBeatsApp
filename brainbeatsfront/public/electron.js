@@ -69,8 +69,6 @@ function stopEEGScript() {
   return;
 }
 
-
-
 ipcMain.on('set_instrument', (event, args) => {
   console.log("Set instrument to: " + args);
   track = setInstrument(track, args);
@@ -116,7 +114,6 @@ ipcMain.on('end_eeg_script', (event, musicGenerationModel, key, scale, minRange,
   eegDataQueue.forEach(eegDataPoint => {
     var secondsForThisSnapshot = secondsPerEEGSnapShot + remainderSeconds;
     musicGenerationDriver(musicGenerationModel, scaleMap, octaveRangeMap, eegDataPoint, noteDurationsPerBeatPerSecond, secondsForThisSnapshot);
-
     noteEvents = createNotes(secondsForThisSnapshot, scaleMap);
     track = addNotesToTrack(track, noteEvents);
 
