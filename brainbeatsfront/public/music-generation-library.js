@@ -2,8 +2,14 @@ var MidiWriter = require('midi-writer-js')
 const fs = require('fs');
 
 const brainwaves = ['delta', 'theta', 'alpha', 'beta', 'gamma'];
-const commonNoteGroupings = [1, 2, 3, 4, 6, 8];
-const commonNoteDurations = ['2', '4', '8', '8t', '16', '16t'];
+const commonNoteGroupings = [1, 2, 3, 4, 6, 8]; // These are hardcoded values pls don't change
+const commonNoteDurations = ['2', '4', '8', '8t', '16', '16t'];  // These are hardcoded values pls don't change
+
+const pentatonicLen = 5;
+const singularLen = 1;
+const chromaticLen = 12;
+const majorLen = 7;
+const minorLen = 7;
 
 const DEBUG = false;
 
@@ -11,23 +17,33 @@ const DEBUG = false;
 // TODO: Mean aggregate of the EEG data
 
 // Note (Scale) = Letter
-// Duration (commonNoteDurations)
-// Repetition (commonNoteGroupings)
+
+
 // Pitch (Jumps within octave ranges)
 // Loudness
-// build the probability ranges from the EEG data
 
-function musicGenerationDriver(musicGenerationModel, scaleMap, octaveRangeMap, eegDataPoint, noteDurationsPerBeatPerSecond, secondsForThisSnapshot) {
+
+function musicGenerationDriver(musicGenerationModel, scaleNoteArray, octaveArray, eegDataPoint, noteDurationsPerBeatPerSecond, secondsForThisSnapshot) {
     track = new MidiWriter.Track();
+
     // calculate percents for current EEG data
     // add give number ranges 
     // have random number generate 
 
     // Map Aggregate Band Power to Random Probability
     if (musicGenerationModel == 1) {
-        brainwaveRanges = getBrainwaveBandPowerRangesFromPercent(eegDataPoint);
-        console.log(brainwaveRanges);
+        // TODO: Should this handle loudness?
+        var durationRanges = getOutcomeRanges(eegDataPoint, commonNoteDurations);
+        var groupingsRanges = getOutcomeRanges(eegDataPoint, commonNoteGroupings);
+        var octaveRanges = getOutcomeRanges(eegDataPoint, octaveArray);
+        var scaleNoteRanges = getOutcomeRanges(eegDataPoint, scaleNoteArray);
+
+
+
+        brainwaveRanges = getBrainwaveBandPowerRangesFromPercent(eegDataPoint, scaleNoteArray);
+
         // durations = durationRandomProbabilityDriver(eegDataPoint['band_values'])
+
         // Keep time in mind!!!
         // notesRandomProbabilityDriver
         // repetitionRandomProbabilityDriver
@@ -49,28 +65,142 @@ function durationRandomProbabilityDriver(eegData) {
     // have random number generate 
 }
 
-function getBrainwaveBandPowerRangesFromPercent(eegData) {
-    var bandPowerValues = eegData['band_values'];
-    var brainwaveData = [bandPowerValues['delta'], bandPowerValues['theta'], bandPowerValues['alpha'], bandPowerValues['beta'], bandPowerValues['gamma']];
-    var totalBandPower = roundTwoDecimalPoints(bandPowerValues['delta'] + bandPowerValues['theta'] + bandPowerValues['alpha'] + bandPowerValues['beta'] + bandPowerValues['gamma']);
+function getMaxBrainwaveName(bandPowers) {
+    var maxBrainwaveName = "";
+    var max = 0;
 
-    var brainwaveRanges = [];
-    var curLowerRange = 0;
-    for (let i = 0; i < brainwaves.length; i++) {
+    for (var brainwave in bandPowers) {
+        if (bandPowers.hasOwnProperty(brainwave) && bandPowers[brainwave] > max) {
+            max = bandPowers[brainwave];
+            maxBrainwaveName = brainwave;
+        }
+    }
+    return maxBrainwaveName;
+}
+
+
+function getOutcomeRanges(eegData, outcomesArray) {
+    var totalOutcomes = outcomesArray.length;
+
+    if (totalOutcomes == 1) {
+        return getOutcomeRangesForOne(eegData, outcome);
+    } else if (totalOutcomes > 1 && totalOutcomes < 5) {
+        return getOutcomeRangesForMoreThanOneLessThanFive(eegData, outcome);
+    }
+
+    // Assumes data is either one for one for brainwave data or can be split by the greatest brainwave
+    return getOutcomeRangesForFiveOutcomesOrGreater(eegData, outcomesArray);
+}
+
+function getOutcomeRangesForOne(eegData, outcome) {
+    var brainwaveRangesToOutcomes = [];
+
+    brainwaveRangesToOutcomes.push({
+        lowerRange: 0,
+        upperRange: 100,
+        outcome: outcome,
+    });
+
+    return brainwaveRangesToOutcomes;
+}
+
+function getOutcomeRangesForMoreThanOneLessThanFive(eegData, outcomesArray) {
+    var bandPowerValues = eegData['band_values'];
+    var numOutcomes = outcomesArray.length;
+    var brainwavesToRemove = brainwaves.length - numOutcomes;
+
+    // Map brainwave values to their brainwave names for easy retrieval later!
+    var brainwaveDataMap = new Map();
+    for (brainwave in bandPowerValues) {
+        brainwaveDataMap.set(bandPowerValues[brainwave], brainwave);
+    }
+
+    // Sort the brainwave data from smallest to largest
+    var brainwaveData = [bandPowerValues['delta'], bandPowerValues['theta'], bandPowerValues['alpha'], bandPowerValues['beta'], bandPowerValues['gamma']];
+    brainwaveData.sort(function (a, b) {
+        return a - b;
+    });
+
+    // Calculate the total: 
+    var totalBandPower = 0;
+    for (let i = brainwavesToRemove; i < brainwaveData.length; i++) {
+        totalBandPower += brainwaveData[i];
+    }
+    totalBandPower = roundTwoDecimalPoints(totalBandPower);
+
+    // Build the outcome map
+    var brainwaveRangesToOutcomes = [];
+    var curLowerRange = 0, outcomeIndex = 0;
+    for (let i = brainwavesToRemove; i < brainwaveData.length; i++) {
         var curBrainwavePercent = roundTwoDecimalPoints(brainwaveData[i] / totalBandPower * 100);
         var curUpperRange = roundTwoDecimalPoints(curLowerRange + curBrainwavePercent);
 
-        // If we are at the last brainwave, just make sure it's upperRange is 100.
-        if (i == brainwaves.length - 1) curUpperRange = 100.00;
-        brainwaveRanges.push({
-            brainwave: brainwaves[i],
+        // If we are at the last option, just make sure it's upperRange is 100.
+        if (i == brainwaveData.length - 1) curUpperRange = 100.00;
+
+
+        brainwaveRangesToOutcomes.push({
+            brainwave: brainwaveDataMap.get(brainwaveData[i]),
             lowerRange: curLowerRange,
             upperRange: curUpperRange,
+            outcome: outcomesArray[outcomeIndex],
         });
+
         curLowerRange = curUpperRange + 0.001;
+        outcomeIndex++;
     }
 
-    return brainwaveRanges;
+    return brainwaveRangesToOutcomes;
+}
+
+function getOutcomeRangesForFiveOutcomesOrGreater(eegData, outcomesArray) {
+    var numOutcomes = outcomesArray.length;
+    var bandPowerValues = eegData['band_values'];
+
+    //  Determine the max, split the max brainwave into outcomes if needed
+    var maxBrainwaveName = getMaxBrainwaveName(bandPowerValues);
+    var howManyOctcomesMaxBrainwaveWillBeSplitInto = numOutcomes > brainwaves.length ? (numOutcomes - brainwaves.length - 1) : 1;
+    var maxBrainwaveSplitValue = roundTwoDecimalPoints(bandPowerValues[maxBrainwaveName] / howManyOctcomesMaxBrainwaveWillBeSplitInto);
+
+    // Get the totalBandPower to calculate percent later
+    var totalBandPower = roundTwoDecimalPoints(bandPowerValues['delta'] + bandPowerValues['theta'] + bandPowerValues['alpha'] + bandPowerValues['beta'] + bandPowerValues['gamma']);
+    var brainwaveData = [bandPowerValues['delta'], bandPowerValues['theta'], bandPowerValues['alpha'], bandPowerValues['beta'], bandPowerValues['gamma']];
+
+    var brainwaveRangesToOutcomes = [];
+    var curLowerRange = 0, brainwaveIndex = 0;
+    for (let i = 0; i < numOutcomes; i++) {
+        var curBrainwavePercent = 0;
+
+        // Adjust percent values based on whether or not it needs be split 
+        if (maxBrainwaveSplitValue > 0 && maxBrainwaveName == brainwaves[brainwaveIndex]) {
+            curBrainwavePercent = roundTwoDecimalPoints(maxBrainwaveSplitValue / totalBandPower * 100);
+        } else {
+            curBrainwavePercent = roundTwoDecimalPoints(brainwaveData[brainwaveIndex] / totalBandPower * 100);
+        }
+
+        var curUpperRange = roundTwoDecimalPoints(curLowerRange + curBrainwavePercent);
+
+        // If we are at the last option, just make sure it's upperRange is 100.
+        if (i == numOutcomes - 2) curUpperRange = 100.00;
+
+        brainwaveRangesToOutcomes.push({
+            brainwave: brainwaves[brainwaveIndex],
+            lowerRange: curLowerRange,
+            upperRange: curUpperRange,
+            outcome: outcomesArray[i],
+        });
+
+        curLowerRange = curUpperRange + 0.001;
+
+        // Update indexes as needed
+        if (maxBrainwaveName == brainwaves[brainwaveIndex] && maxBrainwaveSplitValue > 0) {
+            maxBrainwaveSplitValue--;
+        } else {
+            brainwaveIndex++;
+        }
+    }
+
+    return brainwaveRangesToOutcomes;
 }
 
 function setInstrument(track, instrument_num) {
@@ -176,16 +306,16 @@ function getScaleMap(key, scale, minRange, maxRange) {
     return scaleMap;
 }
 
-function getOctaveRangeMap(minRange, maxRange) {
-    var octaveRangeMap = new Map();
-    let index = 0;
-    for (let octave = minRange; octave <= maxRange; octave++) {
-        octaveRangeMap.set(index, octave);
-        index++;
+function getOctaveRangeArray(minRange, maxRange) {
+
+    var octaveRangeArray = [];
+    for (let octave = minRange; octave < maxRange + 1; octave++) {
+        octaveRangeArray.push(octave);
     }
-    debug_print('Octave Range Map');
-    debug_print(octaveRangeMap);
-    return octaveRangeMap;
+
+    debug_print('Octave Range Array:');
+    debug_print(octaveRangeArray);
+    return octaveRangeArray;
 }
 
 // TODO: Reorganize this!
@@ -341,7 +471,7 @@ module.exports = {
     setInstrument: setInstrument,
     getScaleNotes: getScaleNotes,
     getScaleMap: getScaleMap,
-    getOctaveRangeMap: getOctaveRangeMap,
+    getOctaveRangeArray: getOctaveRangeArray,
     createNotes: createNotes,
     addNotesToTrack: addNotesToTrack,
     getMidiString: getMidiString,

@@ -1,4 +1,4 @@
-const { setInstrument, musicGenerationDriver, getOctaveRangeMap, getScaleMap, createNotes, addNotesToTrack, getMidiString, writeMIDIfile, getNoteDurationsPerBeatPerSecond, roundTwoDecimalPoints } = require('./music-generation-library');
+const { setInstrument, musicGenerationDriver, getOctaveRangeArray, getScaleNotes, getScaleMap, createNotes, addNotesToTrack, getMidiString, writeMIDIfile, getNoteDurationsPerBeatPerSecond, roundTwoDecimalPoints } = require('./music-generation-library');
 var MidiWriter = require('midi-writer-js')
 var MidiPlayer = require('midi-player-js');
 const { app, BrowserWindow, ipcMain } = require('electron');
@@ -108,8 +108,11 @@ ipcMain.on('end_eeg_script', (event, musicGenerationModel, key, scale, minRange,
   var remainderSeconds = 0;
 
   var noteDurationsPerBeatPerSecond = getNoteDurationsPerBeatPerSecond(BPM, timeSignature);
-  var scaleMap = getScaleMap(key, scale, minRange, maxRange);
-  var octaveRangeMap = getOctaveRangeMap(minRange, maxRange);
+
+  // refactor this to get have the arrays?
+
+  var scaleMap = getScaleNotes(key, scale, minRange, maxRange);
+  var octaveRangeMap = getOctaveRangeArray(minRange, maxRange);
 
   eegDataQueue.forEach(eegDataPoint => {
     var secondsForThisSnapshot = secondsPerEEGSnapShot + remainderSeconds;
