@@ -263,19 +263,41 @@ app.get(devPath + '/api/models/:model_name', function(req, res) {
     });
 })
 
+/*
+    Example:
+        POST localhost:4000/api/midis/public?skip=0&limit=100
+        Headers- Content-Type: application/json; charset=utf-8
+        Response- 200 OK
+*/
+app.get('/api/midis/public', async function(req, res) {
+    // send public midi data
+    var skip = 0;
+    var limit = 0;
+    
+    if (req.params.skip) {
+        skip = req.params.skip;
+    }
+    
+    if (req.params.limit) {
+        limit = req.params.limit;
+    }
+    
+    Midi.find({"privacy":"public"}).skip(skip).limit(limit).then(function(doc) {
+        res.status(200).send(doc);
+    });
+})
+
 
 /*
     Example:
-        POST localhost:4000/api/midis
+        POST localhost:4000/api/midis/mine
         Headers- Content-Type: application/json; charset=utf-8
         Body- {"email": "harry@hsauers.net", "password": "Passwd123!"}
         Response- 200 OK
     * You MUST supply the exact Content-Type above, or it won't work.
     * Note the user's account info in the body.
-    *
-    * @TODO - this feels bad. I don't like the various nested levels. fix it at some point.
 */
-app.post(devPath + '/api/midis', async function(req, res) {
+app.post(devPath + '/api/midis/mine', async function(req, res) {
     var body = req.body;
     var email = body.email;
     var password = body.password;
@@ -317,6 +339,9 @@ app.post(devPath + '/api/midis/create', async function(req, res) {
     var midi_privacy = body.midi_privacy;
     var midi_notes = body.midi_notes;
     var midi_bpm = body.midi_bpm;
+    var midi_time_signature = body.midi_time_signature;
+    var midi_scale = body.midi_scale; 
+    var midi_key = body.midi_key; 
 
     // validate input
     if (midi_name == null || midi_name == "") {
@@ -341,13 +366,16 @@ app.post(devPath + '/api/midis/create', async function(req, res) {
         } else {
             // create new midi
             var newMidi = Midi({
-                "user_email": email,
+                "username": email,
+                "modelId": midi_model_id,
                 "name": midi_name,
-                "midi_data": midi_data,
-                "model_id": midi_model_id,
+                "midiData": midi_data,
                 "privacy": midi_privacy,
                 "notes": midi_notes,
                 "bpm": midi_bpm, 
+                "timeSignature": midi_time_signature, 
+                "scale": midi_scale,
+                "key": midi_key
             });
 
             newMidi.save();
@@ -461,7 +489,7 @@ app.get(devPath + '/download/midi/:midi_id', async function(req, res) {
 /*
     Update MIDI file
     Example: 
-        GET localhost:4000/download/midi/606e1726f9d7edf2fe715ee6
+        GET localhost:4000/api/midis/606e1726f9d7edf2fe715ee6/update
         Headers- Content-Type: application/json; charset=utf-8
         Body- {"email": "harry@hsauers.net", "password": "Passwd123!"}
         Response- 200 OK
@@ -512,10 +540,54 @@ app.post(devPath + '/api/midis/:midi_id/update', async function(req, res) {
 });
 
 
+/*
+    Delete MIDI file
+    Example: 
+        GET localhost:4000/api/midis/606e1726f9d7edf2fe715ee6/delete
+        Headers- Content-Type: application/json; charset=utf-8
+        Body- {"email": "harry@hsauers.net", "password": "Passwd123!"}
+        Response- 200 OK
+*/
+app.post('/api/midis/:midi_id/delete', async function(req, res) {
+    var midi_id = req.params.midi_id;
+    var body = req.body;
+    var email = body.email;
+    var password = body.password;
+
+    // check credentials
+    User.findOne({"email": email}).then(function(doc) {
+        if (doc == null) {
+            res.status(401).send("Incorrect account username.");
+        } else if (doc.password != password) {
+            res.status(401).send("Incorrect account password.");
+        } else {
+            
+            Midi.deleteOne({"_id": midi_id},).then(function(err) {
+                if (err.ok != 1) {
+                    res.status(400).send("bad request");
+                } else {
+                    res.status(200).send({
+                        "message": "MIDI deleted successfully!",
+                        "id": midi_id
+                    });
+                }
+              });
+        }
+    });
+});
+
+
+
+
+
 
 
 // start app
 app.listen(PORT, () => console.log("Running on"), PORT);
+
+
+
+
 
 
 /* Send Mail functionality - using SendGrid */
