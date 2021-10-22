@@ -5,64 +5,53 @@ const brainwaves = ['delta', 'theta', 'alpha', 'beta', 'gamma'];
 const commonNoteGroupings = [1, 2, 3, 4, 6, 8]; // These are hardcoded values pls don't change
 const commonNoteDurations = ['2', '4', '8', '8t', '16', '16t'];  // These are hardcoded values pls don't change
 
-const pentatonicLen = 5;
-const singularLen = 1;
-const chromaticLen = 12;
-const majorLen = 7;
-const minorLen = 7;
-
 const DEBUG = false;
 
 // TODO: Are sharps and flats being handled?
 // TODO: Mean aggregate of the EEG data
 
-// Note (Scale) = Letter
-
-
-// Pitch (Jumps within octave ranges)
-// Loudness
-
-
-function musicGenerationDriver(musicGenerationModel, scaleNoteArray, octaveArray, eegDataPoint, noteDurationsPerBeatPerSecond, secondsForThisSnapshot) {
+function musicGenerationDriver(musicGenerationModel, scaleNoteArray, octaveArray, eegDataPoint, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot) {
     track = new MidiWriter.Track();
 
-    // calculate percents for current EEG data
-    // add give number ranges 
-    // have random number generate 
-
-    // Map Aggregate Band Power to Random Probability
     if (musicGenerationModel == 1) {
-        // TODO: Should this handle loudness?
-        var durationRanges = getOutcomeRanges(eegDataPoint, commonNoteDurations);
-        var groupingsRanges = getOutcomeRanges(eegDataPoint, commonNoteGroupings);
-        var octaveRanges = getOutcomeRanges(eegDataPoint, octaveArray);
-        var scaleNoteRanges = getOutcomeRanges(eegDataPoint, scaleNoteArray);
-
-
-
-        brainwaveRanges = getBrainwaveBandPowerRangesFromPercent(eegDataPoint, scaleNoteArray);
-
-        // durations = durationRandomProbabilityDriver(eegDataPoint['band_values'])
-
-        // Keep time in mind!!!
-        // notesRandomProbabilityDriver
-        // repetitionRandomProbabilityDriver
-        // octaveRandomProbabilityDriver
-        // loudness -> 
+        track = mapAggregateBandPowerToRandomProbability(track, scaleNoteArray, octaveArray, eegDataPoint, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot);
+    } else {
+        noteEvents = createNotes(secondsForThisSnapshot, scaleMap);
+        track = addNotesToTrack(track, noteEvents);
     }
 
-    // Stuff todo: 
-    // noteEvents = createNotes(secondsForThisSnapshot, scaleMap);
-    // track = addNotesToTrack(track, noteEvents);
     return track;
 }
 
-function durationRandomProbabilityDriver(eegData) {
-    // 
-    //  = getPercents(eegData);
-    // calculate percents for Band Powers (EEG data)
-    // add give number ranges 
-    // have random number generate 
+// TODO: Should this handle loudness?
+function mapAggregateBandPowerToRandomProbability(track, scaleNoteArray, octaveArray, eegDataPoint, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot) {
+
+    // 1. Calculate percents and determine outcome ranges for each component of what makes a note!
+    var durationRanges = getOutcomeRanges(eegDataPoint, commonNoteDurations);
+    var groupingsRanges = getOutcomeRanges(eegDataPoint, commonNoteGroupings);
+    var octaveRanges = getOutcomeRanges(eegDataPoint, octaveArray);
+    var scaleNoteRanges = getOutcomeRanges(eegDataPoint, scaleNoteArray);
+
+
+    // 2. Determine the randomly selected durations and groupings and calculate it based off of seconds noteDurationsPerBeatPerSecond, secondsForThisSnapshot
+    var noteDurationsGroupings = getNoteDurationsGroupingsForEEGSnapshot(noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, durationRanges, groupingsRanges);
+
+    // 3. Determine the octave and scale notes based off of the size of durations and groupings determined for this eeg snapshot (based on time):
+    var finalNotes = getNoteOctaveScaleNotes(noteDurationsGroupings, octaveRanges, scaleNoteRanges);
+
+    // Add to track 
+    track = addNotesToTrack(track, finalNotes);
+    return track;
+}
+
+// random number generate and build out the outcomes based off of time! yay :C
+// 2. Determine the randomly selected durations and groupings and calculate it based off of seconds noteDurationsPerBeatPerSecond, secondsForThisSnapshot
+function getNoteDurationsGroupingsForEEGSnapshot(noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, durationRanges, groupingsRanges) {
+    return noteDurationsGroupings;
+}
+
+function getNoteOctaveScaleNotes(noteDurationsGroupings, octaveRanges, scaleNoteRanges) {
+    return finalNotes;
 }
 
 function getMaxBrainwaveName(bandPowers) {
@@ -367,13 +356,9 @@ let createNoteDistribution = (numberOfNotesToGenerate, currentPitch) => {
     return distribution;
 }
 
-// TODO: Reorganize this!
 function createNotes(totalNoteGroupingsDurations, scaleMap) {
-    // totalNoteGroupingsDurations = time;
-
     var noteEvents = [];
     var currentPitch = 3;
-    // Want: scaleMap length amount
 
     for (var i = 0; i < totalNoteGroupingsDurations; i++) {
         // pick a random note grouping and duration and generate that many notes
