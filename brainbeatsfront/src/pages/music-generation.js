@@ -197,7 +197,20 @@ class MusicGeneration extends Component {
             });
         }
     }
-
+    onLogout = (e) => {
+        e.preventDefault();
+        this.setState({
+          username: '',
+          password: '',
+          email: '',
+        });
+        if (isElectron()) {
+          this.setState({ loggedout: 1 });
+        } else {
+          this.setState({ loggedout: 0 });
+        }
+    
+      }
     updateRange() {
         console.log("updated")
     }
@@ -297,7 +310,7 @@ class MusicGeneration extends Component {
                     <ul className="nav__menu_loggedin" style={{ display: (this.state.showMenu && !this.state.loggedout) ? 'inline-block' : 'none' }}>
                         <li className="nav_menu-item"><a href="#">My Account</a></li>
                         <li className="nav_menu-item"><a href="#">Settings</a></li>
-                        <li className="nav_menu-item"><a href="#">Log Out</a></li>
+                        <li className="nav_menu-item"><a href="#" onClick={this.onLogout}>Log Out</a></li>
                     </ul>
                     <ul className="nav__menu_loggedout" style={{ display: (this.state.showMenu && this.state.loggedout) ? 'inline-block' : 'none' }}>
                         <li className="nav_menu-item"><a href="/login">Login</a></li>
