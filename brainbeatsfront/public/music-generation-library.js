@@ -3,7 +3,11 @@ const fs = require('fs');
 
 const brainwaves = ['delta', 'theta', 'alpha', 'beta', 'gamma'];
 const commonNoteGroupings = [1, 2, 3, 4, 6, 8]; // These are hardcoded values pls don't change
-const commonNoteDurations = ['2', '4', '8', '8t', '16', '16t'];  // These are hardcoded values pls don't change
+
+// const commonNoteDurations = ['2', '4', '8', '8t', '16', '16t'];  // These are hardcoded values pls don't change
+// const commonNoteDurations = ['2', '4', '8', '16'];  
+const commonNoteDurations = ['1', '2', '4', '8', '16', '32'];
+
 
 const DEBUG = false;
 
@@ -18,7 +22,7 @@ function musicGenerationDriver(musicGenerationModel, scaleNoteArray, octaveArray
         // TODO: Should this handle loudness?
         track = mapAggregateBandPowerToRandomProbability(track, eegDataPoint, scaleNoteArray, octaveArray, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot);
     } else {
-        noteEvents = createNotes(secondsForThisSnapshot, scaleMap);
+        noteEvents = createNotes(secondsPerEEGSnapShot, scaleMap);
         track = addNotesToTrack(track, noteEvents);
     }
 
@@ -35,58 +39,65 @@ function mapAggregateBandPowerToRandomProbability(track, eegDataPoint, scaleNote
     var scaleNoteRanges = getOutcomeRanges(eegDataPoint, scaleNoteArray);
 
     // 2. Determine the randomly selected durations and groupings and calculate it based off of seconds noteDurationsPerBeatPerSecond, secondsForThisSnapshot
-    var finalNotes = getRandomFinalNotesBasedOnTime(noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, getRandomTwoPlaceDecimalZeroThruHundred(), durationRanges, groupingsRanges, scaleNoteRanges, octaveRanges);
-    console.log("Final Notes: ");
-    console.log(finalNotes);
+    var finalNotes = getRandomFinalNotesBasedOnTime(noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, durationRanges, groupingsRanges, scaleNoteRanges, octaveRanges);
 
     // 3. Build track!
     track = addNotesToTrack(track, finalNotes);
-    console.log("Track: ")
-    console.log(track);
 
     return track;
 }
 
-function getRandomFinalNotesBasedOnTime(noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, randomNumber, durationRanges, groupingsRanges, scaleNoteRanges, octaveRanges) {
+function getRandomFinalNotesBasedOnTime(noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, durationRanges, groupingsRanges, scaleNoteRanges, octaveRanges) {
     // 1. Determine the shortest note we can generate
-    var shortestNoteCombo = getSecondsForNote('16', 1, noteDurationsPerBeatPerSecond);
+    var shortestNoteCombo = getSecondsForNote('16', 3, noteDurationsPerBeatPerSecond);
 
-    // 2. Build notes, save how long the notes last, until there are no more seconds or can't make even the shortest note combo:
-    var notesBuild = [];
-    while (secondsPerEEGSnapShot > 0 && secondsPerEEGSnapShot >= shortestNoteCombo) {
+    // Build notes, save how long the notes last, until there are no more seconds or can't make even the shortest note combo:
+    var noteEvents = [];
+    while (secondsPerEEGSnapShot > 0 && secondsPerEEGSnapShot > shortestNoteCombo) {
 
-        // 2a. Determine outcomes for the duration & groupings
+        // 2. Determine the random outcomes for the duration & groupings
+        var randomNumber = getRandomTwoPlaceDecimalZeroThruHundred();
         var curDurationOutcome = getRandomOutcome(randomNumber, durationRanges);
         var curGroupingOutcome = getRandomOutcome(randomNumber, groupingsRanges);
-        console.log("CurSeconds: " + secondsPerEEGSnapShot + "," + curDurationOutcome: " + curDurationOutcome + " curGroupingOutcome: " + curGroupingOutcome);
 
-        // 2b. Determine the amount of seconds for the note duration and grouping randomly produced. 
+        // 3. Determine the amount of seconds for the note duration and grouping randomly produced. 
         var currentSeconds = getSecondsForNote(curDurationOutcome, curGroupingOutcome, noteDurationsPerBeatPerSecond);
+        console.log("Total sec: " + secondsPerEEGSnapShot + ", curSec " + currentSeconds + ", curDuration " + curDurationOutcome + ", curGrouping " + curGroupingOutcome);
 
-        // 2c. If it valid grouping (less than how many seconds produced!) Only get note & octave if it's a valid note combo for timing.
+        // 4. Build the Notes: 
+        // 4a. If the note duration & grouping is shorter than how many seconds this snapshot needs to produce, then add the notes and update the time!
         if (currentSeconds <= secondsPerEEGSnapShot) {
-            notesBuild.push({
-                note: getRandomOutcome(randomNumber, scaleNoteRanges),
-                duration: curDurationOutcome,
-                grouping: curGroupingOutcome,
-                octave: getRandomOutcome(randomNumber, octaveRanges),
-            });
+            noteEvents.push(new MidiWriter.NoteEvent({
+                pitch: getRandomOutcome(randomNumber, scaleNoteRanges),
+                duration: curDurationOutcome.toString(),
+                repeat: Number(curGroupingOutcome),
+            }));
             secondsPerEEGSnapShot -= currentSeconds;
+        }
 
-            // 2d. If we are at the shortestNoteCombo we can make, make just that note!
-        } else if (secondsPerEEGSnapShot == shortestNoteCombo) {
-            notesBuild.push({
-                note: getRandomOutcome(randomNumber, scaleNoteRanges),
-                duration: '16',
-                grouping: 1,
-                octave: getRandomOutcome(randomNumber, octaveRanges),
-            });
+        // 4b. If currentSeconds is greater than remaining secondsPerEEGSnapShot but they are within 1 second of each other, just go with the note and update the time!
+        if (currentSeconds > secondsPerEEGSnapShot && (currentSeconds - secondsPerEEGSnapShot) <= 1) {
+            noteEvents.push(new MidiWriter.NoteEvent({
+                pitch: getRandomOutcome(randomNumber, scaleNoteRanges),
+                duration: curDurationOutcome.toString(),
+                repeat: Number(curGroupingOutcome),
+            }));
+            secondsPerEEGSnapShot -= currentSeconds;
+            secondsPerEEGSnapShot = secondsPerEEGSnapShot > 0 ? secondsPerEEGSnapShot : 0;
+        }
+
+        // 4c. If we are very close to the shortestNoteCombo we can make, just make that note and end it!
+        if (secondsPerEEGSnapShot <= shortestNoteCombo * 1.5) {
+            noteEvents.push(new MidiWriter.NoteEvent({
+                pitch: getRandomOutcome(randomNumber, scaleNoteRanges),
+                duration: '16'.toString(),
+                repeat: 3,
+            }));
             secondsPerEEGSnapShot = 0;
         }
-        // 2e. If we are at less notes than the shortestNoteCombo, then just stop making notes!
     }
 
-    return notesBuild;
+    return noteEvents;
 }
 
 function getSecondsForNote(curDuration, curGrouping, noteDurationsPerBeatPerSecond) {
@@ -98,7 +109,6 @@ function getSecondsForNote(curDuration, curGrouping, noteDurationsPerBeatPerSeco
 function getRandomTwoPlaceDecimalZeroThruHundred() {
     var precision = 1000; // 2 decimals
     var randomNum = Math.floor(Math.random() * (100 * precision - 1 * precision) + 1 * precision) / (1 * precision);
-    console.log("Random Num: " + randomNum);
     return randomNum;
 }
 
