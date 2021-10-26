@@ -116,11 +116,11 @@ ipcMain.on('end_eeg_script', (event, musicGenerationModel, key, scale, minRange,
   var octaveRangeArray = getOctaveRangeArray(minRange, maxRange);
 
   eegDataQueue.forEach(eegDataPoint => {
-    musicGenerationDriver(musicGenerationModel, scaleArray, octaveRangeArray, eegDataPoint, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, scaleMap);
+    track = musicGenerationDriver(musicGenerationModel, scaleArray, octaveRangeArray, eegDataPoint, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, scaleMap);
 
 
-    noteEvents = createNotes(secondsPerEEGSnapShot, scaleMap);
-    track = addNotesToTrack(track, noteEvents);
+    // noteEvents = createNotes(secondsPerEEGSnapShot, scaleMap);
+    // track = addNotesToTrack(track, noteEvents);
 
     // remainderSeconds = update the remainder
   });

@@ -15,6 +15,7 @@ function musicGenerationDriver(musicGenerationModel, scaleNoteArray, octaveArray
     console.log("musicGenerationDriver, model: " + musicGenerationModel + " scales: " + scaleNoteArray + " octaveArray: " + octaveArray + " secondsPerEEGSnapShot: " + secondsPerEEGSnapShot + " noteDurationsPerBeatPerSecond: ");
 
     if (musicGenerationModel == 1) {
+        // TODO: Should this handle loudness?
         track = mapAggregateBandPowerToRandomProbability(track, eegDataPoint, scaleNoteArray, octaveArray, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot);
     } else {
         noteEvents = createNotes(secondsForThisSnapshot, scaleMap);
@@ -24,7 +25,6 @@ function musicGenerationDriver(musicGenerationModel, scaleNoteArray, octaveArray
     return track;
 }
 
-// TODO: Should this handle loudness?
 function mapAggregateBandPowerToRandomProbability(track, eegDataPoint, scaleNoteArray, octaveArray, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot) {
     console.log("Music Generation Model 1: Map Aggregate Band Power To Random Probability");
 
@@ -35,62 +35,62 @@ function mapAggregateBandPowerToRandomProbability(track, eegDataPoint, scaleNote
     var scaleNoteRanges = getOutcomeRanges(eegDataPoint, scaleNoteArray);
 
     // 2. Determine the randomly selected durations and groupings and calculate it based off of seconds noteDurationsPerBeatPerSecond, secondsForThisSnapshot
-    var noteDurationsGroupings = getNoteDurationsGroupingsForEEGSnapshot(noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, durationRanges, groupingsRanges);
+    var finalNotes = getRandomFinalNotesBasedOnTime(noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, getRandomTwoPlaceDecimalZeroThruHundred(), durationRanges, groupingsRanges, scaleNoteRanges, octaveRanges);
+    console.log("Final Notes: ");
+    console.log(finalNotes);
 
-    // 3. Determine the octave and scale notes based off of the size of durations and groupings determined for this eeg snapshot (based on time):
-    var finalNotes = getNoteOctaveScaleNotes(noteDurationsGroupings, octaveRanges, scaleNoteRanges);
-
-    // Add to track 
+    // 3. Build track!
     track = addNotesToTrack(track, finalNotes);
+    console.log("Track: ")
+    console.log(track);
+
     return track;
 }
 
-// random number generate and build out the outcomes based off of time! yay :C
-// 2. Determine the randomly selected durations and groupings and calculate it based off of seconds noteDurationsPerBeatPerSecond, secondsForThisSnapshot
-function getNoteDurationsGroupingsForEEGSnapshot(noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, durationRanges, groupingsRanges) {
-    // check the number of seconds per snapshot, if the largest value in the notes section is greater than the amount of time, keep going in until either we have the time or don't. 
+function getRandomFinalNotesBasedOnTime(noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, randomNumber, durationRanges, groupingsRanges, scaleNoteRanges, octaveRanges) {
+    // 1. Determine the shortest note we can generate
     var shortestNoteCombo = getSecondsForNote('16', 1, noteDurationsPerBeatPerSecond);
-    console.log("Shortest time " + shortestNoteCombo);
 
-    var noteDurationsGroupings = [];
+    // 2. Build notes, save how long the notes last, until there are no more seconds or can't make even the shortest note combo:
+    var notesBuild = [];
     while (secondsPerEEGSnapShot > 0 && secondsPerEEGSnapShot >= shortestNoteCombo) {
-        var currentSeconds = 0;
-        var randomNumber = getRandomTwoPlaceDecimalZeroThruHundred();
 
-        // find out what value it should be from duration and groupings
-        var curDurationOutcome = getRandomOutcome(randomNumber, durationRanges, secondsPerEEGSnapShot);
-        var curGroupingOutcome = getRandomOutcome(randomNumber, groupingsRanges, secondsPerEEGSnapShot);
-        console.log("curDurationOutcome: " + curDurationOutcome + " curGroupingOutcome: " + curGroupingOutcome);
+        // 2a. Determine outcomes for the duration & groupings
+        var curDurationOutcome = getRandomOutcome(randomNumber, durationRanges);
+        var curGroupingOutcome = getRandomOutcome(randomNumber, groupingsRanges);
+        console.log("CurSeconds: " + secondsPerEEGSnapShot + "," + curDurationOutcome: " + curDurationOutcome + " curGroupingOutcome: " + curGroupingOutcome);
 
-        // calculate that value in time 
-        currentSeconds = getSecondsForNote(curDurationOutcome, curGroupingOutcome, noteDurationsPerBeatPerSecond);
-        console.log("Total time: " + secondsPerEEGSnapShot + " currentSeconds: " + currentSeconds);
-        // if not valid then pick one that is more valid
+        // 2b. Determine the amount of seconds for the note duration and grouping randomly produced. 
+        var currentSeconds = getSecondsForNote(curDurationOutcome, curGroupingOutcome, noteDurationsPerBeatPerSecond);
 
-        // if valid time save it, if not valid ignore until valid
+        // 2c. If it valid grouping (less than how many seconds produced!) Only get note & octave if it's a valid note combo for timing.
         if (currentSeconds <= secondsPerEEGSnapShot) {
-            noteDurationsGroupings.push({
+            notesBuild.push({
+                note: getRandomOutcome(randomNumber, scaleNoteRanges),
                 duration: curDurationOutcome,
                 grouping: curGroupingOutcome,
+                octave: getRandomOutcome(randomNumber, octaveRanges),
             });
-
             secondsPerEEGSnapShot -= currentSeconds;
+
+            // 2d. If we are at the shortestNoteCombo we can make, make just that note!
         } else if (secondsPerEEGSnapShot == shortestNoteCombo) {
-            noteDurationsGroupings.push({
+            notesBuild.push({
+                note: getRandomOutcome(randomNumber, scaleNoteRanges),
                 duration: '16',
                 grouping: 1,
+                octave: getRandomOutcome(randomNumber, octaveRanges),
             });
             secondsPerEEGSnapShot = 0;
         }
+        // 2e. If we are at less notes than the shortestNoteCombo, then just stop making notes!
     }
 
-    return noteDurationsGroupings;
+    return notesBuild;
 }
 
 function getSecondsForNote(curDuration, curGrouping, noteDurationsPerBeatPerSecond) {
-    // console.log("Duration: " + curDuration + " curGrouping " + curGrouping);
     let curNoteDuration = noteDurationsPerBeatPerSecond.find(o => o.duration === curDuration);
-    // console.log(curNoteDuration);
     var curNoteDurationSec = curNoteDuration.seconds;
     return curNoteDurationSec * curGrouping;
 }
@@ -102,7 +102,7 @@ function getRandomTwoPlaceDecimalZeroThruHundred() {
     return randomNum;
 }
 
-function getRandomOutcome(randomNumber, ranges, secondsPerEEGSnapShot) {
+function getRandomOutcome(randomNumber, ranges) {
     var outcomeValue;
     for (let i = 0; i < ranges.length; i++) {
         var cur = ranges[i];
@@ -113,10 +113,6 @@ function getRandomOutcome(randomNumber, ranges, secondsPerEEGSnapShot) {
     }
 
     return outcomeValue;
-}
-
-function getNoteOctaveScaleNotes(noteDurationsGroupings, octaveRanges, scaleNoteRanges) {
-    return noteDurationsGroupings;
 }
 
 function getMaxBrainwaveName(bandPowers) {
@@ -131,7 +127,6 @@ function getMaxBrainwaveName(bandPowers) {
     }
     return maxBrainwaveName;
 }
-
 
 function getOutcomeRanges(eegData, outcomesArray) {
     var totalOutcomes = outcomesArray.length;
@@ -434,7 +429,7 @@ function createNotes(totalNoteGroupingsDurations, scaleMap) {
         debug_print("CommonNoteDurationsLength :: " + commonNoteDurations.length);
         debug_print("numberOfNotesToGenerate :: " + numberOfNotesToGenerate);
 
-        var pitches = [];
+        var pitches = []; 2
 
         for (var j = 0; j < numberOfNotesToGenerate; j++) {
 
