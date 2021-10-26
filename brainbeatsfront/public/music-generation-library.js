@@ -10,11 +10,12 @@ const DEBUG = false;
 // TODO: Are sharps and flats being handled?
 // TODO: Mean aggregate of the EEG data
 
-function musicGenerationDriver(musicGenerationModel, scaleNoteArray, octaveArray, eegDataPoint, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot) {
+function musicGenerationDriver(musicGenerationModel, scaleNoteArray, octaveArray, eegDataPoint, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, scaleMap) {
     track = new MidiWriter.Track();
+    console.log("musicGenerationDriver, model: " + musicGenerationModel + " scales: " + scaleNoteArray + " octaveArray: " + octaveArray + " secondsPerEEGSnapShot: " + secondsPerEEGSnapShot + " noteDurationsPerBeatPerSecond: ");
 
     if (musicGenerationModel == 1) {
-        track = mapAggregateBandPowerToRandomProbability(track, scaleNoteArray, octaveArray, eegDataPoint, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot);
+        track = mapAggregateBandPowerToRandomProbability(track, eegDataPoint, scaleNoteArray, octaveArray, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot);
     } else {
         noteEvents = createNotes(secondsForThisSnapshot, scaleMap);
         track = addNotesToTrack(track, noteEvents);
@@ -24,14 +25,14 @@ function musicGenerationDriver(musicGenerationModel, scaleNoteArray, octaveArray
 }
 
 // TODO: Should this handle loudness?
-function mapAggregateBandPowerToRandomProbability(track, scaleNoteArray, octaveArray, eegDataPoint, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot) {
+function mapAggregateBandPowerToRandomProbability(track, eegDataPoint, scaleNoteArray, octaveArray, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot) {
+    console.log("Music Generation Model 1: Map Aggregate Band Power To Random Probability");
 
     // 1. Calculate percents and determine outcome ranges for each component of what makes a note!
     var durationRanges = getOutcomeRanges(eegDataPoint, commonNoteDurations);
     var groupingsRanges = getOutcomeRanges(eegDataPoint, commonNoteGroupings);
     var octaveRanges = getOutcomeRanges(eegDataPoint, octaveArray);
     var scaleNoteRanges = getOutcomeRanges(eegDataPoint, scaleNoteArray);
-
 
     // 2. Determine the randomly selected durations and groupings and calculate it based off of seconds noteDurationsPerBeatPerSecond, secondsForThisSnapshot
     var noteDurationsGroupings = getNoteDurationsGroupingsForEEGSnapshot(noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, durationRanges, groupingsRanges);
@@ -47,11 +48,75 @@ function mapAggregateBandPowerToRandomProbability(track, scaleNoteArray, octaveA
 // random number generate and build out the outcomes based off of time! yay :C
 // 2. Determine the randomly selected durations and groupings and calculate it based off of seconds noteDurationsPerBeatPerSecond, secondsForThisSnapshot
 function getNoteDurationsGroupingsForEEGSnapshot(noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, durationRanges, groupingsRanges) {
+    // check the number of seconds per snapshot, if the largest value in the notes section is greater than the amount of time, keep going in until either we have the time or don't. 
+    var shortestNoteCombo = getSecondsForNote('16', 1, noteDurationsPerBeatPerSecond);
+    console.log("Shortest time " + shortestNoteCombo);
+
+    var noteDurationsGroupings = [];
+    while (secondsPerEEGSnapShot > 0 && secondsPerEEGSnapShot >= shortestNoteCombo) {
+        var currentSeconds = 0;
+        var randomNumber = getRandomTwoPlaceDecimalZeroThruHundred();
+
+        // find out what value it should be from duration and groupings
+        var curDurationOutcome = getRandomOutcome(randomNumber, durationRanges, secondsPerEEGSnapShot);
+        var curGroupingOutcome = getRandomOutcome(randomNumber, groupingsRanges, secondsPerEEGSnapShot);
+        console.log("curDurationOutcome: " + curDurationOutcome + " curGroupingOutcome: " + curGroupingOutcome);
+
+        // calculate that value in time 
+        currentSeconds = getSecondsForNote(curDurationOutcome, curGroupingOutcome, noteDurationsPerBeatPerSecond);
+        console.log("Total time: " + secondsPerEEGSnapShot + " currentSeconds: " + currentSeconds);
+        // if not valid then pick one that is more valid
+
+        // if valid time save it, if not valid ignore until valid
+        if (currentSeconds <= secondsPerEEGSnapShot) {
+            noteDurationsGroupings.push({
+                duration: curDurationOutcome,
+                grouping: curGroupingOutcome,
+            });
+
+            secondsPerEEGSnapShot -= currentSeconds;
+        } else if (secondsPerEEGSnapShot == shortestNoteCombo) {
+            noteDurationsGroupings.push({
+                duration: '16',
+                grouping: 1,
+            });
+            secondsPerEEGSnapShot = 0;
+        }
+    }
+
     return noteDurationsGroupings;
 }
 
+function getSecondsForNote(curDuration, curGrouping, noteDurationsPerBeatPerSecond) {
+    // console.log("Duration: " + curDuration + " curGrouping " + curGrouping);
+    let curNoteDuration = noteDurationsPerBeatPerSecond.find(o => o.duration === curDuration);
+    // console.log(curNoteDuration);
+    var curNoteDurationSec = curNoteDuration.seconds;
+    return curNoteDurationSec * curGrouping;
+}
+
+function getRandomTwoPlaceDecimalZeroThruHundred() {
+    var precision = 1000; // 2 decimals
+    var randomNum = Math.floor(Math.random() * (100 * precision - 1 * precision) + 1 * precision) / (1 * precision);
+    console.log("Random Num: " + randomNum);
+    return randomNum;
+}
+
+function getRandomOutcome(randomNumber, ranges, secondsPerEEGSnapShot) {
+    var outcomeValue;
+    for (let i = 0; i < ranges.length; i++) {
+        var cur = ranges[i];
+        if (cur.lowerRange <= randomNumber && cur.upperRange >= randomNumber) {
+            outcomeValue = cur.outcome;
+            break;
+        }
+    }
+
+    return outcomeValue;
+}
+
 function getNoteOctaveScaleNotes(noteDurationsGroupings, octaveRanges, scaleNoteRanges) {
-    return finalNotes;
+    return noteDurationsGroupings;
 }
 
 function getMaxBrainwaveName(bandPowers) {
@@ -70,11 +135,10 @@ function getMaxBrainwaveName(bandPowers) {
 
 function getOutcomeRanges(eegData, outcomesArray) {
     var totalOutcomes = outcomesArray.length;
-
     if (totalOutcomes == 1) {
-        return getOutcomeRangesForOne(eegData, outcome);
+        return getOutcomeRangesForOne(eegData, outcomesArray);
     } else if (totalOutcomes > 1 && totalOutcomes < 5) {
-        return getOutcomeRangesForMoreThanOneLessThanFive(eegData, outcome);
+        return getOutcomeRangesForMoreThanOneLessThanFive(eegData, outcomesArray);
     }
 
     // Assumes data is either one for one for brainwave data or can be split by the greatest brainwave
@@ -87,7 +151,7 @@ function getOutcomeRangesForOne(eegData, outcome) {
     brainwaveRangesToOutcomes.push({
         lowerRange: 0,
         upperRange: 100,
-        outcome: outcome,
+        outcome: outcome[0],
     });
 
     return brainwaveRangesToOutcomes;
@@ -135,7 +199,7 @@ function getOutcomeRangesForMoreThanOneLessThanFive(eegData, outcomesArray) {
             outcome: outcomesArray[outcomeIndex],
         });
 
-        curLowerRange = curUpperRange + 0.001;
+        curLowerRange = curUpperRange;
         outcomeIndex++;
     }
 
@@ -148,8 +212,8 @@ function getOutcomeRangesForFiveOutcomesOrGreater(eegData, outcomesArray) {
 
     //  Determine the max, split the max brainwave into outcomes if needed
     var maxBrainwaveName = getMaxBrainwaveName(bandPowerValues);
-    var howManyOctcomesMaxBrainwaveWillBeSplitInto = numOutcomes > brainwaves.length ? (numOutcomes - brainwaves.length - 1) : 1;
-    var maxBrainwaveSplitValue = roundTwoDecimalPoints(bandPowerValues[maxBrainwaveName] / howManyOctcomesMaxBrainwaveWillBeSplitInto);
+    var howManyOctcomesMaxBrainwaveWillBeSplitInto = numOutcomes > brainwaves.length ? (numOutcomes - brainwaves.length + 1) : 0;
+    var maxBrainwaveSplitValue = howManyOctcomesMaxBrainwaveWillBeSplitInto > 0 ? (roundTwoDecimalPoints(bandPowerValues[maxBrainwaveName] / howManyOctcomesMaxBrainwaveWillBeSplitInto)) : 0;
 
     // Get the totalBandPower to calculate percent later
     var totalBandPower = roundTwoDecimalPoints(bandPowerValues['delta'] + bandPowerValues['theta'] + bandPowerValues['alpha'] + bandPowerValues['beta'] + bandPowerValues['gamma']);
@@ -161,8 +225,9 @@ function getOutcomeRangesForFiveOutcomesOrGreater(eegData, outcomesArray) {
         var curBrainwavePercent = 0;
 
         // Adjust percent values based on whether or not it needs be split 
-        if (maxBrainwaveSplitValue > 0 && maxBrainwaveName == brainwaves[brainwaveIndex]) {
+        if (howManyOctcomesMaxBrainwaveWillBeSplitInto > 0 && maxBrainwaveName == brainwaves[brainwaveIndex]) {
             curBrainwavePercent = roundTwoDecimalPoints(maxBrainwaveSplitValue / totalBandPower * 100);
+            howManyOctcomesMaxBrainwaveWillBeSplitInto--;
         } else {
             curBrainwavePercent = roundTwoDecimalPoints(brainwaveData[brainwaveIndex] / totalBandPower * 100);
         }
@@ -170,7 +235,7 @@ function getOutcomeRangesForFiveOutcomesOrGreater(eegData, outcomesArray) {
         var curUpperRange = roundTwoDecimalPoints(curLowerRange + curBrainwavePercent);
 
         // If we are at the last option, just make sure it's upperRange is 100.
-        if (i == numOutcomes - 2) curUpperRange = 100.00;
+        if (i == numOutcomes - 1) curUpperRange = 100.00;
 
         brainwaveRangesToOutcomes.push({
             brainwave: brainwaves[brainwaveIndex],
@@ -179,12 +244,10 @@ function getOutcomeRangesForFiveOutcomesOrGreater(eegData, outcomesArray) {
             outcome: outcomesArray[i],
         });
 
-        curLowerRange = curUpperRange + 0.001;
+        curLowerRange = curUpperRange;
 
-        // Update indexes as needed
-        if (maxBrainwaveName == brainwaves[brainwaveIndex] && maxBrainwaveSplitValue > 0) {
-            maxBrainwaveSplitValue--;
-        } else {
+        // If not on the brainwave that needs to be split & still splitting
+        if (!(maxBrainwaveName == brainwaves[brainwaveIndex] && howManyOctcomesMaxBrainwaveWillBeSplitInto > 0)) {
             brainwaveIndex++;
         }
     }
@@ -368,7 +431,7 @@ function createNotes(totalNoteGroupingsDurations, scaleMap) {
 
         var duration = commonNoteDurations[Math.floor(Math.random() * commonNoteDurations.length)];
 
-        debug_print("CommongNoteDurationsLength :: " + commonNoteDurations.length);
+        debug_print("CommonNoteDurationsLength :: " + commonNoteDurations.length);
         debug_print("numberOfNotesToGenerate :: " + numberOfNotesToGenerate);
 
         var pitches = [];
