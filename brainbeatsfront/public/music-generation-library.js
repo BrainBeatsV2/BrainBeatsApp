@@ -108,7 +108,7 @@ function getSecondsForNote(curDuration, curGrouping, noteDurationsPerBeatPerSeco
 
 function getRandomTwoPlaceDecimalZeroThruHundred() {
     var precision = 1000; // 2 decimals
-    var randomNum = Math.floor(Math.random() * (100 * precision - 1 * precision) + 1 * precision) / (1 * precision);
+    var randomNum = Math.floor(Math.random() * (101 * precision - 1 * precision) + 1 * precision) / (1 * precision);
     return randomNum;
 }
 
