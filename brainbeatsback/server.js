@@ -16,7 +16,7 @@ var port = process.env.MONGO_PORT;
 var dbName = process.env.MONGO_DB;
 
 var mongo_uri = 'mongodb://' + mongo_username + ':' + mongo_password + '@' + host + ':' + port + '/' + dbName;
-var devPath = 'http://localhost:4000'; //For testing and development on electron, remove paramater for production
+var devPath = '';  // 'http://localhost:4000'; //For testing and development on electron, remove paramater for production
 
 function getConnection() {
     mongoose.connect(mongo_uri, { useNewUrlParser: true });
