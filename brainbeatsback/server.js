@@ -13,14 +13,14 @@ var mongo_username = process.env.MONGO_USERNAME;
 var mongo_password = process.env.MONGO_PASSWORD;
 var host = process.env.MONGO_HOSTNAME;
 var port = process.env.MONGO_PORT;
-var dbName = process.env.MONGO_DB ;
+var dbName = process.env.MONGO_DB;
 
 var mongo_uri = 'mongodb://' + mongo_username + ':' + mongo_password + '@' + host + ':' + port + '/' + dbName;
 var devPath = 'http://localhost:4000'; //For testing and development on electron, remove paramater for production
 
 function getConnection() {
     mongoose.connect(mongo_uri, { useNewUrlParser: true });
-    var conn =  mongoose.connection;
+    var conn = mongoose.connection;
     return conn;
 }
 setTimeout(getConnection, 3000);
@@ -55,7 +55,7 @@ app.get(devPath + '/api/users', (req, res) => {
         Response- 200 OK
     * You MUST supply the exact Content-Type above, or it won't work.
 */
-app.post(devPath + '/api/requestreset', function(req, res) {
+app.post(devPath + '/api/requestreset', function (req, res) {
     var body = req.body;
 
     var email = body.email;
@@ -63,7 +63,7 @@ app.post(devPath + '/api/requestreset', function(req, res) {
     var conn = getConnection();
     var db = conn.db;
 
-    User.findOne({"email": email}).then(function(doc) {
+    User.findOne({ "email": email }).then(function (doc) {
         if (doc == null) {
             res.status(404).send("Account does not exist.");
         } else {
@@ -71,7 +71,7 @@ app.post(devPath + '/api/requestreset', function(req, res) {
 
             // generate token
             function genNumber() {
-                return Math.round(Math.random()*9);
+                return Math.round(Math.random() * 9);
             }
             var token = genNumber() + "" + genNumber() + "" + genNumber() + "" + genNumber();
 
@@ -95,7 +95,7 @@ app.post(devPath + '/api/requestreset', function(req, res) {
         Response- 200 OK
     * You MUST supply the exact Content-Type above, or it won't work.
 */
-app.post(devPath + '/api/resetpassword', function(req, res) {
+app.post(devPath + '/api/resetpassword', function (req, res) {
     var body = req.body;
     var email = body.email;
     var token = body.token;
@@ -103,7 +103,7 @@ app.post(devPath + '/api/resetpassword', function(req, res) {
 
     var conn = getConnection();
 
-    User.findOne({"email": email}).then(function(doc) {
+    User.findOne({ "email": email }).then(function (doc) {
         if (doc == null) {
             res.status(404).send("Account does not exist.");
         } else if (doc.token != token) {
@@ -131,9 +131,9 @@ app.post(devPath + '/api/login', function (req, res) {
 
     var conn = getConnection();
 
-    User.findOne({"username": username}).then(function(doc) {
+    User.findOne({ "username": username }).then(function (doc) {
         if (doc == null) {
-            User.findOne({"email": username}).then(function(doc) {
+            User.findOne({ "email": username }).then(function (doc) {
                 if (doc == null) {
                     res.status(400).send("Invalid username or password");
                 } else if (doc.password != password) {
@@ -147,8 +147,7 @@ app.post(devPath + '/api/login', function (req, res) {
         else if (doc.password != password) {
             res.status(400).send("Invalid username or password");
         }
-        else if (doc.password == password)
-        {
+        else if (doc.password == password) {
             res.status(200).send("login successful");
         }
     });
@@ -193,12 +192,12 @@ app.post(devPath + '/api/register', function (req, res) {
             return res.status(200).json("Successful Register");
         }
     })
-    .catch(err => {
-        // Default 500 server error
-        return res.status(500).json({
-            error: err
+        .catch(err => {
+            // Default 500 server error
+            return res.status(500).json({
+                error: err
+            });
         });
-    });
 
 });
 
@@ -209,10 +208,10 @@ app.post(devPath + '/api/register', function (req, res) {
         Response- 200 OK
     * You MUST supply the exact Content-Type above, or it won't work.
 */
-app.get(devPath + '/api/models', function(req, res) {
+app.get(devPath + '/api/models', function (req, res) {
     var conn = getConnection();
 
-    Model.find().then(function(doc) {
+    Model.find().then(function (doc) {
         if (doc == null) {
             res.status(404).send("No models found.");
         } else {
@@ -230,10 +229,10 @@ app.get(devPath + '/api/models', function(req, res) {
         Response- 200 OK
     * You MUST supply the exact Content-Type above, or it won't work.
 */
-app.get(devPath + '/api/models/all', function(req, res) {
+app.get(devPath + '/api/models/all', function (req, res) {
     var conn = getConnection();
 
-    Model.find().then(function(doc) {
+    Model.find().then(function (doc) {
         if (doc == null) {
             res.status(404).send("No models found.");
         } else {
@@ -249,12 +248,12 @@ app.get(devPath + '/api/models/all', function(req, res) {
         Response- 200 OK
     * You MUST supply the exact Content-Type above, or it won't work.
 */
-app.get(devPath + '/api/models/:model_name', function(req, res) {
+app.get(devPath + '/api/models/:model_name', function (req, res) {
     var conn = getConnection();
 
     var model_name = req.params.model_name;
 
-    Model.findOne({"name": model_name}).then(function(doc) {
+    Model.findOne({ "name": model_name }).then(function (doc) {
         if (doc == null) {
             res.status(404).send("Model does not exist.");
         } else {
@@ -263,30 +262,52 @@ app.get(devPath + '/api/models/:model_name', function(req, res) {
     });
 })
 
+/*
+    Example:
+        POST localhost:4000/api/midis/public?skip=0&limit=100
+        Headers- Content-Type: application/json; charset=utf-8
+        Response- 200 OK
+*/
+
+app.get('/api/midis/public', async function (req, res) {
+    // send public midi data
+    var skip = 0;
+    var limit = 0;
+
+    if (req.params.skip) {
+        skip = req.params.skip;
+    }
+
+    if (req.params.limit) {
+        limit = req.params.limit;
+    }
+
+    Midi.find({ "privacy": "public" }).skip(skip).limit(limit).then(function (doc) {
+        res.status(200).send(doc);
+    });
+})
 
 /*
     Example:
-        POST localhost:4000/api/midis
+        POST localhost:4000/api/midis/mine
         Headers- Content-Type: application/json; charset=utf-8
         Body- {"email": "harry@hsauers.net", "password": "Passwd123!"}
         Response- 200 OK
     * You MUST supply the exact Content-Type above, or it won't work.
     * Note the user's account info in the body.
-    *
-    * @TODO - this feels bad. I don't like the various nested levels. fix it at some point.
 */
-app.post(devPath + '/api/midis', async function(req, res) {
+app.post(devPath + '/api/midis/mine', async function (req, res) {
     var body = req.body;
     var email = body.email;
     var password = body.password;
 
     // check credentials
-    User.findOne({"email": email}).then(function(doc) {
+    User.findOne({ "email": email }).then(function (doc) {
         if (doc == null || doc.password != password) {
             res.status(401).send("Incorrect account credentials.");
         } else {
             // send all midi data
-            Midi.find({"username": email}).then(function(doc) {
+            Midi.find({ "username": email }).then(function (doc) {
                 res.status(200).send(doc);
             });
         }
@@ -305,7 +326,7 @@ app.post(devPath + '/api/midis', async function(req, res) {
     * You MUST supply the exact Content-Type above, or it won't work.
     * Note the user's account info in the body.
 */
-app.post(devPath + '/api/midis/create', async function(req, res) {
+app.post(devPath + '/api/midis/create', async function (req, res) {
     var body = req.body;
     var email = body.email;
     var password = body.password;
@@ -317,6 +338,9 @@ app.post(devPath + '/api/midis/create', async function(req, res) {
     var midi_privacy = body.midi_privacy;
     var midi_notes = body.midi_notes;
     var midi_bpm = body.midi_bpm;
+    var midi_time_signature = body.midi_time_signature;
+    var midi_scale = body.midi_scale;
+    var midi_key = body.midi_key;
 
     // validate input
     if (midi_name == null || midi_name == "") {
@@ -333,7 +357,7 @@ app.post(devPath + '/api/midis/create', async function(req, res) {
     }
 
     // check credentials
-    User.findOne({"email": email}).then(function(doc) {
+    User.findOne({ "email": email }).then(function (doc) {
         if (doc == null) {
             res.status(401).send("Incorrect account username.");
         } else if (doc.password != password) {
@@ -341,13 +365,16 @@ app.post(devPath + '/api/midis/create', async function(req, res) {
         } else {
             // create new midi
             var newMidi = Midi({
-                "user_email": email,
+                "username": email,
+                "modelId": midi_model_id,
                 "name": midi_name,
-                "midi_data": midi_data,
-                "model_id": midi_model_id,
+                "midiData": midi_data,
                 "privacy": midi_privacy,
                 "notes": midi_notes,
-                "bpm": midi_bpm, 
+                "bpm": midi_bpm,
+                "timeSignature": midi_time_signature,
+                "scale": midi_scale,
+                "key": midi_key
             });
 
             newMidi.save();
@@ -369,11 +396,11 @@ app.post(devPath + '/api/midis/create', async function(req, res) {
     * You MUST supply the exact Content-Type above, or it won't work.
     * User account info not needed if MIDI is public
 */
-app.post(devPath + '/api/midis/:midi_id', async function(req, res) {
+app.post(devPath + '/api/midis/:midi_id', async function (req, res) {
     var midi_id = req.params.midi_id;
 
     // fetch midi
-    Midi.findOne({"_id": midi_id}).then(function(midi_doc) {
+    Midi.findOne({ "_id": midi_id }).then(function (midi_doc) {
         if (midi_doc.privacy != "private") {
             // send midi data
             res.status(200).send(midi_doc);
@@ -381,8 +408,8 @@ app.post(devPath + '/api/midis/:midi_id', async function(req, res) {
             var body = req.body;
             var email = body.email;
             var password = body.password;
-            
-            User.findOne({"email": email}).then(function(doc) {
+
+            User.findOne({ "email": email }).then(function (doc) {
                 if (doc == null || doc.password != password || midi_doc.username != email) {
                     res.status(401).send("Incorrect account credentials.");
                 } else {
@@ -406,11 +433,11 @@ app.post(devPath + '/api/midis/:midi_id', async function(req, res) {
     * You MUST supply the exact Content-Type above, or it won't work. 
     * User account info not needed if MIDI is public
 */
-app.post(devPath + '/download/midi/:midi_id', async function(req, res) {
+app.post(devPath + '/download/midi/:midi_id', async function (req, res) {
     var midi_id = req.params.midi_id;
 
     // fetch midi
-    Midi.findOne({"_id": midi_id}).then(function(midi_doc) {
+    Midi.findOne({ "_id": midi_id }).then(function (midi_doc) {
         if (midi_doc.privacy != "private") {
             // send midi data
             res.status(200).send(midi_doc['midiData']);
@@ -419,7 +446,7 @@ app.post(devPath + '/download/midi/:midi_id', async function(req, res) {
             var email = body.email;
             var password = body.password;
 
-            User.findOne({"email": email}).then(function(doc) {
+            User.findOne({ "email": email }).then(function (doc) {
                 if (doc == null || doc.password != password || midi_doc.username != email) {
                     res.status(401).send("Incorrect account credentials.");
                 } else {
@@ -428,7 +455,7 @@ app.post(devPath + '/download/midi/:midi_id', async function(req, res) {
                 }
             });
         }
-        
+
     });
 })
 
@@ -442,18 +469,18 @@ app.post(devPath + '/download/midi/:midi_id', async function(req, res) {
     * You MUST supply the exact Content-Type above, or it won't work. 
     * User account info not needed if MIDI is public
 */
-app.get(devPath + '/download/midi/:midi_id', async function(req, res) {
+app.get(devPath + '/download/midi/:midi_id', async function (req, res) {
     var midi_id = req.params.midi_id;
 
     // fetch midi
-    Midi.findOne({"_id": midi_id}).then(function(midi_doc) {
+    Midi.findOne({ "_id": midi_id }).then(function (midi_doc) {
         if (midi_doc.privacy != "private") {
             // send midi data
             res.status(200).send(midi_doc['midiData']);
         } else {
             res.status(401).send("Unauthorized.");
         }
-        
+
     });
 })
 
@@ -461,12 +488,12 @@ app.get(devPath + '/download/midi/:midi_id', async function(req, res) {
 /*
     Update MIDI file
     Example: 
-        GET localhost:4000/download/midi/606e1726f9d7edf2fe715ee6
+        GET localhost:4000/api/midis/606e1726f9d7edf2fe715ee6/update
         Headers- Content-Type: application/json; charset=utf-8
         Body- {"email": "harry@hsauers.net", "password": "Passwd123!"}
         Response- 200 OK
 */
-app.post(devPath + '/api/midis/:midi_id/update', async function(req, res) {
+app.post(devPath + '/api/midis/:midi_id/update', async function (req, res) {
     var midi_id = req.params.midi_id;
     var body = req.body;
     var email = body.email;
@@ -478,7 +505,7 @@ app.post(devPath + '/api/midis/:midi_id/update', async function(req, res) {
     var midi_notes = body.midi_notes;
 
     // check credentials
-    User.findOne({"email": email}).then(function(doc) {
+    User.findOne({ "email": email }).then(function (doc) {
         if (doc == null) {
             res.status(401).send("Incorrect account username.");
         } else if (doc.password != password) {
@@ -486,18 +513,18 @@ app.post(devPath + '/api/midis/:midi_id/update', async function(req, res) {
         } else {
             // update midi
             var newMidiValues = {};
-            
-            if (midi_name != null) { 
+
+            if (midi_name != null) {
                 newMidiValues["name"] = midi_name;
             }
-            if (midi_privacy != null) { 
+            if (midi_privacy != null) {
                 newMidiValues["privacy"] = midi_privacy;
-            } 
-            if (midi_notes != null) { 
+            }
+            if (midi_notes != null) {
                 newMidiValues["notes"] = midi_notes;
-            } 
-            
-            Midi.updateOne({"_id": midi_id}, newMidiValues).then(function(err) {
+            }
+
+            Midi.updateOne({ "_id": midi_id }, newMidiValues).then(function (err) {
                 if (err.ok != 1) {
                     res.status(400).send("bad request");
                 } else {
@@ -506,12 +533,46 @@ app.post(devPath + '/api/midis/:midi_id/update', async function(req, res) {
                         "id": midi_id
                     });
                 }
-              });
+            });
         }
     });
 });
 
+/*
+    Delete MIDI file
+    Example: 
+        GET localhost:4000/api/midis/606e1726f9d7edf2fe715ee6/delete
+        Headers- Content-Type: application/json; charset=utf-8
+        Body- {"email": "harry@hsauers.net", "password": "Passwd123!"}
+        Response- 200 OK
+*/
+app.post('/api/midis/:midi_id/delete', async function (req, res) {
+    var midi_id = req.params.midi_id;
+    var body = req.body;
+    var email = body.email;
+    var password = body.password;
 
+    // check credentials
+    User.findOne({ "email": email }).then(function (doc) {
+        if (doc == null) {
+            res.status(401).send("Incorrect account username.");
+        } else if (doc.password != password) {
+            res.status(401).send("Incorrect account password.");
+        } else {
+
+            Midi.deleteOne({ "_id": midi_id },).then(function (err) {
+                if (err.ok != 1) {
+                    res.status(400).send("bad request");
+                } else {
+                    res.status(200).send({
+                        "message": "MIDI deleted successfully!",
+                        "id": midi_id
+                    });
+                }
+            });
+        }
+    });
+});
 
 
 // start app
@@ -519,7 +580,6 @@ app.listen(PORT, () => console.log("Running on"), PORT);
 
 
 /* Send Mail functionality - using SendGrid */
-
 const sgMail = require('@sendgrid/mail')
 sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
@@ -534,16 +594,16 @@ function sendMail(to, from, subject, text, html) {
     sgMail.send(msg).then(() => {
         console.log('Email sent')
     })
-    .catch((error) => {
-        console.error(error)
-    })
+        .catch((error) => {
+            console.error(error)
+        })
 }
 
 /* Authentication functionality @TODO not working */
 function checkAuth(email, password) {
     var conn = getConnection();
 
-    User.findOne({"email": email}).then(function(doc) {
+    User.findOne({ "email": email }).then(function (doc) {
         if (doc == null) {
             return false;
         } else if (doc.password != password) {
