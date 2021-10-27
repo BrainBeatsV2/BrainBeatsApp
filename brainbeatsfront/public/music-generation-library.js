@@ -2,24 +2,22 @@ var MidiWriter = require('midi-writer-js')
 const fs = require('fs');
 
 const brainwaves = ['delta', 'theta', 'alpha', 'beta', 'gamma'];
-const commonNoteGroupings = [1, 2, 3, 4, 6, 8]; // These are hardcoded values pls don't change
-
+// const commonNoteGroupings = [1, 2, 3, 4, 6, 8]; // These are hardcoded values pls don't change
 // const commonNoteDurations = ['2', '4', '8', '8t', '16', '16t'];  // These are hardcoded values pls don't change
-// const commonNoteDurations = ['2', '4', '8', '16'];  
-const commonNoteDurations = ['1', '2', '4', '8', '16', '32'];
-
+const commonNoteGroupings = [6, 3, 1, 2, 4]; // Ideally keep to five or more
+const commonNoteDurations = ['1', '2', '4', '8', '16']; // Ideally keep to five or more
 
 const DEBUG = false;
 
-// TODO: Are sharps and flats being handled?
 // TODO: Mean aggregate of the EEG data
 
 function musicGenerationDriver(musicGenerationModel, scaleNoteArray, octaveArray, eegDataPoint, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, scaleMap) {
     track = new MidiWriter.Track();
     console.log("musicGenerationDriver, model: " + musicGenerationModel + " scales: " + scaleNoteArray + " octaveArray: " + octaveArray + " secondsPerEEGSnapShot: " + secondsPerEEGSnapShot + " noteDurationsPerBeatPerSecond: ");
+    console.log(eegDataPoint['band_values']);
 
     if (musicGenerationModel == 1) {
-        // TODO: Should this handle loudness?
+        // TODO: Stretch goal: Should this handle loudness?
         track = mapAggregateBandPowerToRandomProbability(track, eegDataPoint, scaleNoteArray, octaveArray, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot);
     } else {
         noteEvents = createNotes(secondsPerEEGSnapShot, scaleMap);
@@ -62,11 +60,12 @@ function getRandomFinalNotesBasedOnTime(noteDurationsPerBeatPerSecond, secondsPe
 
         // 3. Determine the amount of seconds for the note duration and grouping randomly produced. 
         var currentSeconds = getSecondsForNote(curDurationOutcome, curGroupingOutcome, noteDurationsPerBeatPerSecond);
-        console.log("Total sec: " + secondsPerEEGSnapShot + ", curSec " + currentSeconds + ", curDuration " + curDurationOutcome + ", curGrouping " + curGroupingOutcome);
+        // console.log("Total sec: " + secondsPerEEGSnapShot + ", curSec " + currentSeconds + ", curDuration " + curDurationOutcome + ", curGrouping " + curGroupingOutcome);
 
         // 4. Build the Notes: 
         // 4a. If the note duration & grouping is shorter than how many seconds this snapshot needs to produce, then add the notes and update the time!
         if (currentSeconds <= secondsPerEEGSnapShot) {
+
             noteEvents.push(new MidiWriter.NoteEvent({
                 pitch: getRandomOutcome(randomNumber, scaleNoteRanges),
                 duration: curDurationOutcome.toString(),

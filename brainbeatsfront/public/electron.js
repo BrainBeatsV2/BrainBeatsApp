@@ -105,11 +105,8 @@ ipcMain.on('end_eeg_script', (event, musicGenerationModel, key, scale, minRange,
   // Time Tracking: 
   var secondsRecorded = getMaxTimeRecorded(new Date());
   var secondsPerEEGSnapShot = roundTwoDecimalPoints(secondsRecorded / eegDataQueue.length);
-  var remainderSeconds = 0;
 
   var noteDurationsPerBeatPerSecond = getNoteDurationsPerBeatPerSecond(BPM, timeSignature);
-
-  // refactor this to get have the arrays?
 
   var scaleArray = getScaleNotes(key, scale, minRange, maxRange);
   var scaleMap = getScaleMap(key, scale, minRange, maxRange);
@@ -117,12 +114,6 @@ ipcMain.on('end_eeg_script', (event, musicGenerationModel, key, scale, minRange,
 
   eegDataQueue.forEach(eegDataPoint => {
     track = musicGenerationDriver(musicGenerationModel, scaleArray, octaveRangeArray, eegDataPoint, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, scaleMap);
-
-
-    // noteEvents = createNotes(secondsPerEEGSnapShot, scaleMap);
-    // track = addNotesToTrack(track, noteEvents);
-
-    // remainderSeconds = update the remainder
   });
 
   // Output MIDI file
