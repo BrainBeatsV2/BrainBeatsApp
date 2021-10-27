@@ -102,10 +102,13 @@ function createNotes(totalNoteGroupingsDurations) {
         for (var j = 0; j < numberOfNotesToGenerate; j++) {
             var distribution = createNoteDistribution(numberOfNotesToGenerate, currentPitch);
             var randomIndex = Math.floor(Math.random() * 100);
+            
+            // select from markov chain here
             var nextPitch = distribution[randomIndex];
+
             pitches.push(nextPitch);
             // currentPitch needs to select from internvalpitchmap 
-           // currentPitch = nextPitch;
+            // currentPitch = nextPitch;
             console.log("Interval Pitch Length :: " + (intervalPitchMap.size - 1));
             currentPitch = getRandomInt(0,(intervalPitchMap.size - 1));
         }
