@@ -445,14 +445,22 @@ function createNotes(totalNoteGroupingsDurations, scaleMap) {
             var distribution = createNoteDistribution(numberOfNotesToGenerate, currentPitch);
 
             var randomIndex = Math.floor(Math.random() * 100);
+            
+            // select from markov chain here
             var nextPitch = distribution[randomIndex];
+
             pitches.push(nextPitch);
 
             // currentPitch needs to select from internvalpitchmap 
             // currentPitch = nextPitch;
+<<<<<<< HEAD
             debug_print("Scale Map Length :: " + (scaleMap.size - 1));
 
             currentPitch = getRandomInt(0, (scaleMap.size - 1));
+=======
+            console.log("Interval Pitch Length :: " + (intervalPitchMap.size - 1));
+            currentPitch = getRandomInt(0,(intervalPitchMap.size - 1));
+>>>>>>> Init markov model branch
         }
 
         var pitchesAsNotes = [];
