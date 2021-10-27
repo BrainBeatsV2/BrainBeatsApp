@@ -457,7 +457,7 @@ app.post(devPath + '/download/midi/:midi_id', async function (req, res) {
         }
 
     });
-}) - m
+})
 
 /*
     Download of raw MIDI file
