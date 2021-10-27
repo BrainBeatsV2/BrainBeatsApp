@@ -18,18 +18,27 @@ const Midi = mongoose.Schema({
     },
     privacy: {
         type: String,
-        required: true, 
+        required: true,
     },
     notes: {
-        type: String, 
-    }, 
+        type: String,
+    },
     bpm: {
-        type: String, 
-    }, 
+        type: String,
+    },
+    timeSignature: {
+        type: String,
+    },
+    scale: {
+        type: String,
+    },
+    key: {
+        type: String,
+    },
     createdAt: {
         type: Date,
         default: Date.now(),
     },
 });
 
-module.exports = mongoose.model('Midi', Midi, 'midi'); 
+module.exports = mongoose.model('Midi', Midi, 'midi');
