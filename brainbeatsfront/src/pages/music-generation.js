@@ -62,6 +62,7 @@ class MusicGeneration extends Component {
         this.onSaveRecording = this.onSaveRecording.bind(this);
         this.onChangeTrackSettings = this.onChangeTrackSettings.bind(this);
         this.changeInstrument = this.changeInstrument.bind(this);
+        this.changeModel = this.changeModel.bind(this);
         this.changeKey = this.changeKey.bind(this);
         this.changeScale = this.changeScale.bind(this);
 
@@ -284,6 +285,7 @@ class MusicGeneration extends Component {
         }
     }
     changeInstrument(event) { this.setState({ instrument: event.target.value }); }
+    changeModel(event) { this.setState({ model: event.target.value }); }
     changeKey(event) { this.setState({ key: event.target.value }); }
     changeScale(event) { this.setState({ scale: event.target.value }); }
     changePrivacy = (e, { value }) => this.setState({ privacySettings: value });
@@ -368,8 +370,12 @@ class MusicGeneration extends Component {
                                 </tr>
                                 <tr>
                                     <td>
-                                        <select id="parameter_model" disabled={this.state.recording}>
-                                            <option>Model 1</option>
+                                        <select id="parameter_model" disabled={this.state.recording} value={this.state.model} onChange={this.changeModel}> 
+                                            <option value="1">Model 1</option>
+                                            <option value="2">Model 2</option>
+                                            <option value="3">Model 3</option>
+                                            <option value="4">Model 4</option>
+                                            <option value="5">Model 5</option>
                                         </select>
                                     </td>
                                     <td>
