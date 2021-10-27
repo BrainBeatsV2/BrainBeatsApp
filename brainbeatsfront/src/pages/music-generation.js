@@ -4,7 +4,6 @@ import { Redirect } from "react-router-dom";
 // const { ipcRenderer } = window.require('electron');
 // const { ipcRenderer } = window.require('electron');
 import 'html-midi-player'
-import Plot from 'react-plotly.js';
 import recording_img from '../images/recording.gif'
 
 import { Button, Checkbox, Grid, Modal, Header, Segment, Dimmer, Loader } from 'semantic-ui-react'
