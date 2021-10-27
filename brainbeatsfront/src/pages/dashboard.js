@@ -1,6 +1,8 @@
 import React, { Component, useState } from 'react';
 import isElectron from '../library/isElectron';
 import { Redirect } from "react-router-dom";
+import MidiTrack from '../components/MidiTrack/index'
+
 class Dashboard extends Component {
   constructor(props) {
     super(props);
@@ -12,6 +14,11 @@ class Dashboard extends Component {
       email: '',
       redirect: null,
       electron: null,
+      currentTrack: '',
+      currentKey: '',
+      currentScale: '',
+      currentBPM: '',
+      playing: false
     };
     this.onShowMenu = this.onShowMenu.bind(this);
     this.onHideMenu = this.onHideMenu.bind(this);
@@ -27,7 +34,19 @@ class Dashboard extends Component {
       showMenu: false
     });
   }
+  onStartPlaying = (id, name, key, scale, bpm) => {
+    console.log("playing");
+    console.log(id);
+    console.log(name);
+    this.setState({currentTrack: name, currentKey: key, currentScale: scale, currentBPM: bpm, playing: true})
+  }
+  onStopPlaying = () => {
 
+    this.setState({playing:false})
+  }
+  onResumePlaying = () => {
+    this.setState({playing:true})
+  }
   onLogout = (e) => {
     e.preventDefault();
     this.setState({
@@ -87,20 +106,16 @@ class Dashboard extends Component {
         </div>
         <div class="list">
           <div id="midi-tracks">
-
-
-            <div class="midi-track">My very first midi demo<i class="material-icons midi-settings">settings</i></div>
-            <div class="midi-track">Playing random notes<i class="material-icons midi-settings">settings</i></div>
-            <div class="midi-track">I'm a music genius<i class="material-icons midi-settings">settings</i></div>
+            <MidiTrack playfn={this.onStartPlaying} track_id="400" track_name="test" isowner={1} privacy={0} link="aefikjeaifi2j930r2r" song_key="C" scale="Minor" bpm="120" ></MidiTrack>
+            <MidiTrack playfn={this.onStartPlaying} track_id="500" track_name="test" isowner={1}  privacy={1} link="eafke930i23903429kfqemfm" song_key="D" scale=" Pentatonic" bpm="60"></MidiTrack>
           </div>
           <div id="other-tracks">
-
-            <div class="midi-track-play"><i class="material-icons midi-play">play_circle</i> Track 1 </div>
-            <div class="midi-track-play"><i class="material-icons midi-play">play_circle</i> Woo</div>
-            <div class="midi-track-play"><i class="material-icons midi-play">play_circle</i> Piano Jazz</div>
+           
+            <MidiTrack playfn={this.onStartPlaying} track_id="300" track_name="Woo" isowner={0} link="qi3jroqirj3iornf" song_key="Bb" scale="Major" bpm="90"></MidiTrack>
+            <MidiTrack playfn={this.onStartPlaying} track_id="300" track_name="Track 3" isowner={0} link="frmi0293r0jqfefe" song_key="F" scale="Pentatonic" bpm="180"></MidiTrack>
+            
           </div>
         </div>
-
         <br />
         <br />
         <br />
@@ -110,14 +125,14 @@ class Dashboard extends Component {
         <div id="stream-bar">
           <div class="column" style={{ width: '10%' }}>
             <   div id="play_stream" style={{ display: this.state.saveOptions ? 'none' : 'block' }}>
-              <i class="material-icons" onClick={this.onStartPlaying} style={{ display: this.state.playing ? 'none' : 'inline-block', fontSize: '59px' }}>play_circle_filled</i>
+              <i class="material-icons" onClick={this.onResumePlaying} style={{ display: this.state.playing ? 'none' : 'inline-block', fontSize: '59px' }}>play_circle_filled</i>
               <i class="material-icons" onClick={this.onStopPlaying} style={{ display: this.state.playing ? 'inline-block' : 'none', fontSize: '59px' }}>pause</i>
 
             </div>
 
           </div>
           <div class="column" style={{ width: '80%' }}>
-            <h3 style={{ marginBottom: '0px' }} >Track Name</h3>
+            <h3 style={{ marginBottom: '0px' }} >{this.state.currentTrack}</h3>
 
 
 
@@ -129,9 +144,9 @@ class Dashboard extends Component {
 
               </tr>
               <tr>
-                <td>C</td>
-                <td>Major</td>
-                <td>120</td>
+                <td>{this.state.currentKey}</td>
+                <td>{this.state.currentScale}</td>
+                <td>{this.state.currentBPM}</td>
               </tr>
             </table>
 
