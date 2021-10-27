@@ -2,7 +2,7 @@ import React, { Component, useState } from 'react';
 import isElectron from '../library/isElectron';
 import { Redirect } from "react-router-dom";
 import MidiTrack from '../components/MidiTrack/index'
-import Account from '../components/Account/index'
+
 class Dashboard extends Component {
   constructor(props) {
     super(props);
@@ -106,13 +106,13 @@ class Dashboard extends Component {
         </div>
         <div class="list">
           <div id="midi-tracks">
-            <MidiTrack playfn={this.onStartPlaying} track_id="400" track_name="test" isowner={1} privacy={0} link="aefikjeaifi2j930r2r"></MidiTrack>
-            <MidiTrack playfn={this.onStartPlaying} track_id="500" track_name="test" isowner={1}  privacy={1} link="eafke930i23903429kfqemfm" ></MidiTrack>
+            <MidiTrack playfn={this.onStartPlaying} track_id="400" track_name="test" isowner={1} privacy={0} link="aefikjeaifi2j930r2r" song_key="C" scale="Minor" bpm="120" ></MidiTrack>
+            <MidiTrack playfn={this.onStartPlaying} track_id="500" track_name="test" isowner={1}  privacy={1} link="eafke930i23903429kfqemfm" song_key="D" scale=" Pentatonic" bpm="60"></MidiTrack>
           </div>
           <div id="other-tracks">
            
-            <MidiTrack playfn={this.onStartPlaying} track_id="300" track_name="Woo" isowner={0} link="qi3jroqirj3iornf"></MidiTrack>
-            <MidiTrack playfn={this.onStartPlaying} track_id="300" track_name="Track 3" isowner={0} link="frmi0293r0jqfefe"></MidiTrack>
+            <MidiTrack playfn={this.onStartPlaying} track_id="300" track_name="Woo" isowner={0} link="qi3jroqirj3iornf" song_key="Bb" scale="Major" bpm="90"></MidiTrack>
+            <MidiTrack playfn={this.onStartPlaying} track_id="300" track_name="Track 3" isowner={0} link="frmi0293r0jqfefe" song_key="F" scale="Pentatonic" bpm="180"></MidiTrack>
             
           </div>
         </div>

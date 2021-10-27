@@ -15,9 +15,9 @@ const Index = (props) => {
     const [privacy, setPrivacy] = useState(props.privacy);
     const [name, setName] = useState(props.track_name);
     const [hide, setHidden] = useState(false);
-    var key = 'C';
-    var scale = 'Major';
-    var bpm = '120';
+    var key = props.song_key;
+    var scale = props.scale;
+    var bpm = props.bpm;
     console.log(props);
     
 return (<>
