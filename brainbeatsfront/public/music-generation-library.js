@@ -454,10 +454,13 @@ function createNotes(totalNoteGroupingsDurations, scaleMap) {
             // currentPitch needs to select from internvalpitchmap 
             // currentPitch = nextPitch;
 <<<<<<< HEAD
+<<<<<<< HEAD
             debug_print("Scale Map Length :: " + (scaleMap.size - 1));
 
             currentPitch = getRandomInt(0, (scaleMap.size - 1));
 =======
+=======
+>>>>>>> ffacb92233c820f77340da3921666607fcaa48aa
             console.log("Interval Pitch Length :: " + (intervalPitchMap.size - 1));
             currentPitch = getRandomInt(0,(intervalPitchMap.size - 1));
 >>>>>>> Init markov model branch

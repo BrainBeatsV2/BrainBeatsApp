@@ -269,6 +269,7 @@ app.get(devPath + '/api/models/:model_name', function (req, res) {
         Response- 200 OK
 */
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 app.get('/api/midis/public', async function (req, res) {
     // send public midi data
@@ -288,6 +289,8 @@ app.get('/api/midis/public', async function (req, res) {
     });
 })
 =======
+=======
+>>>>>>> ffacb92233c820f77340da3921666607fcaa48aa
 app.get('/api/midis/public', async function(req, res) {
     // send public midi data
     var skip = 0;
@@ -306,7 +309,10 @@ app.get('/api/midis/public', async function(req, res) {
     });
 })
 
+<<<<<<< HEAD
 >>>>>>> Update MIDI schema and allow fetch public MIDIs
+=======
+>>>>>>> ffacb92233c820f77340da3921666607fcaa48aa
 
 /*
     Example:
@@ -318,10 +324,14 @@ app.get('/api/midis/public', async function(req, res) {
     * Note the user's account info in the body.
 */
 <<<<<<< HEAD
+<<<<<<< HEAD
 app.post(devPath + '/api/midis/mine', async function (req, res) {
 =======
 app.post('/api/midis/mine', async function(req, res) {
 >>>>>>> Update MIDI schema and allow fetch public MIDIs
+=======
+app.post(devPath + '/api/midis/mine', async function(req, res) {
+>>>>>>> ffacb92233c820f77340da3921666607fcaa48aa
     var body = req.body;
     var email = body.email;
     var password = body.password;
@@ -365,12 +375,17 @@ app.post(devPath + '/api/midis/create', async function (req, res) {
     var midi_bpm = body.midi_bpm;
     var midi_time_signature = body.midi_time_signature;
 <<<<<<< HEAD
+<<<<<<< HEAD
     var midi_scale = body.midi_scale;
     var midi_key = body.midi_key;
 =======
     var midi_scale = body.midi_scale; 
     var midi_key = body.midi_key; 
 >>>>>>> Update API endpoints
+=======
+    var midi_scale = body.midi_scale; 
+    var midi_key = body.midi_key; 
+>>>>>>> ffacb92233c820f77340da3921666607fcaa48aa
 
     // validate input
     if (midi_name == null || midi_name == "") {
@@ -407,7 +422,10 @@ app.post(devPath + '/api/midis/create', async function (req, res) {
 =======
                 "bpm": midi_bpm, 
                 "timeSignature": midi_time_signature, 
+<<<<<<< HEAD
 >>>>>>> Update API endpoints
+=======
+>>>>>>> ffacb92233c820f77340da3921666607fcaa48aa
                 "scale": midi_scale,
                 "key": midi_key
             });
@@ -640,6 +658,46 @@ app.post('/api/midis/:midi_id/delete', async function(req, res) {
 });
 
 
+/*
+    Delete MIDI file
+    Example: 
+        GET localhost:4000/api/midis/606e1726f9d7edf2fe715ee6/delete
+        Headers- Content-Type: application/json; charset=utf-8
+        Body- {"email": "harry@hsauers.net", "password": "Passwd123!"}
+        Response- 200 OK
+*/
+app.post('/api/midis/:midi_id/delete', async function(req, res) {
+    var midi_id = req.params.midi_id;
+    var body = req.body;
+    var email = body.email;
+    var password = body.password;
+
+    // check credentials
+    User.findOne({"email": email}).then(function(doc) {
+        if (doc == null) {
+            res.status(401).send("Incorrect account username.");
+        } else if (doc.password != password) {
+            res.status(401).send("Incorrect account password.");
+        } else {
+            
+            Midi.deleteOne({"_id": midi_id},).then(function(err) {
+                if (err.ok != 1) {
+                    res.status(400).send("bad request");
+                } else {
+                    res.status(200).send({
+                        "message": "MIDI deleted successfully!",
+                        "id": midi_id
+                    });
+                }
+              });
+        }
+    });
+});
+
+
+
+
+
 
 >>>>>>> Update MIDI schema and allow fetch public MIDIs
 
@@ -650,6 +708,14 @@ app.post('/api/midis/:midi_id/delete', async function(req, res) {
 app.listen(PORT, () => console.log("Running on"), PORT);
 
 
+<<<<<<< HEAD
+=======
+
+
+
+
+/* Send Mail functionality - using SendGrid */
+>>>>>>> ffacb92233c820f77340da3921666607fcaa48aa
 
 
 
