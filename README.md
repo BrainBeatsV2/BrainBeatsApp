@@ -49,3 +49,53 @@ Open the Docker Desktop app, click on brainbeatsapp, scroll over the db containe
 ```
 mongo --port 27017 -u "root" -p "toor" --authenticationDatabase "admin"
 ```
+
+### Development on Windows
+Credit: https://www.hostinger.com/tutorials/how-to-set-up-nginx-reverse-proxy/
+
+1. Install nginx
+```
+sudo apt-get update
+sudo apt-get install nginx
+```
+
+2. Disable virtual host: 
+```
+sudo unlink /etc/nginx/sites-enabled/default
+```
+
+3. Create the Nginx Reverse Proxy 
+```
+cd etc/nginx/sites-available/
+```
+
+4. Update the config file 
+```
+server {
+    listen 8001;
+    server_name localhost;
+    location / {
+        proxy_pass http://localhost:3000;
+    }
+    location /api/ {
+        proxy_pass http://localhost:4000;
+    }
+}
+```
+
+5. Activate the directives by linking to /sites-enabled/ using the following command:
+```
+sudo ln -s /etc/nginx/sites-available/reverse-proxy.conf /etc/nginx/sites-enabled/reverse-proxy.conf
+```
+
+6. Test Nginx and the Nginx Reverse Proxy
+```
+sudo service nginx configtest
+sudo service nginx restart
+```
+
+7. Look at the database entries: 
+```
+http://localhost:4000/api/users
+```
+

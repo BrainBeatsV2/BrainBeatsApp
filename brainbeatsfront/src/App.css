@@ -505,7 +505,7 @@ button, input, optgroup, select, textarea{
   margin: 0 auto;
 }
 .midi-track:hover,.midi-track-play:hover{
-  opacity:0.8;
+  
 }
 .column-track
 {
@@ -551,7 +551,7 @@ margin-bottom:10px;
   filter: drop-shadow(2px 4px 6px #2d2d2d );
 }
 
-.midi-settings
+.midi-settings,.midi-delete,.midi-share
 {
   display:inline-block;
   font-size:9pt;
@@ -559,6 +559,9 @@ margin-bottom:10px;
   vertical-align: middle;
   float:right;
 
+}
+.midi-delete:hover,.midi-share:hover,.midi-settings:hover,.midi-play:hover{
+  opacity:0.8;
 }
 .midi-play
 {
