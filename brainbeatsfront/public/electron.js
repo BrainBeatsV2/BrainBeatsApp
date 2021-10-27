@@ -1,17 +1,25 @@
-const { setInstrument, getScaleNotes, createIntervalPitchMap, createNotes, addNotesToTrack, getMidiString, writeMIDIfile } = require('./music-generation-library');
+const { setInstrument, musicGenerationDriver, getOctaveRangeArray, getScaleNotes, getScaleMap, createNotes, addNotesToTrack, getMidiString, writeMIDIfile, getNoteDurationsPerBeatPerSecond, roundTwoDecimalPoints } = require('./music-generation-library');
 var MidiWriter = require('midi-writer-js')
 var MidiPlayer = require('midi-player-js');
-
-
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const isDev = require('electron-is-dev');
 const { PythonShell } = require('python-shell');
 var kill = require('tree-kill');
 const { start } = require('repl');
-var startTime = new Date();
 
+let filePath = path.join(__dirname, 'eeg_stream.py');
 let mainWindow;
+let pyshell
+
+var startTime = new Date();
+let eegDataQueue = [];
+track = new MidiWriter.Track();
+write = new MidiWriter.Writer(track);
+player = new MidiPlayer.Player();
+midiString = "";
+urlMIDI = "";
+
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -45,37 +53,42 @@ function sendEEGDataToNode(eeg_data) {
   return
 }
 
-let filePath = path.join(__dirname, 'eeg_stream.py');
-let pyshell;
+function clearMidiWriter() {
+  eegDataQueue = [];
+  track = new MidiWriter.Track();
+  write = new MidiWriter.Writer(track);
+  midiString = "";
+  urlMIDI = "";
+  console.log("Cleared MIDI track");
+  return
+}
 
-let eegDataQueue = [];
-track = new MidiWriter.Track();
-player = new MidiPlayer.Player();
-urlMIDI = "";
+function stopEEGScript() {
+  kill(pyshell.childProcess.pid);
+  console.log('Terminated EEG Python script');
+  return;
+}
 
 ipcMain.on('set_instrument', (event, args) => {
-  console.log(args);
+  console.log("Set instrument to: " + args);
   track = setInstrument(track, args);
 });
 
 ipcMain.on('start_eeg_script', (event, arguments) => {
+  clearMidiWriter();
+
+  // Start recording time and python script with user arguments
   startTime = new Date();
-  console.log(arguments.data);
   pyshell = new PythonShell(filePath, { pythonOptions: ['-u'], args: arguments.data });
+
   console.log('Python script started & track started');
-
-  // Currently default setting the instrument as piano, can later change instruments
-  //track = setInstrument(track, 1);
-
   pyshell.on('message', function (message) {
     try {
-      console.log('Received message')
+      console.log('Received EEG data')
       eeg_data = JSON.parse(message)
-      console.log(eeg_data)
       if (eeg_data == undefined || eeg_data == null) {
         return
       }
-      console.log(eeg_data)
       eegDataQueue.push(eeg_data);
       sendEEGDataToNode(eeg_data);
     } catch (error) {
@@ -85,45 +98,49 @@ ipcMain.on('start_eeg_script', (event, arguments) => {
 });
 
 
-ipcMain.on('end_eeg_script', (event, user_key, user_scale, user_minrange, user_maxrange) => {
-  var endTime = new Date();
-  var timeDiff = endTime - startTime; //in ms
-  // strip the ms
-  timeDiff /= 1000;
+ipcMain.on('end_eeg_script', (event, musicGenerationModel, key, scale, minRange, maxRange, BPM, timeSignature) => {
+  if (pyshell == null || pyshell == undefined) return;
+  stopEEGScript();
 
-  // get seconds 
-  var user_time = Math.round(timeDiff);
-  console.log("User time: " + user_time);
-  if (pyshell == null || pyshell == undefined) {
-    return
-  }
-  console.log('Terminating python script')
+  // Time Tracking: 
+  var secondsRecorded = getMaxTimeRecorded(new Date());
+  var secondsPerEEGSnapShot = roundTwoDecimalPoints(secondsRecorded / eegDataQueue.length);
+
+  var noteDurationsPerBeatPerSecond = getNoteDurationsPerBeatPerSecond(BPM, timeSignature);
+
+  var scaleArray = getScaleNotes(key, scale, minRange, maxRange);
+  var scaleMap = getScaleMap(key, scale, minRange, maxRange);
+  var octaveRangeArray = getOctaveRangeArray(minRange, maxRange);
+
   eegDataQueue.forEach(eegDataPoint => {
-    sendEEGDataToNode(eeg_data);
-    scale = getScaleNotes(user_key, user_scale, user_minrange, user_maxrange);
-    intervalPitchMap = createIntervalPitchMap(scale.length, scale);
-    // TODO: Fix hardcoding and allow for it to be something that's modified by time in the script or time it
-    noteEvents = createNotes(user_time);
-    track = addNotesToTrack(track, noteEvents);
+    track = musicGenerationDriver(musicGenerationModel, scaleArray, octaveRangeArray, eegDataPoint, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, scaleMap);
   });
 
+  // Output MIDI file
   write = new MidiWriter.Writer(track);
   urlMIDI = write.dataUri();
   player.loadDataUri(urlMIDI);
   midiString = getMidiString(write);
-  console.log(midiString);
   event.sender.send('end_eeg_script', midiString);
   writeMIDIfile(write);
-
-  eegDataQueue = [];
-  track = new MidiWriter.Track();
-  kill(pyshell.childProcess.pid)
-
 });
 
+function getMaxTimeRecorded(endTime) {
+  // Compares recording time rounded by whole number & by two decimal points
+  totalTime = (endTime - startTime) / 1000;
+  return Math.max(Math.round(totalTime), roundTwoDecimalPoints(totalTime));
+}
+
+
+function sendEEGDataToNode(eeg_data) {
+  mainWindow.webContents.send('start_eeg_script', eeg_data)
+  return
+}
+
+
 ipcMain.on('gen_midi', (event, args) => {
-  console.log('Loaded midi now')
-  //player.loadDataUri(urlMIDI);
+  // console.log('Loaded midi now')
+  // player.loadDataUri(urlMIDI);
 });
 
 ipcMain.on('play_midi', (event, args) => {
