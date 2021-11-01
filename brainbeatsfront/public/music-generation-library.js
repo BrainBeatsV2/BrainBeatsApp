@@ -25,6 +25,8 @@ function musicGenerationDriver(musicGenerationModel, scaleNoteArray, octaveArray
         noteEvents = createNotes(secondsPerEEGSnapShot, scaleMap);
         track = addNotesToTrack(track, noteEvents);
     }
+    
+    console.log(track);
 
     return track;
 }
@@ -43,8 +45,6 @@ function buildMarkovModel(track, eegDataPoint, scaleNoteArray, octaveArray, note
 
     // 3. Build track!
     track = addNotesToTrack(track, finalNotes);
-    
-    console.log(track);
 
     return track;
 }
@@ -107,41 +107,73 @@ function getMarkovBluesModelNotes(eegDataPoint, noteDurationsPerBeatPerSecond, s
 }
 
 function getNextMarkovNote(noteEvents, eegDataPoint) {
-    var bluesScale = ["C", "Eb", "F", "F#", "G", "Bb", "C"];
-    console.log("noteEvents: ");
-    console.log(noteEvents);
+    var bluesScale = ["C3", "Eb3", "F3", "F#3", "G3", "Bb3", "C4"];
     
     var lastNote;
     
     if (noteEvents.length == 0) {
-        lastNote = "C";
+        lastNote = "C3";
     } else {
         lastNote = noteEvents.at(-1)['pitch'][0];
     }
     
     /* 
+    
     [1] {
-[1]   band_values: {
-[1]     delta: 0.012,
-[1]     theta: 8.626,
-[1]     alpha: 93.471,
-[1]     beta: 0.041,
-[1]     gamma: 0.197
-[1]   },
-[1]   concentration: 100,
-[1]   relaxation: 0
-[1] }
+    [1]   band_values: {
+    [1]     delta: 0.012,
+    [1]     theta: 8.626,
+    [1]     alpha: 93.471,
+    [1]     beta: 0.041,
+    [1]     gamma: 0.197
+    [1]   },
+    [1]   concentration: 100,
+    [1]   relaxation: 0
+    [1] }
 
     */
     
+    var lastNoteIndex = bluesScale.indexOf(lastNote);
+    
     var nextNote; 
-    var selector = getOutcomeRangesForFiveOutcomesOrGreater(eegDataPoint, [1, 2, 3]); // array of values to select next note from
-    if (selector == 1) {
-        
+    var nextNoteIndex; 
+    var selector;
+    
+    var alpha = eegDataPoint['band_values']['alpha'];
+    
+    if (alpha < 20) {
+        selector = 1;
+    } else if (alpha < 80) {
+        selector = 2;
+    } else {
+        selector = 3;
     }
     
-    // return [nextNote];
-    return "C";
+    
+    if (selector == 1) {
+        nextNoteIndex = lastNoteIndex + 1;
+        if (nextNoteIndex > 6) {
+            nextNoteIndex = nextNoteIndex % 6;
+        }
+        nextNote = bluesScale[nextNoteIndex];
+    } else if (selector == 2) {
+        nextNoteIndex = lastNoteIndex + 2;
+        if (nextNoteIndex > 6) {
+            nextNoteIndex = nextNoteIndex % 6;
+        }
+        nextNote = bluesScale[nextNoteIndex];
+    } else if (selector == 3) {
+        nextNoteIndex = lastNoteIndex + 6; 
+        if (nextNoteIndex > 6) {
+            nextNoteIndex = nextNoteIndex % 6;
+        }
+        nextNote = bluesScale[nextNoteIndex];
+    }
+
+    console.log(nextNoteIndex);    
+    console.log(nextNote);
+    return [nextNote];
+    // return ["Eb3"];
 }
 
 
@@ -178,7 +210,7 @@ function getRandomFinalNotesBasedOnTime(noteDurationsPerBeatPerSecond, secondsPe
 
         // 3. Determine the amount of seconds for the note duration and grouping randomly produced. 
         var currentSeconds = getSecondsForNote(curDurationOutcome, curGroupingOutcome, noteDurationsPerBeatPerSecond);
-        // console.log("Total sec: " + secondsPerEEGSnapShot + ", curSec " + currentSeconds + ", curDuration " + curDurationOutcome + ", curGrouping " + curGroupingOutcome);
+        console.log("Total sec: " + secondsPerEEGSnapShot + ", curSec " + currentSeconds + ", curDuration " + curDurationOutcome + ", curGrouping " + curGroupingOutcome);
 
         // 4. Build the Notes: 
         // 4a. If the note duration & grouping is shorter than how many seconds this snapshot needs to produce, then add the notes and update the time!
@@ -219,6 +251,9 @@ function getRandomFinalNotesBasedOnTime(noteDurationsPerBeatPerSecond, secondsPe
 
 function getSecondsForNote(curDuration, curGrouping, noteDurationsPerBeatPerSecond) {
     let curNoteDuration = noteDurationsPerBeatPerSecond.find(o => o.duration === curDuration);
+    console.log("Note duration: ");
+    console.log(curNoteDuration);
+    
     var curNoteDurationSec = curNoteDuration.seconds;
     return curNoteDurationSec * curGrouping;
 }
