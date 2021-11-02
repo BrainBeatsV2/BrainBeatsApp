@@ -122,6 +122,8 @@ ipcMain.on('end_eeg_script', (event, musicGenerationModel, key, scale, minRange,
     track = musicGenerationDriver(musicGenerationModel, scaleArray, octaveRangeArray, eegDataPoint, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, scaleMap);
   });
 
+  console.log(track);
+
   // Output MIDI file
   write = new MidiWriter.Writer(track);
   urlMIDI = write.dataUri();
