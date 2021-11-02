@@ -118,11 +118,17 @@ ipcMain.on('end_eeg_script', (event, musicGenerationModel, key, scale, minRange,
   var scaleMap = getScaleMap(key, scale, minRange, maxRange);
   var octaveRangeArray = getOctaveRangeArray(minRange, maxRange);
 
-  eegDataQueue.forEach(eegDataPoint => {
-    track = musicGenerationDriver(musicGenerationModel, scaleArray, octaveRangeArray, eegDataPoint, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, scaleMap);
-  });
+  if (musicGenerationModel == 1)
+  {
+    eegDataQueue.forEach(eegDataPoint => {
+      track = musicGenerationDriver(musicGenerationModel, scaleArray, octaveRangeArray, eegDataPoint, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, scaleMap);
+    });
+  }else if (musicGenerationModel == 3)
+  {
+    track = musicGenerationDriver(musicGenerationModel, scaleArray, octaveRangeArray, eegDataQueue, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, scaleMap);
+  }
 
-  console.log(track);
+  //console.log(track);
 
   // Output MIDI file
   write = new MidiWriter.Writer(track);

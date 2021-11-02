@@ -77,47 +77,55 @@ function musicGenModel3(track, eegDataPoint, scaleArray, octaveArray, secondsPer
     var previousPitchRatio = -1;
     var previousDurationRatio = -1;
 
+    var avgSecondsPerSnapshot = secondsPerEEGSnapShot;
 
-    while (secondsPerEEGSnapShot > 0)
+    for(let i = 0; i < eegDataPoint.length; i++)
     {
-      var note = scale[determineNote(eegDataPoint, scale, minPitch, maxPitch)];
-      // Initialize previous ratio values
-      if (previousVelocityRatio === -1 && previousPitchRatio === -1 && previousDurationRatio === -1)
-      {
-        previousVelocityRatio = getPowerRatio("second", eegDataPoint);
-        previousPitchRatio = getPowerRatio("third", eegDataPoint);
-        previousDurationRatio = getPowerRatio("fourth", eegDataPoint);
+        secondsPerEEGSnapShot = avgSecondsPerSnapshot;
+        while (secondsPerEEGSnapShot > 0)
+        {
+        var note = scale[determineNote(eegDataPoint[i], scale, minPitch, maxPitch)];
+        // Initialize previous ratio values
+        if (previousVelocityRatio === -1 && previousPitchRatio === -1 && previousDurationRatio === -1)
+        {
+            previousVelocityRatio = getPowerRatio("second", eegDataPoint[i]);
+            previousPitchRatio = getPowerRatio("third", eegDataPoint[i]);
+            previousDurationRatio = getPowerRatio("fourth", eegDataPoint[i]);
+
+            // Update Time
+            var currentSeconds = getSecondsForNote(possibleDurations[currentDurationIndex], 1, noteDurationsPerBeatPerSecond);
+            secondsPerEEGSnapShot =- currentSeconds;
+            console.log(secondsPerEEGSnapShot);
+
+            noteEvents.push(new MidiWriter.NoteEvent( {
+            pitch : (note + octaveArray[currentPitchIndex]),
+            duration : possibleDurations[currentDurationIndex],
+            velocity : possibleVelocities[currentVelocityIndex],
+            }));
+        }
+        // Determine all parameters and create a note event
+        currentPitchIndex = determinePitch(eegDataPoint[i], previousPitchRatio, octaveArray.length-1, currentPitchIndex);
+        currentVelocityIndex = determineVelocity(eegDataPoint[i], previousVelocityRatio, possibleVelocities.length-1, currentVelocityIndex);
+        currentDurationIndex = determineDuration(eegDataPoint[i], previousDurationRatio, possibleDurations.length-1, currentDurationIndex);
+        noteEvents.push(new MidiWriter.NoteEvent( {
+            pitch : (note + octaveArray[currentPitchIndex]),
+            duration : possibleDurations[currentDurationIndex],
+            velocity : possibleVelocities[currentVelocityIndex],
+        }));
 
         // Update Time
         var currentSeconds = getSecondsForNote(possibleDurations[currentDurationIndex], 1, noteDurationsPerBeatPerSecond);
         secondsPerEEGSnapShot =- currentSeconds;
+        console.log(secondsPerEEGSnapShot);
 
-        noteEvents.push(new MidiWriter.NoteEvent( {
-          pitch : (note + octaveArray[currentPitchIndex]),
-          duration : possibleDurations[currentDurationIndex],
-          velocity : possibleVelocities[currentVelocityIndex],
-        }));
-      }
-      // Determine all parameters and create a note event
-      currentPitchIndex = determinePitch(eegDataPoint, previousPitchRatio, octaveArray.length-1, currentPitchIndex);
-      currentVelocityIndex = determineVelocity(eegDataPoint, previousVelocityRatio, possibleVelocities.length-1, currentVelocityIndex);
-      currentDurationIndex = determineDuration(eegDataPoint, previousDurationRatio, possibleDurations.length-1, currentDurationIndex);
-      noteEvents.push(new MidiWriter.NoteEvent( {
-        pitch : (note + octaveArray[currentPitchIndex]),
-        duration : possibleDurations[currentDurationIndex],
-        velocity : possibleVelocities[currentVelocityIndex],
-      }));
-
-      // Update Time
-      var currentSeconds = getSecondsForNote(possibleDurations[currentDurationIndex], 1, noteDurationsPerBeatPerSecond);
-      secondsPerEEGSnapShot =- currentSeconds;
-
-      // Update old ratios
-      previousVelocityRatio = getPowerRatio("second", eegDataPoint);
-      previousPitchRatio = getPowerRatio("third", eegDataPoint);
-      previousDurationRatio = getPowerRatio("fourth", eegDataPoint);
+        // Update old ratios
+        previousVelocityRatio = getPowerRatio("second", eegDataPoint[i]);
+        previousPitchRatio = getPowerRatio("third", eegDataPoint[i]);
+        previousDurationRatio = getPowerRatio("fourth", eegDataPoint[i]);
+        }
     }
     track = addNotesToTrack(track, noteEvents);
+    console.log(track);
     return track;
 }
 
