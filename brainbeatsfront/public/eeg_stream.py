@@ -209,9 +209,13 @@ def main():
     board.start_stream(45000, eeg_args.streamer_params)
     BoardShim.log_message(LogLevels.LEVEL_INFO.value,
                           'start sleeping in the main thread')
-    # time.sleep(4)
+   # Brainflow recommends waiting at least collectively 4 seconds for the first EEG reading
+    time.sleep(2.7)
+
     while(True):
-        time.sleep(4)
+        # Wait the smallest amount of time between each snapshot!
+        time.sleep(1.3)
+
         # TODO This is using only the eeg data from the second channel, in the future it'd be best to average the values between all of the channels
         first_channel = eeg_channels_count[0]
         second_channel = eeg_channels_count[1]
