@@ -109,10 +109,9 @@ def get_band_values(data, sampling_rate, eeg_channel):
 
 
 def get_feature_vector(data, eeg_channels_count, sampling_rate):
-    """Gets feature vector for the machine learning models"""
-    bands = DataFilter.get_avg_band_powers(
-        data, eeg_channels_count, sampling_rate, True)
-    return np.concatenate((bands[0], bands[1]))
+    bands = DataFilter.get_avg_band_powers(data, eeg_channels_count, sampling_rate, True)
+    feature_vector = np.concatenate((bands[0], bands[1]))
+    return feature_vector
 
 
 def get_concentration_percent(data, eeg_channels_count, sampling_rate):
