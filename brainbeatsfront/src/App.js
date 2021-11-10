@@ -36,13 +36,13 @@ function App() {
         <Route path="/play" exact component={Play} render={props =>
           (<Play {...props} username={this.state.username} password={this.state.password} email={this.state.email} />)} />
           <Route path="/discover" exact component={Discover} render={props =>
-          (<Play {...props} username={this.state.username} password={this.state.password} email={this.state.email} />)} />
+          (<Discover {...props} username={this.state.username} password={this.state.password} email={this.state.email} />)} />
           <Route path="/help" exact component={Help} render={props =>
-          (<Play {...props} username={this.state.username} password={this.state.password} email={this.state.email} />)} />
+          (<Help {...props} username={this.state.username} password={this.state.password} email={this.state.email} />)} />
           <Route path="/settings" exact component={Settings} render={props =>
-          (<Play {...props} username={this.state.username} password={this.state.password} email={this.state.email} />)} />
+          (<Settings {...props} username={this.state.username} password={this.state.password} email={this.state.email} />)} />
           <Route path="/my-account" exact component={Account} render={props =>
-          (<Play {...props} username={this.state.username} password={this.state.password} email={this.state.email} />)} />
+          (<Account {...props} username={this.state.username} password={this.state.password} email={this.state.email} />)} />
         <Route component={Home} />
       </Switch>
     </Router>
