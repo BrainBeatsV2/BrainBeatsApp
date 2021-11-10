@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Redirect } from "react-router-dom";
 import logo from '../images/logo_dev.png';
 import isElectron from '../library/isElectron';
+import Sidebar from '../components/Sidebar/index'
 class Login extends Component {
 	constructor(props) {
 		super(props);
@@ -195,12 +196,13 @@ class Login extends Component {
 			return <Redirect to={this.state.redirect} />
 		}
 		return (
-			<div class="container-login100">
-
+			<div >
+				<Sidebar active="login" is_shown="true" logged_in={false}></Sidebar>
 
 
 				<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
-				<div class="wrap-login100">
+				<div id="main_content" >
+				<div class="wrap-login100" style={{margin: '0 auto'}}>
 					<img style={{ height: '150px', margin: '0 auto', display: isElectron() ? 'block' : 'none' }} src={logo} alt='logo' />
 					<div id="banner" class="alert m-b-38" role="alert"></div>
 					<form id="loginform" action="" method="post" class="login100-form validate-form" style={{ display: this.state.showLogin ? 'block' : 'none' }} onSubmit={this.handleLogin}>
@@ -330,6 +332,7 @@ class Login extends Component {
 					</form >
 					<a href="/music-generation" style={{ 'font-size': '16px', display: isElectron() ? 'block' : 'none' }}> <span style={{ 'font-size': '12px' }} class="material-icons">arrow_back_ios</span> Go Back </a>
 				</div >
+				</div>
 			</div >
 		);
 	}

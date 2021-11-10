@@ -4,7 +4,7 @@ import { Redirect } from "react-router-dom";
 import MidiTrack from '../components/MidiTrack/index'
 import logo from '../images/logo_dev.png'
 import Sidebar from '../components/Sidebar/index'
-class Dashboard extends Component {
+class Discover extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -20,10 +20,22 @@ class Dashboard extends Component {
       currentScale: '',
       currentBPM: '',
       playing: false,
-      loggedin: 0
+      loggedin:0
     };
-  }
+    this.onShowMenu = this.onShowMenu.bind(this);
+    this.onHideMenu = this.onHideMenu.bind(this);
 
+  }
+  onShowMenu() {
+    this.setState({
+      showMenu: true
+    });
+  }
+  onHideMenu() {
+    this.setState({
+      showMenu: false
+    });
+  }
   onStartPlaying = (id, name, key, scale, bpm) => {
     console.log("playing");
     console.log(id);
@@ -45,14 +57,14 @@ class Dashboard extends Component {
       email: '',
     });
     if (isElectron()) {
-      this.setState({ loggedout: 1 });
+      this.setState({ redirect: "/music-generation" });
     } else {
-      this.setState({ loggedout: 0 });
+      this.setState({ redirect: "/" });
     }
 
   }
   componentDidMount(){
-  if (this.state.username == "")
+    if (this.state.username == "")
     {
         this.setState({ loggedin: 0 });
        
@@ -83,13 +95,12 @@ class Dashboard extends Component {
 
 
       <div class="music-generation-bg" style={{margin:'0'}}>
-          <Sidebar active="dashboard" is_shown="true" logged_in={this.state.loggedin}></Sidebar>
+          <Sidebar active="discover" is_shown="true" logged_in={this.state.loggedin}></Sidebar>
           <div id="main_content">          
-            <h2>My MIDI</h2>
-            <div class="midi-add" style={{ display: isElectron() ? 'inline-block' : 'none' }}><a href="/music-generation"><i class="material-icons">add</i> Add Track</a></div>
+            <h2>MIDI Discover</h2>
             <div id="midi-tracks1" style={{marginTop:'10px'}}>
-                <MidiTrack playfn={this.onStartPlaying} track_id="400" track_name="test" isowner={1} privacy={0} link="aefikjeaifi2j930r2r" song_key="C" scale="Minor" bpm="120" ></MidiTrack>
-                <MidiTrack playfn={this.onStartPlaying} track_id="500" track_name="test" isowner={1}  privacy={1} link="eafke930i23903429kfqemfm" song_key="D" scale=" Pentatonic" bpm="60"></MidiTrack>
+                <MidiTrack playfn={this.onStartPlaying} track_id="400" track_name="test" isowner={0} privacy={0} link="aefikjeaifi2j930r2r" song_key="C" scale="Minor" bpm="120" ></MidiTrack>
+                <MidiTrack playfn={this.onStartPlaying} track_id="500" track_name="test" isowner={0}  privacy={1} link="eafke930i23903429kfqemfm" song_key="D" scale=" Pentatonic" bpm="60"></MidiTrack>
             </div>
           </div>
 
@@ -141,4 +152,4 @@ class Dashboard extends Component {
     );
   }
 }
-export default Dashboard
+export default Discover

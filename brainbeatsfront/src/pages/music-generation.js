@@ -5,7 +5,7 @@ import { Redirect } from "react-router-dom";
 // const { ipcRenderer } = window.require('electron');
 import 'html-midi-player'
 import recording_img from '../images/recording.gif'
-
+import Sidebar from '../components/Sidebar/index'
 import { Button, Checkbox, Grid, Modal, Header, Segment, Dimmer, Loader } from 'semantic-ui-react'
 import { PlayerElement } from 'html-midi-player';
 class MusicGeneration extends Component {
@@ -37,14 +37,10 @@ class MusicGeneration extends Component {
             downloadMIDI: false,
             privacySettings: 0,
             trackLink: "brainbeats.dev/play/",
-            loggedout: 0,
-            playElem: null,
-            elapsedTime: 20,
-            finalTime: 0,
+            loggedin: 0,
+            midiString: ''  ,
             username: '',
-            password: '',
-            email: '',
-            midiString: 'data:audio/midi;base64,TVRoZAAAAAYAAAABAIBNVHJrAAAFpADAAQCQPkArgD5AAJA+QCqAPkAAkEBAK4BAQACQPkArgD5AAJA+QCqAPkAAkEBAK4BAQACQQEAggEBAAJA+QCCAPkAAkD5AIIA+QACQQEBAgEBAAJBAQECAQEAAkD5AQIA+QACQQ0BAgENAAJAAQECAAEAAkEVAQIBFQACQAEBAgABAAJBDQECAQ0AAkEVAgQCARUAAkEBAgQCAQEAAkEBAgQCAQEAAkEVAgQCARUAAkABAIIAAQACQRUAggEVAAJBFQCCARUAAkENAIIBDQACQQEAggEBAAJBFQCCARUAAkEVAIIBFQACQQEAQgEBAAJBAQBCAQEAAkD5AEIA+QACQQEAQgEBAAJBDQBCAQ0AAkD5AEIA+QACQQEArgEBAAJBAQECAQEAAkENAQIBDQACQAEBAgABAAJAAQECAAEAAkENAQIBDQACQAEBAgABAAJBFQBWARUAAkENAFYBDQACQRUAWgEVAAJBFQBWARUAAkEVAFYBFQACQQ0AWgENAAJBFQIEAgEVAAJBAQIEAgEBAAJBAQIEAgEBAAJBAQIEAgEBAAJBAQCqAQEAAkEVAK4BFQACQQ0ArgENAAJBDQCqAQ0AAkD5AIIA+QACQQEAggEBAAJBDQCCAQ0AAkEBAIIBAQACQQECBAIBAQACQRUArgEVAAJAAQCuAAEAAkEVAKoBFQACQAEArgABAAJBDQCuAQ0AAkABAKoAAQACQAEArgABAAJBFQCuARUAAkABAFYAAQACQRUAVgEVAAJBFQBaARUAAkEVAFYBFQACQRUAVgEVAAJBDQBaAQ0AAkD5AFYA+QACQPkAVgD5AAJBAQIEAgEBAAJBFQCuARUAAkABAK4AAQACQRUAqgEVAAJAAQCuAAEAAkENAK4BDQACQRUAqgEVAAJBAQBaAQEAAkEBAFYBAQACQRUAVgEVAAJBDQBaAQ0AAkABAIIAAQACQRUAggEVAAJBFQCCARUAAkEVAIIBFQACQQ0AggENAAJBFQCCARUAAkEBAIIBAQACQPkAggD5AAJBAQCqAQEAAkENAK4BDQACQQEArgEBAAJBDQCqAQ0AAkD5AK4A+QACQQEBAgEBAAJBAQECAQEAAkENAQIBDQACQRUBAgEVAAJBAQECAQEAAkEVAQIBFQACQAEBAgABAAJBFQECARUAAkEBAIIBAQACQQEAggEBAAJBAQIEAgEBAAJBAQIEAgEBAAJBDQIEAgENAAJBDQIEAgENAAJBAQIEAgEBAAJBFQIEAgEVAAJBDQIEAgENAAJBFQIEAgEVAAJAAQCCAAEAAkEVAIIBFQACQQEAggEBAAJBDQCCAQ0AAkEBAIIBAQACQQ0AggENAAJBDQBCAQ0AAkABAEIAAQACQQ0AQgENAAJA+QBCAPkAAkEBAFYBAQACQQEAWgEBAAJA+QBWAPkAAkEBAFYBAQACQRUAQgEVAAJBFQBCARUAAkABAEIAAQACQQ0AQgENAAJBDQBCAQ0AAkD5AEIA+QACQQEAQgEBAAJBFQBCARUAAkEVAgQCARUAAkENAgQCAQ0AAkEVAgQCARUAAkABAgQCAAEAAkABAgQCAAEAAkENAgQCAQ0AAkENAgQCAQ0AAkEBAgQCAQEAAkD5AEIA+QACQQ0AWgENAAJBAQBWAQEAAkEVAFYBFQACQQ0ArgENAAJBFQIEAgEVAAJBAQIEAgEBAAJBFQIEAgEVAAJBFQBWARUAAkENAIIBDQACQQ0AggENAAJBAQCCAQEAAkENAIIBDQACQQEAggEBAAJBDQCCAQ0AAkEBAIIBAQACQQ0AggENAAJBAQBCAQEAAkEBAEIBAQACQQ0CBAIBDQACQPkCBAIA+QACQQECBAIBAQACQRUCBAIBFQACQAECBAIAAQACQRUCBAIBFQACQQ0CBAIBDQACQQECBAIBAQAD/LwA='
+            password: ''
         };
         this.onStartRecording = this.onStartRecording.bind(this);
         this.onStopRecording = this.onStopRecording.bind(this);
@@ -59,7 +55,7 @@ class MusicGeneration extends Component {
         this.onIncreaseMax = this.onIncreaseMax.bind(this);
         this.updateRange = this.updateRange.bind(this);
         this.onSynthetic = this.onSynthetic.bind(this);
-        this.onGanglion = this.onGanglion.bind(this);
+        this.onEEG = this.onEEG.bind(this);
         this.setOpen = this.setOpen.bind(this);
         this.onSaveRecording = this.onSaveRecording.bind(this);
         this.onChangeTrackSettings = this.onChangeTrackSettings.bind(this);
@@ -199,16 +195,16 @@ class MusicGeneration extends Component {
         }
     }
     onLogout = (e) => {
-        e.preventDefault();
+       // e.preventDefault();
         this.setState({
           username: '',
           password: '',
           email: '',
         });
         if (isElectron()) {
-          this.setState({ loggedout: 1 });
+          this.setState({ loggedin: 0 });
         } else {
-          this.setState({ loggedout: 0 });
+          this.setState({ loggedin: 1 });
         }
     
       }
@@ -217,18 +213,18 @@ class MusicGeneration extends Component {
     }
     // Clicking Synthetic
     onSynthetic() {
-        if (this.state.headsetMode == "Ganglion") {
+        if (this.state.headsetMode == "EEG") {
             this.setState({
                 headsetMode: 'Synthetic'
             })
         }
 
     }
-    // Clicking Ganglion
-    onGanglion() {
+    // Clicking EEG
+    onEEG() {
         if (this.state.headsetMode == "Synthetic") {
             this.setState({
-                headsetMode: 'Ganglion'
+                headsetMode: 'EEG'
             })
         }
     }
@@ -292,6 +288,17 @@ class MusicGeneration extends Component {
 
             });
         }
+        
+        if (this.state.username == "")
+        {
+            this.setState({ loggedin: 0 });
+            
+        }
+        else 
+        {
+            this.setState({ loggedin: 1 });
+        } 
+        
     }
     changeInstrument(event) { this.setState({ instrument: event.target.value }); }
     changeModel(event) { this.setState({ model: event.target.value }); }
@@ -306,7 +313,8 @@ class MusicGeneration extends Component {
         return (
 
 
-            <div class="music-generation-bg">
+            <div class="music-generation-bg" >
+                <Sidebar music_generation="true" logout={this.onLogout} is_shown={this.state.showMenu} logged_in={this.state.loggedin}></Sidebar>
                 <Dimmer.Dimmable dimmed={this.state.saving}>
                     <Dimmer active={this.state.saving} page>
                         <Loader>Uploading</Loader>
@@ -314,28 +322,16 @@ class MusicGeneration extends Component {
 
 
                 </Dimmer.Dimmable>
+                <div class="fade-bg" onMouseEnter={this.onHideMenu} style={{display: (this.state.showMenu)? "block": "none"}}></div>
                 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
                 <script src="https://cdn.jsdelivr.net/combine/npm/tone@14.7.58,npm/@magenta/music@1.22.1/es6/core.js,npm/focus-visible@5,npm/html-midi-player@1.4.0"></script>
-                <div className="nav__button" onClick={this.onShowMenu} onMouseEnter={this.onShowMenu} onMouseLeave={this.onHideMenu}>
-                    <i class="material-icons">account_circle</i>
 
-                    <ul className="nav__menu_loggedin" style={{ display: (this.state.showMenu && !this.state.loggedout) ? 'inline-block' : 'none' }}>
-                        <li className="nav_menu-item"><a href="#">My Account</a></li>
-                        <li className="nav_menu-item"><a href="#">Settings</a></li>
-                        <li className="nav_menu-item"><a href="#" onClick={this.onLogout}>Log Out</a></li>
-                    </ul>
-                    <ul className="nav__menu_loggedout" style={{ display: (this.state.showMenu && this.state.loggedout) ? 'inline-block' : 'none' }}>
-                        <li className="nav_menu-item"><a href="/login">Login</a></li>
-                        <li className="nav_menu-item"><a href="#">Help</a></li>
-                    </ul>
-
-                </div>
-                <a id="back" href="/dashboard" style={{ display: this.state.loggedout ? 'none' : 'inline-block' }}><i class="material-icons" >chevron_left</i> <span>DASHBOARD</span></a>
+                <a id="back" class="showmenu" href="#" onMouseEnter={this.onShowMenu}><i class="material-icons" >menu</i> <span>MENU</span></a>
 
                 <div id="headset_selection" class="">
                     <p>{this.state.headsetMode} Mode</p>
                     <i class="material-icons" onClick={this.onSynthetic} style={{ color: (this.state.headsetMode == 'Synthetic') ? 'white' : 'rgba(48,50,54)' }}>memory</i>
-                    <i class="material-icons" onClick={this.onGanglion} style={{ color: (this.state.headsetMode == 'Ganglion') ? 'white' : 'rgba(48,50,54)' }}>headset</i>
+                    <i class="material-icons" onClick={this.onEEG} style={{ color: (this.state.headsetMode == 'EEG') ? 'white' : 'rgba(48,50,54)' }}>headset</i>
                 </div>
 
                 <div class="stream">
@@ -353,7 +349,7 @@ class MusicGeneration extends Component {
                 <br />
                 <br />
                 <br />
-                <div id="stream-bar">
+                <div id="stream-bar" style={{position: (this.state.showMenu) ? "absolute": "fixed"}}>
                     <div class="column">
                         <div id="rerecord" style={{ display: this.state.saveOptions ? 'inline-block' : 'none' }}>
 
@@ -426,7 +422,7 @@ class MusicGeneration extends Component {
                                 <tr>
 
                                     <td><i class="material-icons">file_download</i></td>
-                                    <td style={{ display: (this.state.saved || this.state.loggedout) ? 'none' : 'block' }}><i class="material-icons" onClick={this.onSaveRecording} >cloud_upload</i></td>
+                                    <td style={{ display: (this.state.saved || !this.state.loggedin) ? 'none' : 'block' }}><i class="material-icons" onClick={this.onSaveRecording} >cloud_upload</i></td>
                                     <Modal
                                         onClose={this.setOpen}
                                         onOpen={this.setOpen}
@@ -435,9 +431,7 @@ class MusicGeneration extends Component {
                                         closeOnDimmerClick={false} >
                                         <Modal.Header>Track Settings</Modal.Header>
                                         <Modal.Content text>
-
                                             <Modal.Description>
-
                                                 <Header>Sharing and Privacy Settings</Header>
                                                 <Checkbox input onChange={this.changePrivacy} value='0' checked={this.state.privacySettings == 0} radio label='Track is visible on MIDI Discover section' />
                                                 <br />
@@ -446,7 +440,6 @@ class MusicGeneration extends Component {
                                                 <Checkbox onChange={this.changePrivacy} value='2' checked={this.state.privacySettings == 2} radio label='Track is only visible to me' />
                                                 <br />
                                                 <br />
-
                                                 MIDI Link: <input className="modal_input" value={this.state.trackLink} type="text" readOnly={true} />
                                             </Modal.Description>
                                         </Modal.Content>
@@ -468,7 +461,7 @@ class MusicGeneration extends Component {
                                 <tr>
 
                                     <th>Download MIDI</th>
-                                    <th style={{ display: (this.state.saved || this.state.loggedout) ? 'none' : 'block' }}>Save and Upload</th>
+                                    <th style={{ display: (this.state.saved || !this.state.loggedin) ? 'none' : 'block' }}>Save and Upload</th>
                                     <th style={{ display: this.state.saved ? 'block' : 'none' }}>Share</th>
                                 </tr>
                             </table>

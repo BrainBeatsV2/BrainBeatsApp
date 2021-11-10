@@ -19,7 +19,9 @@ function musicGenerationDriver(musicGenerationModel, scaleNoteArray, octaveArray
     if (musicGenerationModel == 1) {
         // TODO: Stretch goal: Should this handle loudness?
         track = mapAggregateBandPowerToRandomProbability(track, eegDataPoint, scaleNoteArray, octaveArray, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot);
-    } else if (musicGenerationModel == 3){
+    } else if (musicGenerationModel == 2) {
+        // track = buildMarkovModel(track, eegDataPoint, scaleNoteArray, octaveArray, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot);
+    } else if (musicGenerationModel == 3) {
         track = musicGenModel3(track, eegDataPoint, scaleNoteArray, octaveArray, secondsPerEEGSnapShot, noteDurationsPerBeatPerSecond);
     } else {
         noteEvents = createNotes(secondsPerEEGSnapShot, scaleMap);
@@ -28,6 +30,142 @@ function musicGenerationDriver(musicGenerationModel, scaleNoteArray, octaveArray
 
     return track;
 }
+
+function buildMarkovModel(track, eegDataQueue, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot) {
+    console.log("Music Generation Model 2: Blues Markov Chain");
+
+    eegDataQueue.forEach(eegDataPoint => {
+        // 1. Calculate percents and determine outcome ranges for each component of what makes a note!
+        var durationRanges = getOutcomeRanges(eegDataPoint, commonNoteDurations);
+        var groupingsRanges = getOutcomeRanges(eegDataPoint, commonNoteGroupings);
+
+        // 2. Determine the randomly selected durations and groupings and calculate it based off of seconds noteDurationsPerBeatPerSecond, secondsForThisSnapshot
+        // Build notes, save how long the notes last, until there are no more seconds or can't make even the shortest note combo:
+        var noteEvents = [];
+        var finalNotes = getMarkovBluesModelNotes(noteEvents, eegDataPoint, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, durationRanges, groupingsRanges);
+
+        // 3. Build track!
+        track = addNotesToTrack(track, finalNotes);
+    });
+
+    return track;
+}
+
+// Markov chain-based blues composition
+function getMarkovBluesModelNotes(noteEvents, eegDataPoint, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, durationRanges, groupingsRanges) {
+    console.log("Beginning markov model");
+    
+    // 1. Determine the shortest note we can generate
+    var shortestNoteCombo = getSecondsForNote('16', 3, noteDurationsPerBeatPerSecond);
+    
+    while (secondsPerEEGSnapShot > 0 && secondsPerEEGSnapShot > shortestNoteCombo) {
+        // 2. Determine the random outcomes for the duration & groupings
+        /*
+        var randomNumber = getRandomTwoPlaceDecimalZeroThruHundred();
+        var curDurationOutcome = getRandomOutcome(randomNumber, durationRanges);
+        var curGroupingOutcome = getRandomOutcome(randomNumber, groupingsRanges);
+        */
+        var curDurationOutcome = durationRanges[Math.floor(Math.random() * durationRanges.length)]['outcome'];
+        var curGroupingOutcome = groupingsRanges[Math.floor(Math.random() * groupingsRanges.length)]['outcome'];
+
+        // 3. Determine the amount of seconds for the note duration and grouping randomly produced. 
+        var currentSeconds = getSecondsForNote(curDurationOutcome, curGroupingOutcome, noteDurationsPerBeatPerSecond);
+        // var currentSeconds = (1/curDurationOutcome * curGroupingOutcome * noteDurationsPerBeatPerSecond);
+
+        // 4. Build the Notes: 
+        // 4a. If the note duration & grouping is shorter than how many seconds this snapshot needs to produce, then add the notes and update the time!
+
+        /* This is where the magic happens... */
+        if (currentSeconds <= secondsPerEEGSnapShot) {
+            noteEvents.push(new MidiWriter.NoteEvent({
+                pitch: getNextMarkovNote(noteEvents, eegDataPoint),  
+                duration: curDurationOutcome.toString(),
+                repeat: Number(curGroupingOutcome),
+            }));
+            secondsPerEEGSnapShot -= currentSeconds;
+        }
+
+        // 4b. If currentSeconds is greater than remaining secondsPerEEGSnapShot but they are within 1 second of each other, just go with the note and update the time!
+        if (currentSeconds > secondsPerEEGSnapShot && (currentSeconds - secondsPerEEGSnapShot) <= 1) {
+            noteEvents.push(new MidiWriter.NoteEvent({
+                pitch: getNextMarkovNote(noteEvents, eegDataPoint),  
+                duration: curDurationOutcome.toString(),
+                repeat: Number(curGroupingOutcome),
+            }));
+            secondsPerEEGSnapShot -= currentSeconds;
+            secondsPerEEGSnapShot = secondsPerEEGSnapShot > 0 ? secondsPerEEGSnapShot : 0;
+        }
+
+        // 4c. If we are very close to the shortestNoteCombo we can make, just make that note and end it!
+        if (secondsPerEEGSnapShot <= shortestNoteCombo * 1.5) {
+            noteEvents.push(new MidiWriter.NoteEvent({
+                pitch: getNextMarkovNote(noteEvents, eegDataPoint),  
+                duration: curDurationOutcome.toString(),
+                repeat: 1,
+            }));
+            secondsPerEEGSnapShot = 0;
+        }
+    }
+
+    return noteEvents;
+}
+
+function getNextMarkovNote(noteEvents, eegDataPoint) {
+    var bluesScale = ["C3", "Eb3", "F3", "F#3", "G3", "Bb3", "C4", "Eb4", "F4", "F#4", "G4", "Bb4", "C5"];
+    
+    var lastNote;
+    
+    if (noteEvents.length == 0) {
+        lastNote = "C3";
+    } else {
+        lastNote = noteEvents.at(-1)['pitch'][0];
+    }
+    
+    var lastNoteIndex = bluesScale.indexOf(lastNote);
+    
+    var nextNote; 
+    var nextNoteIndex; 
+    var selector;
+    
+    var alpha = eegDataPoint['band_values']['alpha'];
+    
+    if (alpha < 93) {
+        selector = 1;
+    } else if (alpha < 93.5) {
+        selector = 2;
+    } else if (alpha < 94) {
+        selector = 3;
+    } else if (alpha < 94.5) {
+        selector = 4;
+    } else if (alpha < 95) {
+        selector = 5;
+    } else {
+        selector = 6;
+    }
+    
+    
+    if (selector == 1) {
+        nextNoteIndex = lastNoteIndex + 1;
+    } else if (selector == 2) {
+        nextNoteIndex = lastNoteIndex + 2;
+    } else if (selector == 3) {
+        nextNoteIndex = lastNoteIndex + 4; 
+    } else if (selector == 4) {
+        nextNoteIndex = lastNoteIndex + 6; 
+    } else if (selector == 5) {
+        nextNoteIndex = lastNoteIndex - 2;
+    } else if (selector == 6) {
+        nextNoteIndex = lastNoteIndex - 4; 
+    }
+
+    if (nextNoteIndex > bluesScale.length) {
+        nextNoteIndex = nextNoteIndex % bluesScale.length;
+    }
+    nextNote = bluesScale[nextNoteIndex];
+
+    return [nextNote];
+}
+
 
 function mapAggregateBandPowerToRandomProbability(track, eegDataPoint, scaleNoteArray, octaveArray, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot) {
     console.log("Music Generation Model 1: Map Aggregate Band Power To Random Probability");
@@ -214,7 +352,7 @@ function getRandomFinalNotesBasedOnTime(noteDurationsPerBeatPerSecond, secondsPe
 
         // 3. Determine the amount of seconds for the note duration and grouping randomly produced. 
         var currentSeconds = getSecondsForNote(curDurationOutcome, curGroupingOutcome, noteDurationsPerBeatPerSecond);
-        // console.log("Total sec: " + secondsPerEEGSnapShot + ", curSec " + currentSeconds + ", curDuration " + curDurationOutcome + ", curGrouping " + curGroupingOutcome);
+        console.log("Total sec: " + secondsPerEEGSnapShot + ", curSec " + currentSeconds + ", curDuration " + curDurationOutcome + ", curGrouping " + curGroupingOutcome);
 
         // 4. Build the Notes: 
         // 4a. If the note duration & grouping is shorter than how many seconds this snapshot needs to produce, then add the notes and update the time!
@@ -255,6 +393,9 @@ function getRandomFinalNotesBasedOnTime(noteDurationsPerBeatPerSecond, secondsPe
 
 function getSecondsForNote(curDuration, curGrouping, noteDurationsPerBeatPerSecond) {
     let curNoteDuration = noteDurationsPerBeatPerSecond.find(o => o.duration === curDuration);
+    console.log("Note duration: ");
+    console.log(curNoteDuration);
+    
     var curNoteDurationSec = curNoteDuration.seconds;
     return curNoteDurationSec * curGrouping;
 }
@@ -684,4 +825,6 @@ module.exports = {
     writeMIDIfile: writeMIDIfile,
     getNoteDurationsPerBeatPerSecond: getNoteDurationsPerBeatPerSecond,
     roundTwoDecimalPoints: roundTwoDecimalPoints,
+    buildMarkovModel: buildMarkovModel, 
 }
+
