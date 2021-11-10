@@ -126,7 +126,6 @@ function getNextMarkovNote(noteEvents, eegDataPoint) {
     var selector;
     
     var alpha = eegDataPoint['band_values']['alpha'];
-    console.log(alpha);
     
     if (alpha < 93) {
         selector = 1;
