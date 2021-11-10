@@ -19,6 +19,8 @@ function musicGenerationDriver(musicGenerationModel, scaleNoteArray, octaveArray
     if (musicGenerationModel == 1) {
         // TODO: Stretch goal: Should this handle loudness?
         track = mapAggregateBandPowerToRandomProbability(track, eegDataPoint, scaleNoteArray, octaveArray, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot);
+    } else if (musicGenerationModel == 3){
+        track = musicGenModel3(track, eegDataPoint, scaleNoteArray, octaveArray, secondsPerEEGSnapShot, noteDurationsPerBeatPerSecond);
     } else {
         noteEvents = createNotes(secondsPerEEGSnapShot, scaleMap);
         track = addNotesToTrack(track, noteEvents);
@@ -43,6 +45,158 @@ function mapAggregateBandPowerToRandomProbability(track, eegDataPoint, scaleNote
     track = addNotesToTrack(track, finalNotes);
 
     return track;
+}
+
+function musicGenModel3(track, eegDataPoint, scaleArray, octaveArray, secondsPerEEGSnapShot, noteDurationsPerBeatPerSecond)
+{
+    var noteEvents = [];
+    var scale = [];
+    var minPitch = octaveArray[0];
+    var maxPitch = octaveArray[octaveArray.length-1];
+    var possibleVelocities = [25,30,35,40,45,50,55,60,65,70,75];
+    var possibleDurations = ['1', '2', '4', '8', '16'];
+
+    // Getting just the scale without pitches
+    // Ex: c d e f g a b
+    var firstNote = scaleArray[0].substring(0,1);
+    scale.push(firstNote);
+    var scaleArrayIndex = 1;
+    while (scaleArray[scaleArrayIndex].substring(0,1) !== firstNote)
+    {
+      scale.push(scaleArray[scaleArrayIndex].substring(0,1));
+      scaleArrayIndex++;
+    }
+
+    // Starting indices for parameters
+    var currentVelocityIndex = 5;
+    var currentPitchIndex = Math.floor(octaveArray.length/2);
+    var currentDurationIndex = 2;
+    var currentNoteIndex = Math.floor(scale.length/2);
+
+    // Previous ratio values for parameters
+    var previousVelocityRatio = -1;
+    var previousPitchRatio = -1;
+    var previousDurationRatio = -1;
+    var previousNoteRatio = -1;
+
+    var avgSecondsPerSnapshot = secondsPerEEGSnapShot;
+
+    for(let i = 0; i < eegDataPoint.length; i++)
+    {
+        secondsPerEEGSnapShot = avgSecondsPerSnapshot;
+        while (secondsPerEEGSnapShot > 0)
+        {
+            // Initialize previous ratio values
+            if (previousVelocityRatio === -1 && previousPitchRatio === -1 && previousDurationRatio === -1 && previousNoteRatio === -1)
+            {
+                previousNoteRatio = getPowerRatio("first", eegDataPoint[i]);
+                previousPitchRatio = getPowerRatio("second", eegDataPoint[i]);
+                previousVelocityRatio = getPowerRatio("third", eegDataPoint[i]);
+                previousDurationRatio = getPowerRatio("fourth", eegDataPoint[i]);
+            
+
+                // Update Time
+                var currentSeconds = getSecondsForNote(possibleDurations[currentDurationIndex], 1, noteDurationsPerBeatPerSecond);
+                secondsPerEEGSnapShot =- currentSeconds;
+
+                noteEvents.push(new MidiWriter.NoteEvent( {
+                pitch : (scale[currentNoteIndex] + octaveArray[currentPitchIndex]),
+                duration : possibleDurations[currentDurationIndex],
+                velocity : possibleVelocities[currentVelocityIndex],
+                }));
+            }
+            // Determine all parameters and create a note event
+            currentNoteIndex = determineNote(eegDataPoint[i], previousNoteRatio, scale.length-1, currentNoteIndex);
+            currentPitchIndex = determinePitch(eegDataPoint[i], previousPitchRatio, octaveArray.length-1, currentPitchIndex);
+            currentVelocityIndex = determineVelocity(eegDataPoint[i], previousVelocityRatio, possibleVelocities.length-1, currentVelocityIndex);
+            currentDurationIndex = determineDuration(eegDataPoint[i], previousDurationRatio, possibleDurations.length-1, currentDurationIndex);
+            // console.log(previousNoteRatio + " " + previousPitchRatio + " " + previousVelocityRatio + " " + previousDurationRatio);
+            noteEvents.push(new MidiWriter.NoteEvent( {
+                pitch : (scale[currentNoteIndex] + octaveArray[currentPitchIndex]),
+                duration : possibleDurations[currentDurationIndex],
+                velocity : possibleVelocities[currentVelocityIndex],
+            }));
+
+            // Update Time
+            var currentSeconds = getSecondsForNote(possibleDurations[currentDurationIndex], 1, noteDurationsPerBeatPerSecond);
+            secondsPerEEGSnapShot =- currentSeconds;
+
+            // Update old ratios
+            previousNoteRatio = getPowerRatio("first", eegDataPoint[i]);
+            previousPitchRatio = getPowerRatio("second", eegDataPoint[i]);
+            previousVelocityRatio = getPowerRatio("third", eegDataPoint[i]);
+            previousDurationRatio = getPowerRatio("fourth", eegDataPoint[i]);
+        }
+    }
+    track = addNotesToTrack(track, noteEvents);
+    // Prints out the Note Events when uncommented
+    // console.log(track);
+    return track;
+}
+
+
+// Function to create notes based on one channels relaxation and concentration percentages
+function determineNote(eegDataPoint, previousPowerRatio, maxNoteIndex, previousIndex)
+{
+    var powerRatio = getPowerRatio("first", eegDataPoint);
+    var noteIndex = previousIndex;
+    if (powerRatio > previousPowerRatio && previousIndex !== maxNoteIndex)
+  {
+    noteIndex++;
+  } else if(powerRatio < previousPowerRatio && previousIndex !== 0)
+  {
+    noteIndex--;
+  }
+  return noteIndex;
+}
+
+function determinePitch(eegDataPoint, previousPowerRatio, maxPitchIndex, previousIndex)
+{
+  var powerRatio = getPowerRatio("second", eegDataPoint);
+  var pitchIndex = previousIndex;
+  if (powerRatio > previousPowerRatio && previousIndex !== maxPitchIndex)
+  {
+    pitchIndex++;
+  } else if(powerRatio < previousPowerRatio && previousIndex !== 0)
+  {
+    pitchIndex--;
+  }
+  return pitchIndex;
+}
+
+function determineVelocity(eegDataPoint, previousPowerRatio, maxVelocityIndex, previousIndex)
+{
+  var powerRatio = getPowerRatio("third", eegDataPoint);
+  var velocityIndex = previousIndex;
+  if (powerRatio > previousPowerRatio && previousIndex !== maxVelocityIndex)
+  {
+    velocityIndex++;
+  } else if(powerRatio < previousPowerRatio && previousIndex !== 0)
+  {
+    velocityIndex--;
+  }
+  return velocityIndex;
+}
+
+function determineDuration(eegDataPoint, previousPowerRatio, maxDurationIndex, previousIndex)
+{
+  var powerRatio = getPowerRatio("fourth", eegDataPoint);
+  var durationIndex = previousIndex;
+  if (powerRatio > previousPowerRatio && previousIndex !== maxDurationIndex)
+  {
+    durationIndex++;
+  } else if(powerRatio < previousPowerRatio && previousIndex !== 0)
+  {
+    durationIndex--;
+  }
+  return durationIndex;
+}
+
+function getPowerRatio(channel, eegDataPoint)
+{
+  var bandPowerValues = eegDataPoint[channel + '_values'];
+  var powerRatio = (bandPowerValues['gamma'] + bandPowerValues['beta']) / (bandPowerValues['delta'] + bandPowerValues['theta']);
+  return powerRatio;
 }
 
 function getRandomFinalNotesBasedOnTime(noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, durationRanges, groupingsRanges, scaleNoteRanges, octaveRanges) {

@@ -109,10 +109,9 @@ def get_band_values(data, sampling_rate, eeg_channel):
 
 
 def get_feature_vector(data, eeg_channels_count, sampling_rate):
-    """Gets feature vector for the machine learning models"""
-    bands = DataFilter.get_avg_band_powers(
-        data, eeg_channels_count, sampling_rate, True)
-    return np.concatenate((bands[0], bands[1]))
+    bands = DataFilter.get_avg_band_powers(data, eeg_channels_count, sampling_rate, True)
+    feature_vector = np.concatenate((bands[0], bands[1]))
+    return feature_vector
 
 
 def get_concentration_percent(data, eeg_channels_count, sampling_rate):
@@ -218,14 +217,22 @@ def main():
         time.sleep(1.3)
 
         # TODO This is using only the eeg data from the second channel, in the future it'd be best to average the values between all of the channels
+        first_channel = eeg_channels_count[0]
+        second_channel = eeg_channels_count[1]
+        third_channel = eeg_channels_count[2]
+        fourth_channel = eeg_channels_count[3]
         eeg_channel = eeg_channels_count[1]
         data = board.get_board_data()
         band_values = get_band_values(data, sampling_rate, eeg_channel)
+        first_values= get_band_values(data, sampling_rate, first_channel)
+        second_values = get_band_values(data, sampling_rate, second_channel)
+        third_values = get_band_values(data, sampling_rate, third_channel)
+        fourth_values = get_band_values(data, sampling_rate, fourth_channel)
         concentration_percent = get_concentration_percent(
             data, eeg_channels_count, sampling_rate)
         relaxation_percent = get_relaxation_percent(
             data, eeg_channels_count, sampling_rate)
-        eeg_data = {"band_values": band_values,
+        eeg_data = {"band_values": band_values, "first_values": first_values, "second_values": second_values, "third_values": third_values, "fourth_values": fourth_values,
                     "concentration": concentration_percent, "relaxation": relaxation_percent}
         print(str(json.dumps(eeg_data)))
         # Required to flush output for python to allow for python to output script!!!
