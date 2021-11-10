@@ -8,14 +8,19 @@ import Login from './pages/login'
 import MusicGeneration from './pages/music-generation'
 import Dashboard from './pages/dashboard'
 import Play from './pages/play'
+import Discover from './pages/discover'
+import Help from './pages/help'
+import Account from './pages/my-account'
+import Settings from './pages/settings'
+
 
 function App() {
   let curLocation = window.location.pathname
 
   return (
-
+    
     <Router>
-      <Navbar />
+      
 
 
 
@@ -28,7 +33,16 @@ function App() {
           (<MusicGeneration {...props} username={this.state.username} password={this.state.password} email={this.state.email} />)} />
         <Route path="/dashboard" exact component={Dashboard} render={props =>
           (<Dashboard {...props} username={this.state.username} password={this.state.password} email={this.state.email} />)} />
-        <Route path="/play" exact component={Play} />
+        <Route path="/play" exact component={Play} render={props =>
+          (<Play {...props} username={this.state.username} password={this.state.password} email={this.state.email} />)} />
+          <Route path="/discover" exact component={Discover} render={props =>
+          (<Discover {...props} username={this.state.username} password={this.state.password} email={this.state.email} />)} />
+          <Route path="/help" exact component={Help} render={props =>
+          (<Help {...props} username={this.state.username} password={this.state.password} email={this.state.email} />)} />
+          <Route path="/settings" exact component={Settings} render={props =>
+          (<Settings {...props} username={this.state.username} password={this.state.password} email={this.state.email} />)} />
+          <Route path="/my-account" exact component={Account} render={props =>
+          (<Account {...props} username={this.state.username} password={this.state.password} email={this.state.email} />)} />
         <Route component={Home} />
       </Switch>
     </Router>

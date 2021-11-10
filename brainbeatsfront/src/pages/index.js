@@ -1,23 +1,47 @@
 import React, { Component, useState } from 'react';
 import isElectron from '../library/isElectron';
 import { Redirect } from "react-router-dom";
+import Navbar from '../components/Navbar';
+import Sidebar from '../components/Sidebar/index'
 class Home extends Component {
     constructor(props) {
         super(props);
         this.state = {
             name: "React",
             redirect: null,
+            username: '',
+            loggedin: 0
         };
     }
 
     render() {
+        
         if(isElectron())
         {
             return <Redirect to="music-generation" />
         }
-        return (<div style={{ display: 'flex', height: '90vh', width: '100%' }}>
-            <a href="/music-generation"><i class="material-icons"></i> Music Generation</a>
-        </div>);
+        if (this.props.loggedin == 1)
+        {
+            return <Redirect to="/dashboard" />
+        }else{
+            return (
+        
+                <div class="music-generation-bg" style={{margin:'0'}}>
+                <Sidebar active="home" is_shown="true" logged_in={this.state.loggedin}></Sidebar>
+                <div id="main_content" class="help_screen">          
+                  <h2>Brain Beats</h2>
+      
+                </div>
+      
+              <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+      
+              
+      
+          
+            </div>);
+        }
+
+        
     }
 }
 export default Home

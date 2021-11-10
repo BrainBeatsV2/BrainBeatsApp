@@ -4,7 +4,7 @@ import { Redirect } from "react-router-dom";
 import MidiTrack from '../components/MidiTrack/index'
 import logo from '../images/logo_dev.png'
 import Sidebar from '../components/Sidebar/index'
-class Play extends Component {
+class Discover extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -20,10 +20,22 @@ class Play extends Component {
       currentScale: '',
       currentBPM: '',
       playing: false,
-      loggedin: 0
+      loggedin:0
     };
-  }
+    this.onShowMenu = this.onShowMenu.bind(this);
+    this.onHideMenu = this.onHideMenu.bind(this);
 
+  }
+  onShowMenu() {
+    this.setState({
+      showMenu: true
+    });
+  }
+  onHideMenu() {
+    this.setState({
+      showMenu: false
+    });
+  }
   onStartPlaying = (id, name, key, scale, bpm) => {
     console.log("playing");
     console.log(id);
@@ -83,61 +95,13 @@ class Play extends Component {
 
 
       <div class="music-generation-bg" style={{margin:'0'}}>
-          <Sidebar active="play" is_shown="true" logged_in={this.state.loggedin} ></Sidebar>
+          <Sidebar active="discover" is_shown="true" logged_in={this.state.loggedin}></Sidebar>
           <div id="main_content">          
-           
+            <h2>MIDI Discover</h2>
             <div id="midi-tracks1" style={{marginTop:'10px'}}>
-               <div class="inner_text">
-                 <h2>Track Name</h2> <p>by Author</p>
-                 <br />
-               
-               <MidiTrack playfn={this.onStartPlaying} track_id="400" track_name="test" isowner={0} privacy={1} link="aefikjeaifi2j930r2r" song_key="C" scale="Minor" bpm="120" ></MidiTrack>
-               <br />
-               <br />
-               <br />
-          
-            <h3>Parameters</h3>
-            <table style={{width: '50%', textAlign: 'left'}}>
-              <tr>
-                <th><h4>Base Note</h4></th>
-                <th><h4>Scale</h4></th>
-                <th><h4>BPM</h4></th>
-                <th><h4>Timing</h4></th>
-                
-                
-              </tr>
-              <tr>
-                <td><p>11/02/2021 </p></td>
-                <td><p>Model 1</p></td>
-                <td><p>120</p></td>
-                <td><p>4/4</p></td>
-              </tr>
-            </table>
-            <br />
-
-            <h3>Info</h3>
-            <table style={{width: '50%', textAlign: 'left'}}>
-              <tr>
-                
-                <th><h4>Created On</h4></th>
-                <th><h4>Model Used</h4></th>
-                <th><h4>Instrument</h4></th>
-              </tr>
-              <tr>
-                
-                <td><p>11/02/2021 </p></td>
-                <td><p>Model 1</p></td>
-                <td><p>Piano</p></td>
-             
-              </tr>
-            </table>
-            
-            
-           
+                <MidiTrack playfn={this.onStartPlaying} track_id="400" track_name="test" isowner={0} privacy={0} link="aefikjeaifi2j930r2r" song_key="C" scale="Minor" bpm="120" ></MidiTrack>
+                <MidiTrack playfn={this.onStartPlaying} track_id="500" track_name="test" isowner={0}  privacy={1} link="eafke930i23903429kfqemfm" song_key="D" scale=" Pentatonic" bpm="60"></MidiTrack>
             </div>
-              
-              
-                </div>
           </div>
 
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
@@ -188,4 +152,4 @@ class Play extends Component {
     );
   }
 }
-export default Play
+export default Discover

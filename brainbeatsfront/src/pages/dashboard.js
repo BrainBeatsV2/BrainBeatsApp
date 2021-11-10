@@ -2,7 +2,8 @@ import React, { Component, useState } from 'react';
 import isElectron from '../library/isElectron';
 import { Redirect } from "react-router-dom";
 import MidiTrack from '../components/MidiTrack/index'
-
+import logo from '../images/logo_dev.png'
+import Sidebar from '../components/Sidebar/index'
 class Dashboard extends Component {
   constructor(props) {
     super(props);
@@ -18,22 +19,11 @@ class Dashboard extends Component {
       currentKey: '',
       currentScale: '',
       currentBPM: '',
-      playing: false
+      playing: false,
+      loggedin: 0
     };
-    this.onShowMenu = this.onShowMenu.bind(this);
-    this.onHideMenu = this.onHideMenu.bind(this);
+  }
 
-  }
-  onShowMenu() {
-    this.setState({
-      showMenu: true
-    });
-  }
-  onHideMenu() {
-    this.setState({
-      showMenu: false
-    });
-  }
   onStartPlaying = (id, name, key, scale, bpm) => {
     console.log("playing");
     console.log(id);
@@ -61,6 +51,17 @@ class Dashboard extends Component {
     }
 
   }
+  componentDidMount(){
+  if (this.state.username == "")
+    {
+        this.setState({ loggedin: 0 });
+       
+    }
+    else 
+    {
+        this.setState({ loggedin: 1 });
+    }
+  }
 
   render() {
     if (this.state.redirect) {
@@ -81,46 +82,22 @@ class Dashboard extends Component {
 
 
 
-      <div class="music-generation-bg">
+      <div class="music-generation-bg" style={{margin:'0'}}>
+          <Sidebar active="dashboard" is_shown="true" logged_in={this.state.loggedin}></Sidebar>
+          <div id="main_content">          
+            <h2>My MIDI</h2>
+            <div class="midi-add" style={{ display: isElectron() ? 'inline-block' : 'none' }}><a href="/music-generation"><i class="material-icons">add</i> Add Track</a></div>
+            <div id="midi-tracks1" style={{marginTop:'10px'}}>
+                <MidiTrack playfn={this.onStartPlaying} track_id="400" track_name="test" isowner={1} privacy={0} link="aefikjeaifi2j930r2r" song_key="C" scale="Minor" bpm="120" ></MidiTrack>
+                <MidiTrack playfn={this.onStartPlaying} track_id="500" track_name="test" isowner={1}  privacy={1} link="eafke930i23903429kfqemfm" song_key="D" scale=" Pentatonic" bpm="60"></MidiTrack>
+            </div>
+          </div>
 
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
-        <div className="nav__button" onClick={this.onShowMenu} onMouseEnter={this.onShowMenu} onMouseLeave={this.onHideMenu}><i class="material-icons">account_circle</i>
-          <ul className="nav__menu_loggedin" style={{ display: (this.state.showMenu && !this.state.loggedout) ? 'inline-block' : 'none' }}>
-            <li className="nav_menu-item"><a href="#">My Account</a></li>
-            <li className="nav_menu-item"><a href="#">Settings</a></li>
-            <li className="nav_menu-item"><a href="#" onClick={this.onLogout} >Log Out</a></li>
-          </ul>
-          <ul className="nav__menu_loggedout" style={{ display: (this.state.showMenu && this.state.loggedout) ? 'inline-block' : 'none' }}>
-            <li className="nav_menu-item"><a href="/login">Login</a></li>
-            <li className="nav_menu-item"><a href="#">Help</a></li>
-          </ul>
-        </div>
-        <h1 style={{ color: 'white' }}>Dashboard </h1 >
 
+        
 
-        <div class="list">
-          <div class="column-track"><h2>My MIDI</h2>
-            <div class="midi-add" style={{ display: isElectron() ? 'inline-block' : 'none' }}><a href="/music-generation"><i class="material-icons">add</i> Add Track</a></div>
-          </div>
-          <div class="column-track"><h2> Discover</h2></div>
-        </div>
-        <div class="list">
-          <div id="midi-tracks">
-            <MidiTrack playfn={this.onStartPlaying} track_id="400" track_name="test" isowner={1} privacy={0} link="aefikjeaifi2j930r2r" song_key="C" scale="Minor" bpm="120" ></MidiTrack>
-            <MidiTrack playfn={this.onStartPlaying} track_id="500" track_name="test" isowner={1}  privacy={1} link="eafke930i23903429kfqemfm" song_key="D" scale=" Pentatonic" bpm="60"></MidiTrack>
-          </div>
-          <div id="other-tracks">
-           
-            <MidiTrack playfn={this.onStartPlaying} track_id="300" track_name="Woo" isowner={0} link="qi3jroqirj3iornf" song_key="Bb" scale="Major" bpm="90"></MidiTrack>
-            <MidiTrack playfn={this.onStartPlaying} track_id="300" track_name="Track 3" isowner={0} link="frmi0293r0jqfefe" song_key="F" scale="Pentatonic" bpm="180"></MidiTrack>
-            
-          </div>
-        </div>
-        <br />
-        <br />
-        <br />
-        <h3>MIDIs you might like</h3>
-        <br />
+        
 
         <div id="stream-bar">
           <div class="column" style={{ width: '10%' }}>
