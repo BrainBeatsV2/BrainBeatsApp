@@ -208,7 +208,8 @@ def main():
     board.start_stream(45000, eeg_args.streamer_params)
     BoardShim.log_message(LogLevels.LEVEL_INFO.value,
                           'start sleeping in the main thread')
-   # Brainflow recommends waiting at least collectively 4 seconds for the first EEG reading
+   
+# Brainflow recommends waiting at least collectively 4 seconds for the first EEG reading
     time.sleep(2.7)
 
     while(True):
@@ -220,7 +221,9 @@ def main():
         second_channel = eeg_channels_count[1]
         third_channel = eeg_channels_count[2]
         fourth_channel = eeg_channels_count[3]
+        eeg_channel = eeg_channels_count[1]
         data = board.get_board_data()
+        band_values = get_band_values(data, sampling_rate, eeg_channel)
         first_values= get_band_values(data, sampling_rate, first_channel)
         second_values = get_band_values(data, sampling_rate, second_channel)
         third_values = get_band_values(data, sampling_rate, third_channel)
@@ -229,7 +232,7 @@ def main():
             data, eeg_channels_count, sampling_rate)
         relaxation_percent = get_relaxation_percent(
             data, eeg_channels_count, sampling_rate)
-        eeg_data = {"first_values": first_values, "second_values": second_values, "third_values": third_values, "fourth_values": fourth_values,
+        eeg_data = {"band_values": band_values, "first_values": first_values, "second_values": second_values, "third_values": third_values, "fourth_values": fourth_values,
                     "concentration": concentration_percent, "relaxation": relaxation_percent}
         print(str(json.dumps(eeg_data)))
         # Required to flush output for python to allow for python to output script!!!
