@@ -18,7 +18,8 @@ class Dashboard extends Component {
       currentKey: '',
       currentScale: '',
       currentBPM: '',
-      playing: false
+      playing: false,
+      loggedout: 0,
     };
     this.onShowMenu = this.onShowMenu.bind(this);
     this.onHideMenu = this.onHideMenu.bind(this);
@@ -55,9 +56,9 @@ class Dashboard extends Component {
       email: '',
     });
     if (isElectron()) {
-      this.setState({ redirect: "/music-generation" });
+      this.setState({ loggedout: 1 });
     } else {
-      this.setState({ redirect: "/" });
+      this.setState({ loggedout: 0 });
     }
 
   }
