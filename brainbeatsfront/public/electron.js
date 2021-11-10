@@ -23,8 +23,8 @@ urlMIDI = "";
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1085, 
-    height: 680, 
+    width: 1085,
+    height: 680,
     minWidth: 1085,
     title: "Brain Beats",
     webPreferences:
@@ -35,7 +35,7 @@ function createWindow() {
   mainWindow.setMenuBarVisibility(false);
   mainWindow.loadURL(isDev ? 'http://localhost:8002/music-generation/' : `file://${path.join(__dirname, '../build/index.html')}`);
   mainWindow.on('closed', () => mainWindow = null);
-  mainWindow.on('page-title-updated', function(e) {
+  mainWindow.on('page-title-updated', function (e) {
     e.preventDefault()
   });
 }

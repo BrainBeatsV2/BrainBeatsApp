@@ -208,8 +208,8 @@ def main():
     board.start_stream(45000, eeg_args.streamer_params)
     BoardShim.log_message(LogLevels.LEVEL_INFO.value,
                           'start sleeping in the main thread')
-   
-# Brainflow recommends waiting at least collectively 4 seconds for the first EEG reading
+
+    # Brainflow recommends waiting at least collectively 4 seconds for the first EEG reading
     time.sleep(2.7)
 
     while(True):
