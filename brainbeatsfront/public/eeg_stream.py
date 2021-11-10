@@ -47,7 +47,7 @@ def configure_eeg_headset(headset_type_name):
         parser.add_argument('--serial-port', type=str,
                             help='serial port', required=False, default='COM3')  # COM3
         parser.add_argument('--mac-address', type=str, help='mac address',
-                            required=False, default='')  # d2:a0:57:70:bd:01
+                            required=False, default='d2:a0:57:70:bd:01')  # d2:a0:57:70:bd:01
         parser.add_argument('--board-id', type=int, help='board id, check docs to get a list of supported boards',
                             required=False, default=1)  # 1
         parser.add_argument('--timeout', type=int, help='timeout for device discovery or connection', required=False,
