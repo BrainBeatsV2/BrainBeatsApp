@@ -235,7 +235,7 @@ def main():
 
 def print_debug(string):
     debug = 1
-    print(string)
+    # print(string)
     # sys.stderr.write(string)
 
 
