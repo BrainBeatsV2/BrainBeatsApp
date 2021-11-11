@@ -17,6 +17,7 @@ var dbName = process.env.MONGO_DB;
 
 var mongo_uri = 'mongodb://' + mongo_username + ':' + mongo_password + '@' + host + ':' + port + '/' + dbName;
 var devPath = '';  // 'http://localhost:4000'; //For testing and development on electron, remove paramater for production
+var lstmPath = '127.0.0.1:5000';
 
 function getConnection() {
     mongoose.connect(mongo_uri, { useNewUrlParser: true });
@@ -29,6 +30,33 @@ setTimeout(getConnection, 3000);
 const User = require('./schemas/user');
 const Midi = require('./schemas/midi');
 const Model = require('./schemas/model');
+
+app.post(lstmPath + '/predict', function (req, res) {
+    var data = req.body;
+
+    // fix this pls
+    res.send()
+    User.findOne({ "input": data }).then(function (doc) {
+        if (doc == null) {
+            User.findOne({ "email": username }).then(function (doc) {
+                if (doc == null) {
+                    res.status(400).send("Invalid username or password");
+                } else if (doc.password != password) {
+                    res.status(400).send("Invalid username or password");
+                }
+                else if (doc.password == password) {
+                    res.status(200).send("login successful");
+                }
+            });
+        }
+        else if (doc.password != password) {
+            res.status(400).send("Invalid username or password");
+        }
+        else if (doc.password == password) {
+            res.status(200).send("login successful");
+        }
+    });
+});
 
 app.get(devPath + '/api', (req, res) => {
     res.send("hello world");

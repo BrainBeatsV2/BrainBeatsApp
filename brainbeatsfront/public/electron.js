@@ -118,17 +118,13 @@ ipcMain.on('end_eeg_script', (event, musicGenerationModel, key, scale, minRange,
   var scaleMap = getScaleMap(key, scale, minRange, maxRange);
   var octaveRangeArray = getOctaveRangeArray(minRange, maxRange);
 
-  if (musicGenerationModel == 1) {
-      eegDataQueue.forEach(eegDataPoint => {
-        track = musicGenerationDriver(musicGenerationModel, scaleArray, octaveRangeArray, eegDataPoint, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, scaleMap);
-      });
-  } else if (musicGenerationModel == 2) {
+  if (musicGenerationModel == 2) {
     track = buildMarkovModel(track, eegDataQueue, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot);
-  } else if (musicGenerationModel == 3) {
+  } else {
     track = musicGenerationDriver(musicGenerationModel, scaleArray, octaveRangeArray, eegDataQueue, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, scaleMap);
   }
-  
-  
+
+
   // Output MIDI file
   write = new MidiWriter.Writer(track);
   urlMIDI = write.dataUri();
