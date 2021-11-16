@@ -33,7 +33,7 @@ function createWindow() {
   });
   console.log(__dirname);
   mainWindow.setMenuBarVisibility(false);
-  mainWindow.loadURL(isDev ? 'http://localhost:8001/music-generation/' : `file://${path.join(__dirname, '../build/index.html')}`);
+  mainWindow.loadURL(isDev ? 'http://localhost:3000/music-generation/' : `file://${path.join(__dirname, '../build/index.html')}`);
   mainWindow.on('closed', () => mainWindow = null);
   mainWindow.on('page-title-updated', function (e) {
     e.preventDefault()
@@ -106,24 +106,28 @@ ipcMain.on('start_eeg_script', (event, arguments) => {
 
 ipcMain.on('end_eeg_script', (event, musicGenerationModel, key, scale, minRange, maxRange, BPM, timeSignature) => {
   if (pyshell == null || pyshell == undefined) return;
+
   stopEEGScript();
 
   // Time Tracking: 
-  var secondsRecorded = getMaxTimeRecorded(new Date());
-  var secondsPerEEGSnapShot = roundTwoDecimalPoints(secondsRecorded / eegDataQueue.length);
+  var totalSeconds = getMaxTimeRecorded(new Date());
+  console.log("totalSeconds: " + totalSeconds)
+  var secondsPerEEGSnapShot = roundTwoDecimalPoints(totalSeconds / eegDataQueue.length);
+  console.log("secondsPerEEGSnapShot: " + secondsPerEEGSnapShot)
+  console.log("secondsPerEEGSnapShot: " + secondsPerEEGSnapShot)
 
   var noteDurationsPerBeatPerSecond = getNoteDurationsPerBeatPerSecond(BPM, timeSignature);
+  console.log("noteDurationsPerBeatPerSecond: " + noteDurationsPerBeatPerSecond)
 
   var scaleArray = getScaleNotes(key, scale, minRange, maxRange);
   var scaleMap = getScaleMap(key, scale, minRange, maxRange);
   var octaveRangeArray = getOctaveRangeArray(minRange, maxRange);
+  console.log("scaleArray: " + scaleArray)
+  console.log("scaleMap: " + scaleMap)
+  console.log("octaveRangeArray: " + octaveRangeArray)
+  console.log("secondsPerEEGSnapShot: " + secondsPerEEGSnapShot)
 
-  if (musicGenerationModel == 2) {
-    track = buildMarkovModel(track, eegDataQueue, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot);
-  } else {
-    track = musicGenerationDriver(musicGenerationModel, scaleArray, octaveRangeArray, eegDataQueue, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, scaleMap);
-  }
-
+  track = musicGenerationDriver(eegDataQueue, musicGenerationModel, scaleArray, scaleMap, octaveRangeArray, totalSeconds, secondsPerEEGSnapShot, noteDurationsPerBeatPerSecond);
 
   // Output MIDI file
   write = new MidiWriter.Writer(track);
