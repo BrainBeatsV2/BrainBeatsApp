@@ -167,30 +167,31 @@ function getNextMarkovNote(noteEvents, eegDataPoint) {
     return [nextNote];
 }
 
-function lstmDriver(track, eegDataQueue, scaleNoteArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond) {
+async function lstmDriver(track, eegDataQueue, scaleNoteArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond) {
     console.log("Music Generation Model 4: LSTM");
 
     // 1. Collect the predictions from the LSTM
     var scaleLen = scaleNoteArray.length;
     var octaveLen = octaveRangeArray.length;
 
-    // 2. Get input for the post request
-    var lstmInput = getLSTMInput(eegDataQueue, scaleLen, octaveLen);
-    var lstmPredictions = getLSTMPrediction(lstmInput);
-    console.log("lstmPredictions: " + lstmPredictions);
+    try {
+        // 2. Get input data for LSTM & get it's predictions
+        var lstmInput = getLSTMInput(eegDataQueue, scaleLen, octaveLen);
+        let lstmRealPredictions = await getLSTMPrediction(lstmInput)
+            .then((lstmPredictions) => {
+                finalNotes = getNotesFromLSTMPredictions(lstmPredictions, scaleNoteArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond);
+                track = addNotesToTrack(track, finalNotes);
+            }).catch((error) => {
+                console.log(error);
+            });
+    } catch (e) {
+        console.log("that failed", e);
+    }
 
-    // 3. Parse predictions:
-    finalNotes = getNotesFromLSTMPredictions(lstmPredictions, scaleNoteArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond);
-
-    // 4. Build track!
-    track = addNotesToTrack(track, finalNotes);
+    return track;
 }
 
 function getLSTMInput(eegDataQueue, NumNotesInScale, NumOctaves) {
-    console.log("eegDataQueue: " + eegDataQueue);
-    console.log("NumNotesInScale: " + NumNotesInScale);
-    console.log("NumOctaves: " + NumOctaves);
-
     // TODO: Remove this once the model has been updated!!
     LastNoteIndex = 0;
 
@@ -198,55 +199,73 @@ function getLSTMInput(eegDataQueue, NumNotesInScale, NumOctaves) {
     for (let i = 0; i < eegDataQueue.length; i++) {
         var curBandValues = eegDataQueue[i]['band_values'];
         var brainwaveData = '' + curBandValues['delta'] + ',' + curBandValues['theta'] + ',' + curBandValues['alpha'] + ',' + curBandValues['beta'] + ',' + curBandValues['gamma'] + ',';
-        var musicData = '' + NumNotesInScale + ',' + NumOctaves + ',' + LastNoteIndex + '/n';
+        var musicData = '' + NumNotesInScale + ',' + NumOctaves + ',' + LastNoteIndex;
+
+        // If it's not the last entry, append for to show that more are coming
+        if (i != eegDataQueue.length - 1) {
+            musicData = musicData + '_';
+        }
+
         lstmInput.push(brainwaveData + musicData);
     }
 
     return lstmInput.toString();
 }
 
-function getLSTMPrediction(lstmInput) {
-    var responseInput = { 'input': lstmInput };
-    axios.post(lstmPath + '/predict', responseInput)
-        .then((res) => {
-            if (res.status == 200) {
-                console.log(res);
-                console.log(res.data);
-                return res.data;
-            }
-        }).catch((error) => {
-            //  should probably give error? 
-            console.log(error)
-        });
-    return [1];
+async function getLSTMPrediction(lstmInput) {
+    let output;
+    try {
+        await axios.post(lstmPath + '/predict', { input: lstmInput })
+            .then((res) => {
+                if (res.status == 200) {
+                    console.log("RES DATA:")
+                    console.log(res.data)
+                    console.log("RES DATA[output]:")
+                    console.log(res.data['output'])
+                    output = res.data['output'];
+                }
+            }).catch((error) => {
+                console.log(error)
+            });
+    } catch (e) {
+        console.log("that failed", e);
+    }
+
+    return output;
 }
 
-function getNotesFromLSTMPredictions(lstmPredictions, scaleNoteArray, octaveArray, totalSeconds, noteDurationsPerBeatPerSecond) {
+function getNotesFromLSTMPredictions(lstmPredictions, scaleNoteArray, octaveArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond) {
+    console.log("getNotesFromLSTMPredictions lstmPredictions: ");
+    console.log(lstmPredictions);
 
     // 1. Determine the shortest note we can generate
     var shortestNoteCombo = getSecondsForNote('16', 3, noteDurationsPerBeatPerSecond);
+    var totalPredictions = lstmPredictions.length;
+    console.log("shortestNoteCombo " + shortestNoteCombo + " ,totalPredictions: " + totalPredictions);
 
     // Build notes, save how long the notes last, until there are no more seconds or can't make even the shortest note combo:
     var noteEvents = [];
-    var totalPredictions = lstmPredictions.length;
-    var predictionIndex = 0;
-
+    var curlstmPredictionsIndex = 0;
     while (totalSeconds > 0 && totalSeconds > shortestNoteCombo) {
-        // 1. Grab the current prediction: 
-        var curPrediction = totalPredictions[predictionIndex % (totalPredictions - 1)];
 
-        // 2. Determine the duration & groupings
-        var curDurationOutcome = getPredictedGroupingDurationOutcome(curPrediction, commonNoteDurations);
-        var curGroupingOutcome = getPredictedGroupingDurationOutcome(curPrediction, commonNoteGroupings);
+        // 1. Grab the current prediction: Note the % (totalPredictions - 1) is a safety check due to the increasing nature
+        var safetyIndex = curlstmPredictionsIndex % totalPredictions;
+        // todo maybe rename this to curPrediction instead?
+        var curPrediction = lstmPredictions[safetyIndex];
+
+        // 2. Determine the current predicted outcome for duration & groupings
+        var curDurationOutcome = getPredictedOutcome(curPrediction, commonNoteDurations);
+        var curGroupingOutcome = getPredictedOutcome(curPrediction, commonNoteGroupings);
 
         // 3. Determine the amount of seconds for the note duration and grouping produced. 
         var currentSeconds = getSecondsForNote(curDurationOutcome, curGroupingOutcome, noteDurationsPerBeatPerSecond);
+        console.log("currentSeconds: " + currentSeconds);
 
         // 4. Build the Notes: 
         // 4a. If the note duration & grouping is shorter than how many seconds this snapshot needs to produce, then add the notes and update the time!
         if (currentSeconds > 0 && currentSeconds <= totalSeconds) {
             noteEvents.push(new MidiWriter.NoteEvent({
-                pitch: getPredictedNoteOutcome(curPrediction, scaleNoteArray, octaveArray),
+                pitch: getPredictedNote(curPrediction, scaleNoteArray, octaveArray),
                 duration: curDurationOutcome.toString(),
                 repeat: Number(curGroupingOutcome),
             }));
@@ -256,7 +275,7 @@ function getNotesFromLSTMPredictions(lstmPredictions, scaleNoteArray, octaveArra
         // 4b. If currentSeconds is greater than remaining totalSeconds but they are within 1 second of each other, just go with the note and update the time!
         if (currentSeconds > 0 && currentSeconds > totalSeconds && (currentSeconds - totalSeconds) <= 1) {
             noteEvents.push(new MidiWriter.NoteEvent({
-                pitch: getPredictedNoteOutcome(curPrediction, scaleNoteArray, octaveArray),
+                pitch: getPredictedNote(curPrediction, scaleNoteArray, octaveArray),
                 duration: curDurationOutcome.toString(),
                 repeat: Number(curGroupingOutcome),
             }));
@@ -265,36 +284,37 @@ function getNotesFromLSTMPredictions(lstmPredictions, scaleNoteArray, octaveArra
         }
 
         // 4c. If we are very close to the shortestNoteCombo we can make, just make that note and end it!
-        if (totalSeconds <= shortestNoteCombo * 1.5) {
+        if (currentSeconds > 0 && totalSeconds <= shortestNoteCombo * 1.5) {
             noteEvents.push(new MidiWriter.NoteEvent({
-                pitch: getPredictedNoteOutcome(curPrediction, scaleNoteArray, octaveArray),
+                pitch: getPredictedNote(curPrediction, scaleNoteArray, octaveArray),
                 duration: '16'.toString(),
                 repeat: 3,
             }));
             totalSeconds = 0;
         }
 
-        curPredictionIndex++;
+        curlstmPredictionsIndex++;
     }
 
     return noteEvents;
 }
 
-function getPredictedGroupingDurationOutcome(prediction, outcomes) {
-    return outcomes[prediction % (outcomes.length - 1)];
+function getPredictedOutcome(predictedIndex, outcomes) {
+    var index = predictedIndex % outcomes.length;
+    return outcomes[index];
 }
 
-function getPredictedNoteOutcome(prediction, scaleNoteArray, octaveArray) {
+function getPredictedNote(prediction, scaleNoteArray, octaveArray) {
     var totalOctaves = octaveArray.length;
-    var sizeOfScale = int(scaleNoteArray.length / totalOctaves);
+    var sizeOfScale = scaleNoteArray.length / totalOctaves;
 
     // Pick a note & octave within range of amount of different letter notes & octaves
-    var notePredictionIndex = prediction % sizeOfScale;
-    var octavePrediction = prediction % totalOctaves;
+    var notePredictionIndex = prediction % (sizeOfScale - 1);
+    var octavePredictionRow = prediction % totalOctaves;
 
     // Determine the note within the scaleNoteArray (includes both notes & octaves)
     // subtract octave modifier to put it back to zero index since x^0 = 1
-    var scaleNotePredictedIndex = [notePredictionIndex + ((sizeOfScale ^ octavePrediction) - 1)] % scaleNoteArray.length;
+    var scaleNotePredictedIndex = [notePredictionIndex + ((sizeOfScale ^ octavePredictionRow) - 1)] % scaleNoteArray.length;
 
     return scaleNoteArray[scaleNotePredictedIndex];
 }
@@ -326,15 +346,17 @@ function musicGenModel3(track, eegDataPoint, scaleArray, octaveArray, secondsPer
     var maxPitch = octaveArray[octaveArray.length - 1];
     var possibleVelocities = [25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75];
     var possibleDurations = ['1', '2', '4', '8', '16'];
-
+    console.log("scaleArray[0]: " + scaleArray[0]);
     // Getting just the scale without pitches
     // Ex: c d e f g a b
     var firstNote = String(scaleArray[0]).substring(0, 1);
     scale.push(firstNote);
-    var scaleArrayIndex = 1;
-    while (String(scaleArray[scaleArrayIndex]).substring(0, 1) !== firstNote) {
-        scale.push(String(scaleArray[scaleArrayIndex]).substring(0, 1));
-        scaleArrayIndex++;
+
+    var numNotesInScale = scaleArray.len / octaveArray.len;
+    for (let scaleArrayIndex = 0; scaleArrayIndex < numNotesInScale; scaleArrayIndex++) {
+        currentNote = String(scaleArray[scaleArrayIndex]).substring(0, 1);
+        console.log(currentNote);
+        scale.push(currentNote);
     }
 
     // Starting indices for parameters

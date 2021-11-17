@@ -111,21 +111,12 @@ ipcMain.on('end_eeg_script', (event, musicGenerationModel, key, scale, minRange,
 
   // Time Tracking: 
   var totalSeconds = getMaxTimeRecorded(new Date());
-  console.log("totalSeconds: " + totalSeconds)
   var secondsPerEEGSnapShot = roundTwoDecimalPoints(totalSeconds / eegDataQueue.length);
-  console.log("secondsPerEEGSnapShot: " + secondsPerEEGSnapShot)
-  console.log("secondsPerEEGSnapShot: " + secondsPerEEGSnapShot)
-
+  console.log("totalSeconds: " + totalSeconds + " , secondsPerEEGSnapShot " + secondsPerEEGSnapShot);
   var noteDurationsPerBeatPerSecond = getNoteDurationsPerBeatPerSecond(BPM, timeSignature);
-  console.log("noteDurationsPerBeatPerSecond: " + noteDurationsPerBeatPerSecond)
-
   var scaleArray = getScaleNotes(key, scale, minRange, maxRange);
   var scaleMap = getScaleMap(key, scale, minRange, maxRange);
   var octaveRangeArray = getOctaveRangeArray(minRange, maxRange);
-  console.log("scaleArray: " + scaleArray)
-  console.log("scaleMap: " + scaleMap)
-  console.log("octaveRangeArray: " + octaveRangeArray)
-  console.log("secondsPerEEGSnapShot: " + secondsPerEEGSnapShot)
 
   track = musicGenerationDriver(eegDataQueue, musicGenerationModel, scaleArray, scaleMap, octaveRangeArray, totalSeconds, secondsPerEEGSnapShot, noteDurationsPerBeatPerSecond);
 
