@@ -77,7 +77,15 @@ class Discover extends Component {
 
   render() {
     if (this.state.redirect) {
-      return <Redirect to={this.state.redirect} />
+      return <Redirect to={{
+        pathname: this.state.redirect,
+        state: {
+          username: this.state.username,
+          email: this.state.email,
+          password: this.state.password 
+        }
+      }}
+    />
     }
     if (this.state.electron == null) {
       if (isElectron()) {

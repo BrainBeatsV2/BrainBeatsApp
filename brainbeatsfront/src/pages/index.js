@@ -15,14 +15,29 @@ class Home extends Component {
     }
 
     render() {
-        
         if(isElectron())
         {
-            return <Redirect to="music-generation" />
+            return <Redirect to={{
+                pathname: "/music-generation",
+                state: {
+                  username: this.state.username,
+                  email: this.state.email,
+                  password: this.state.password 
+                }
+              }}
+            />
         }
         if (this.props.loggedin == 1)
         {
-            return <Redirect to="/dashboard" />
+            return <Redirect to={{
+                pathname: "/dashboard",
+                state: {
+                  username: this.state.username,
+                  email: this.state.email,
+                  password: this.state.password 
+                }
+              }}
+            />
         }else{
             return (
         

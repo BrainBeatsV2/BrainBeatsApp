@@ -65,7 +65,15 @@ class Dashboard extends Component {
 
   render() {
     if (this.state.redirect) {
-      return <Redirect to={this.state.redirect} />
+      return <Redirect to={{
+        pathname: this.state.redirect,
+        state: {
+          username: this.state.username,
+          email: this.state.email,
+          password: this.state.password 
+        }
+      }}
+    />
     }
     if (this.state.electron == null) {
       if (isElectron()) {
@@ -77,6 +85,11 @@ class Dashboard extends Component {
           electron: false
         });
       }
+    }
+    if (true)
+    {
+      console.log(this.props.location.state.username);
+      //console.log(this.state.username);
     }
     return (
 

@@ -171,8 +171,10 @@ class Login extends Component {
 			.then((res) => {
 				//console.log(res.data)
 				if (res.data === "Successful Register" || 200) {
+					console.log(this.state.username);
 					this.setState({ redirect: "/dashboard" });
 				}
+				
 			}).catch((error) => {
 				console.log(error)
 			});
@@ -193,8 +195,16 @@ class Login extends Component {
 	}
 	render() {
 		if (this.state.redirect) {
-			return <Redirect to={this.state.redirect} />
-		}
+			return <Redirect to={{
+			  pathname: this.state.redirect,
+			  state: {
+				username: this.state.username,
+				email: this.state.email,
+				password: this.state.password 
+			  }
+			}}
+		  />
+		  }
 		return (
 			<div >
 				<Sidebar active="login" is_shown="true" logged_in={false}></Sidebar>

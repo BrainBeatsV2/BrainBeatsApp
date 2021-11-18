@@ -33,7 +33,7 @@ function createWindow() {
   });
   console.log(__dirname);
   mainWindow.setMenuBarVisibility(false);
-  mainWindow.loadURL(isDev ? 'http://localhost:8001/music-generation/' : `file://${path.join(__dirname, '../build/index.html')}`);
+  mainWindow.loadURL(isDev ? 'http://localhost:8002/music-generation/' : `file://${path.join(__dirname, '../build/index.html')}`);
   mainWindow.on('closed', () => mainWindow = null);
   mainWindow.on('page-title-updated', function (e) {
     e.preventDefault()

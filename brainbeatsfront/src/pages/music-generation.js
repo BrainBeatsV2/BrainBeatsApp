@@ -308,7 +308,15 @@ class MusicGeneration extends Component {
 
     render() {
         if (!isElectron()) {
-            return <Redirect to="/" />
+            return <Redirect to={{
+                pathname: this.state.redirect,
+                state: {
+                  username: this.state.username,
+                  email: this.state.email,
+                  password: this.state.password 
+                }
+              }}
+            />
         }
         return (
 
