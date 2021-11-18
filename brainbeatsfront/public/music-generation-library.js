@@ -220,6 +220,8 @@ async function getLSTMPrediction(track, lstmInput, scaleNoteArray, octaveRangeAr
                 if (res.status == 200) {
                     console.log("RES DATA[output]: " + res.data['output']);
                     lstmPredictions = res.data['output'];
+                    console.log("predictions:")
+                    console.log(lstmPredictions);
                     finalNotes = getNotesFromLSTMPredictions(lstmPredictions, scaleNoteArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond);
                     track = addNotesToTrack(track, finalNotes);
                     track.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: instrument_num }));
@@ -247,7 +249,7 @@ function getNotesFromLSTMPredictions(lstmPredictions, scaleNoteArray, octaveArra
     // Build notes, save how long the notes last, until there are no more seconds or can't make even the shortest note combo:
     var noteEvents = [];
     var curlstmPredictionsIndex = 0;
-    while (totalSeconds > 0 && totalSeconds > shortestNoteCombo && curlstmPredictionsIndex < totalPredictions) {
+    while (totalSeconds > 0 && totalSeconds > shortestNoteCombo) {
 
         // 1. Grab the current prediction: Note the % (totalPredictions - 1) is a safety check due to the increasing nature
         var safetyIndex = curlstmPredictionsIndex % totalPredictions;
@@ -285,7 +287,7 @@ function getNotesFromLSTMPredictions(lstmPredictions, scaleNoteArray, octaveArra
         }
 
         // 4c. If we are very close to the shortestNoteCombo we can make, just make that note and end it!
-        if (currentSeconds > 0 && totalSeconds <= shortestNoteCombo * 1.5) {
+        if (currentSeconds > 0 && totalSeconds <= shortestNoteCombo * 4) {
             noteEvents.push(new MidiWriter.NoteEvent({
                 pitch: getPredictedNote(curPrediction, scaleNoteArray, octaveArray),
                 duration: '16'.toString(),

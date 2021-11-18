@@ -123,8 +123,7 @@ ipcMain.on('end_eeg_script', (event, musicGenerationModel, key, scale, minRange,
     let tempPromise = lstmDriver(track, eegDataQueue, scaleArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond, instrument)
       .then((tempTrack) => {
         track = tempTrack;
-        console.log("end_eeg_script after lstmDriver");
-        console.log(track);
+
         // Output MIDI file
         write = new MidiWriter.Writer(track);
         urlMIDI = write.dataUri();
