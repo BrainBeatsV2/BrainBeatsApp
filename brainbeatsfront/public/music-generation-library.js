@@ -11,12 +11,12 @@ const commonNoteGroupings = [6, 3, 1, 2, 4]; // Ideally keep to five or more
 const commonNoteDurations = ['1', '2', '4', '8', '16']; // Ideally keep to five or more
 const DEBUG = false;
 
-function musicGenerationDriver(eegDataQueue, musicGenerationModel, scaleArray, scaleMap, octaveRangeArray, totalSeconds, secondsPerEEGSnapShot, noteDurationsPerBeatPerSecond) {
+function musicGenerationDriver(eegDataQueue, musicGenerationModel, scaleArray, scaleMap, octaveRangeArray, totalSeconds, secondsPerEEGSnapShot, noteDurationsPerBeatPerSecond, instrument_num) {
     track = new MidiWriter.Track();
     console.log("musicGenerationDriver, model: " + musicGenerationModel + " scales: " + scaleArray + " octaveRangeArray: " + octaveRangeArray + " totalSeconds: " + totalSeconds);
 
     if (musicGenerationModel == 1) {
-        // TODO: Move this into mapAggregateBandPowerToRandomProbability - but 
+        // TODO: Move this into mapAggregateBandPowerToRandomProbability 
         for (let i = 0; i < eegDataQueue.length; i++) {
             track = mapAggregateBandPowerToRandomProbability(track, eegDataQueue[i], scaleArray, octaveRangeArray, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot);
         }
@@ -24,15 +24,17 @@ function musicGenerationDriver(eegDataQueue, musicGenerationModel, scaleArray, s
         track = buildMarkovModel(track, eegDataQueue, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot);
     } else if (musicGenerationModel == 3) {
         track = musicGenModel3(track, eegDataQueue, scaleArray, octaveRangeArray, secondsPerEEGSnapShot, noteDurationsPerBeatPerSecond);
-    } else if (musicGenerationModel == 4) {
-        track = lstmDriver(track, eegDataQueue, scaleArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond);
     } else {
         noteEvents = createNotes(totalSeconds, scaleMap);
         track = addNotesToTrack(track, noteEvents);
     }
 
+    track.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: instrument_num }));
+
     return track;
 }
+
+
 
 function buildMarkovModel(track, eegDataQueue, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot) {
     console.log("Music Generation Model 2: Blues Markov Chain");
@@ -169,33 +171,27 @@ function getNextMarkovNote(noteEvents, eegDataPoint) {
     return [nextNote];
 }
 
-async function lstmDriver(track, eegDataQueue, scaleNoteArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond) {
+async function lstmDriver(track, eegDataQueue, scaleNoteArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond, instrument_num) {
+    let outputTrack;
     console.log("Music Generation Model 4: LSTM");
-
-    // 1. Collect the predictions from the LSTM
-    var scaleLen = scaleNoteArray.length;
-    var octaveLen = octaveRangeArray.length;
-
     try {
-        // 2. Get input data for LSTM & get it's predictions
+        // 1. Collect the predictions from the LSTM
+        var scaleLen = scaleNoteArray.length;
+        var octaveLen = octaveRangeArray.length;
         var lstmInput = getLSTMInput(eegDataQueue, scaleLen, octaveLen);
-        let lstmRealPredictions = await getLSTMPrediction(lstmInput)
-            .then((lstmPredictions) => {
-                finalNotes = getNotesFromLSTMPredictions(lstmPredictions, scaleNoteArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond);
-                console.log("LSTM Final Notes: ");
-                console.log(lstmPredictions);
-                track = addNotesToTrack(track, finalNotes);
-                console.log("LSTM Track: ");
-                console.log(track);
-            }).catch((error) => {
-                console.log(error);
+        let updatedTrack = await getLSTMPrediction(track, lstmInput, scaleNoteArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond, instrument_num)
+            .then((result) => {
+                console.log("lstmDriver result");
+                console.log(result);
+                outputTrack = result;
             });
     } catch (e) {
         console.log("that failed", e);
     }
 
-    console.log("before returning " + track);
-    return track;
+    console.log("lstmDriver outputTrack: ");
+    console.log(outputTrack);
+    return outputTrack;
 }
 
 function getLSTMInput(eegDataQueue, NumNotesInScale, NumOctaves) {
@@ -219,17 +215,25 @@ function getLSTMInput(eegDataQueue, NumNotesInScale, NumOctaves) {
     return lstmInput.toString();
 }
 
-async function getLSTMPrediction(lstmInput) {
+async function getLSTMPrediction(track, lstmInput, scaleNoteArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond, instrument_num) {
     let output;
+
     try {
         await axios.post(lstmPath + '/predict', { input: lstmInput })
             .then((res) => {
                 if (res.status == 200) {
-                    console.log("RES DATA:")
-                    console.log(res.data)
-                    console.log("RES DATA[output]:")
-                    console.log(res.data['output'])
-                    output = res.data['output'];
+                    console.log("RES DATA[output]: " + res.data['output']);
+                    lstmPredictions = res.data['output'];
+
+                    finalNotes = getNotesFromLSTMPredictions(lstmPredictions, scaleNoteArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond);
+                    console.log("getLSTMPrediction Final Notes");
+                    console.log(finalNotes);
+
+                    track = addNotesToTrack(track, finalNotes);
+                    track.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: instrument_num }));
+                    console.log("getLSTMPrediction track");
+                    console.log(track);
+                    output = track;
                 }
             }).catch((error) => {
                 console.log(error)
@@ -238,6 +242,8 @@ async function getLSTMPrediction(lstmInput) {
         console.log("that failed", e);
     }
 
+    console.log("getLSTMPrediction output track ");
+    console.log(output);
     return output;
 }
 
@@ -253,7 +259,7 @@ function getNotesFromLSTMPredictions(lstmPredictions, scaleNoteArray, octaveArra
     // Build notes, save how long the notes last, until there are no more seconds or can't make even the shortest note combo:
     var noteEvents = [];
     var curlstmPredictionsIndex = 0;
-    while (totalSeconds > 0 && totalSeconds > shortestNoteCombo) {
+    while (totalSeconds > 0 && totalSeconds > shortestNoteCombo && curlstmPredictionsIndex < totalPredictions) {
 
         // 1. Grab the current prediction: Note the % (totalPredictions - 1) is a safety check due to the increasing nature
         var safetyIndex = curlstmPredictionsIndex % totalPredictions;
@@ -703,12 +709,6 @@ function getOutcomeRangesForFiveOutcomesOrGreater(eegData, outcomesArray) {
     return brainwaveRangesToOutcomes;
 }
 
-function setInstrument(track, instrument_num) {
-    track.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: instrument_num }));
-    debug_print('Set instrument to track')
-    return track;
-}
-
 function getBeatsPerSec(bpm) {
     return bpm / 60;
 }
@@ -964,7 +964,7 @@ function getKeyByValue(object, value) {
 
 module.exports = {
     musicGenerationDriver: musicGenerationDriver,
-    setInstrument: setInstrument,
+    lstmDriver: lstmDriver,
     getScaleNotes: getScaleNotes,
     getScaleMap: getScaleMap,
     getOctaveRangeArray: getOctaveRangeArray,
