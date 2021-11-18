@@ -194,6 +194,14 @@ class Login extends Component {
 		});
 	}
 	render() {
+		if (this.props.location.state.username !== "")
+		{
+			this.setState({
+			username: this.props.location.state.username,
+			email: this.props.location.state.email,
+			password: this.props.location.state.password,
+			})
+		}
 		if (this.state.redirect) {
 			return <Redirect to={{
 			  pathname: this.state.redirect,
@@ -207,7 +215,14 @@ class Login extends Component {
 		  }
 		return (
 			<div >
-				<Sidebar active="login" is_shown="true" logged_in={false}></Sidebar>
+				<Sidebar 
+					active="login" 
+					is_shown="true" 
+					logged_in={false}
+					username={this.state.username}
+					email={this.state.email}
+					password={this.state.password}
+				></Sidebar>
 
 
 				<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />

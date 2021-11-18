@@ -273,6 +273,14 @@ class MusicGeneration extends Component {
         this.setState({ trackName: e.target.value });
     };
     componentDidMount() {
+        if (this.props.location.state.username !== "")
+        {
+            this.setState({
+            username: this.props.location.state.username,
+            email: this.props.location.state.email,
+            password: this.props.location.state.password,
+            })
+        }
         var player = document.querySelector("midi-player");
         if (player != null) {
 
@@ -289,7 +297,7 @@ class MusicGeneration extends Component {
             });
         }
         
-        if (this.state.username == "")
+        if (this.props.location.state.username == '')
         {
             this.setState({ loggedin: 0 });
             
@@ -322,7 +330,15 @@ class MusicGeneration extends Component {
 
 
             <div class="music-generation-bg" >
-                <Sidebar music_generation="true" logout={this.onLogout} is_shown={this.state.showMenu} logged_in={this.state.loggedin}></Sidebar>
+                <Sidebar 
+                    music_generation="true" 
+                    logout={this.onLogout} 
+                    is_shown={this.state.showMenu} 
+                    logged_in={this.state.loggedin}
+                    username={this.state.username}
+                    email={this.state.email}
+                    password={this.state.password}
+                ></Sidebar>
                 <Dimmer.Dimmable dimmed={this.state.saving}>
                     <Dimmer active={this.state.saving} page>
                         <Loader>Uploading</Loader>

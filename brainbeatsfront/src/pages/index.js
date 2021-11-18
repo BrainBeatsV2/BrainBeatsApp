@@ -10,7 +10,9 @@ class Home extends Component {
             name: "React",
             redirect: null,
             username: '',
-            loggedin: 0
+            loggedin: 0,
+            email: '',
+            password: '',
         };
     }
 
@@ -42,7 +44,14 @@ class Home extends Component {
             return (
         
                 <div class="music-generation-bg" style={{margin:'0'}}>
-                <Sidebar active="home" is_shown="true" logged_in={this.state.loggedin}></Sidebar>
+                <Sidebar 
+                  active="home" 
+                  is_shown="true" 
+                  logged_in={this.state.loggedin}
+                  username={this.state.username}
+                  email={this.state.email}
+                  password={this.state.password}
+                ></Sidebar>
                 <div id="main_content" class="help_screen">          
                   <h2>Brain Beats</h2>
       

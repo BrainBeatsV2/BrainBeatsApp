@@ -44,15 +44,17 @@ class Dashboard extends Component {
       password: '',
       email: '',
     });
-    if (isElectron()) {
-      this.setState({ loggedout: 1 });
-    } else {
-      this.setState({ loggedout: 0 });
-    }
-
   }
   componentDidMount(){
-  if (this.state.username == "")
+  if (this.props.location.state.username !== "")
+  {
+    this.setState({
+      username: this.props.location.state.username,
+      email: this.props.location.state.email,
+      password: this.props.location.state.password,
+    })
+  }
+  if (this.props.location.state.username == "")
     {
         this.setState({ loggedin: 0 });
        
@@ -89,14 +91,21 @@ class Dashboard extends Component {
     if (true)
     {
       console.log(this.props.location.state.username);
-      //console.log(this.state.username);
+      console.log(this.props);
     }
     return (
 
 
 
       <div class="music-generation-bg" style={{margin:'0'}}>
-          <Sidebar active="dashboard" is_shown="true" logged_in={this.state.loggedin}></Sidebar>
+          <Sidebar 
+            active="dashboard" 
+            is_shown="true" 
+            logged_in={this.state.loggedin} 
+            username={this.state.username}
+            email={this.state.email}
+            password={this.state.password}
+          ></Sidebar>
           <div id="main_content">          
             <h2>My MIDI</h2>
             <div class="midi-add" style={{ display: isElectron() ? 'inline-block' : 'none' }}><a href="/music-generation"><i class="material-icons">add</i> Add Track</a></div>

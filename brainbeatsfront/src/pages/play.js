@@ -52,16 +52,25 @@ class Play extends Component {
 
   }
   componentDidMount(){
-    if (this.state.username == "")
+    if (this.props.location.state.username !== "")
+    {
+      this.setState({
+        username: this.props.location.state.username,
+        email: this.props.location.state.email,
+        password: this.props.location.state.password,
+      })
+    }
+    if (this.props.location.state.username == "")
     {
         this.setState({ loggedin: 0 });
-       
     }
     else 
     {
         this.setState({ loggedin: 1 });
     }
+    console.log(this.props);
   }
+ 
 
   render() {
     if (this.state.redirect) {
@@ -91,7 +100,14 @@ class Play extends Component {
 
 
       <div class="music-generation-bg" style={{margin:'0'}}>
-          <Sidebar active="play" is_shown="true" logged_in={this.state.loggedin} ></Sidebar>
+          <Sidebar 
+            active="play" 
+            is_shown="true" 
+            logged_in={this.state.loggedin} 
+            username={this.state.username}
+            email={this.state.email}
+            password={this.state.password}
+          ></Sidebar>
           <div id="main_content">          
            
             <div id="midi-tracks1" style={{marginTop:'10px'}}>

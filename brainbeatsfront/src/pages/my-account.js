@@ -52,7 +52,15 @@ class Account extends Component {
 
   }
   componentDidMount(){
-   if (this.state.username == "")
+    if (this.props.location.state.username !== "")
+    {
+      this.setState({
+        username: this.props.location.state.username,
+        email: this.props.location.state.email,
+        password: this.props.location.state.password,
+      })
+    }
+   if (this.props.location.state.username == "")
     {
         this.setState({ loggedin: 0 });
        
@@ -91,7 +99,14 @@ class Account extends Component {
 
 
       <div class="music-generation-bg" style={{margin:'0'}}>
-          <Sidebar active="my-account" is_shown="true" logged_in={this.state.loggedin}></Sidebar>
+          <Sidebar 
+            active="my-account" 
+            is_shown="true" 
+            logged_in={this.state.loggedin}
+            username={this.state.username}
+            email={this.state.email}
+            password={this.state.password}
+          ></Sidebar>
           <div id="main_content" class="help_screen">          
             <h2>My Account</h2>
 
