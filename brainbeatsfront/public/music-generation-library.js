@@ -2,8 +2,10 @@
 var axios = require('axios');
 var MidiWriter = require('midi-writer-js')
 const fs = require('fs');
+const serverPath = 'http://143.198.6.2:5000';
+const localPath = 'http://172.20.249.73:5000';
+const lstmPath = localPath;
 
-const lstmPath = 'http://143.198.6.2:5000';
 const brainwaves = ['delta', 'theta', 'alpha', 'beta', 'gamma'];
 const commonNoteGroupings = [6, 3, 1, 2, 4]; // Ideally keep to five or more
 const commonNoteDurations = ['1', '2', '4', '8', '16']; // Ideally keep to five or more
@@ -180,7 +182,11 @@ async function lstmDriver(track, eegDataQueue, scaleNoteArray, octaveRangeArray,
         let lstmRealPredictions = await getLSTMPrediction(lstmInput)
             .then((lstmPredictions) => {
                 finalNotes = getNotesFromLSTMPredictions(lstmPredictions, scaleNoteArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond);
+                console.log("LSTM Final Notes: ");
+                console.log(lstmPredictions);
                 track = addNotesToTrack(track, finalNotes);
+                console.log("LSTM Track: ");
+                console.log(track);
             }).catch((error) => {
                 console.log(error);
             });
@@ -188,6 +194,7 @@ async function lstmDriver(track, eegDataQueue, scaleNoteArray, octaveRangeArray,
         console.log("that failed", e);
     }
 
+    console.log("before returning " + track);
     return track;
 }
 
