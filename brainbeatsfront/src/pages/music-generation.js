@@ -38,7 +38,7 @@ class MusicGeneration extends Component {
             privacySettings: 0,
             trackLink: "brainbeats.dev/play/",
             loggedin: 0,
-            midiString: ''  ,
+            midiString: '',
             username: '',
             password: ''
         };
@@ -195,19 +195,19 @@ class MusicGeneration extends Component {
         }
     }
     onLogout = (e) => {
-       // e.preventDefault();
+        // e.preventDefault();
         this.setState({
-          username: '',
-          password: '',
-          email: '',
+            username: '',
+            password: '',
+            email: '',
         });
         if (isElectron()) {
-          this.setState({ loggedin: 0 });
+            this.setState({ loggedin: 0 });
         } else {
-          this.setState({ loggedin: 1 });
+            this.setState({ loggedin: 1 });
         }
-    
-      }
+
+    }
     updateRange() {
         console.log("updated")
     }
@@ -288,17 +288,15 @@ class MusicGeneration extends Component {
 
             });
         }
-        
-        if (this.state.username == "")
-        {
+
+        if (this.state.username == "") {
             this.setState({ loggedin: 0 });
-            
+
         }
-        else 
-        {
+        else {
             this.setState({ loggedin: 1 });
-        } 
-        
+        }
+
     }
     changeInstrument(event) { this.setState({ instrument: event.target.value }); }
     changeModel(event) { this.setState({ model: event.target.value }); }
@@ -322,7 +320,7 @@ class MusicGeneration extends Component {
 
 
                 </Dimmer.Dimmable>
-                <div class="fade-bg" onMouseEnter={this.onHideMenu} style={{display: (this.state.showMenu)? "block": "none"}}></div>
+                <div class="fade-bg" onMouseEnter={this.onHideMenu} style={{ display: (this.state.showMenu) ? "block" : "none" }}></div>
                 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
                 <script src="https://cdn.jsdelivr.net/combine/npm/tone@14.7.58,npm/@magenta/music@1.22.1/es6/core.js,npm/focus-visible@5,npm/html-midi-player@1.4.0"></script>
 
@@ -349,7 +347,7 @@ class MusicGeneration extends Component {
                 <br />
                 <br />
                 <br />
-                <div id="stream-bar" style={{position: (this.state.showMenu) ? "absolute": "fixed"}}>
+                <div id="stream-bar" style={{ position: (this.state.showMenu) ? "absolute" : "fixed" }}>
                     <div class="column">
                         <div id="rerecord" style={{ display: this.state.saveOptions ? 'inline-block' : 'none' }}>
 
@@ -376,7 +374,7 @@ class MusicGeneration extends Component {
                                 </tr>
                                 <tr>
                                     <td>
-                                        <select id="parameter_model" disabled={this.state.recording} value={this.state.model} onChange={this.changeModel}> 
+                                        <select id="parameter_model" disabled={this.state.recording} value={this.state.model} onChange={this.changeModel}>
                                             <option value="1">Model 1</option>
                                             <option value="2">Model 2</option>
                                             <option value="3">Model 3</option>

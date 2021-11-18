@@ -181,16 +181,12 @@ async function lstmDriver(track, eegDataQueue, scaleNoteArray, octaveRangeArray,
         var lstmInput = getLSTMInput(eegDataQueue, scaleLen, octaveLen);
         let updatedTrack = await getLSTMPrediction(track, lstmInput, scaleNoteArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond, instrument_num)
             .then((result) => {
-                console.log("lstmDriver result");
-                console.log(result);
                 outputTrack = result;
             });
     } catch (e) {
         console.log("that failed", e);
     }
 
-    console.log("lstmDriver outputTrack: ");
-    console.log(outputTrack);
     return outputTrack;
 }
 
@@ -224,15 +220,9 @@ async function getLSTMPrediction(track, lstmInput, scaleNoteArray, octaveRangeAr
                 if (res.status == 200) {
                     console.log("RES DATA[output]: " + res.data['output']);
                     lstmPredictions = res.data['output'];
-
                     finalNotes = getNotesFromLSTMPredictions(lstmPredictions, scaleNoteArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond);
-                    console.log("getLSTMPrediction Final Notes");
-                    console.log(finalNotes);
-
                     track = addNotesToTrack(track, finalNotes);
                     track.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: instrument_num }));
-                    console.log("getLSTMPrediction track");
-                    console.log(track);
                     output = track;
                 }
             }).catch((error) => {
@@ -242,8 +232,6 @@ async function getLSTMPrediction(track, lstmInput, scaleNoteArray, octaveRangeAr
         console.log("that failed", e);
     }
 
-    console.log("getLSTMPrediction output track ");
-    console.log(output);
     return output;
 }
 
