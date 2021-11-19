@@ -27,8 +27,8 @@ return (<>
                   </li>
 
                  <li style={{display: (is_logged_in) ? 'none' : ''}} class={(active_page == "login") ? "active" : ""}>
-                  <i class="material-icons">login</i>
-                  <Link to={{pathname: "/login", state: {username: username, email: email, password: password}}}>Log In</Link>
+                    <i class="material-icons">login</i>
+                    <Link to={{pathname: "/login", state: {username: username, email: email, password: password}}}>Log In</Link>
                  </li>
                 
 

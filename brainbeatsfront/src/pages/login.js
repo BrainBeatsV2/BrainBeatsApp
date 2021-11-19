@@ -149,6 +149,8 @@ class Login extends Component {
 				}
 			}).catch((error) => {
 				console.log(error)
+				this.state.username = "";
+				this.state.password = "";
 			});
 	}
 
