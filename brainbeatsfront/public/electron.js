@@ -139,8 +139,6 @@ ipcMain.on('end_eeg_script', (event, musicGenerationModel, key, scale, minRange,
   urlMIDI = write.dataUri();
   player.loadDataUri(urlMIDI);
   midiString = getMidiString(write);
-  writeMIDIfileFromWriteObject(write);
-  // writeMIDIfileFromBase64String(midiString);
   event.sender.send('end_eeg_script', midiString);
 });
 
