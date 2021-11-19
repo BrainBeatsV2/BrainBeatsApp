@@ -765,6 +765,7 @@ function createFileName() {
     // Created all of these variables to make it easier to customize for future generations of Brain Beats
     console.log("Creating file name for midi file");
     var rawDateData = Date().toString().split(" ");
+    var fileExtension = ".mid";
 
     // Grabs the date
     var month = rawDateData[1];
@@ -779,50 +780,59 @@ function createFileName() {
     var seconds = timeArray[2];
     var time = hour + minute + seconds;
 
-    var name = "beat_" + date + "_" + time + ".mid";
-    var nameIndex = 1;
+    // Build midi name template
+    var name = "beat_" + date + "_" + time;
 
     try {
-        var path = "./" + name;
+        var pathToCheck = "./" + name + fileExtension;
+        var nameIndex = 1;
 
-        // Check if there's already a file with this name
-        if (fs.existsSync(path)) {
-            path = "./beat_" + date + "_" + time + "_" + nameIndex + ".mid";
+        // Check to see if this file name is available 
+        if (fs.existsSync(pathToCheck)) {
+            pathToCheck = "./" + name + "_" + nameIndex + fileExtension;
 
-            // If there is, keep incrementing the name index
-            while (fs.existsSync(path)) {
+            // Keep hunting until we find the first avaliable name
+            while (fs.existsSync(pathToCheck)) {
                 nameIndex++;
-                path = "./beat_" + date + "_" + time + "_" + nameIndex + ".mid";
+                pathToCheck = "./" + name + "_" + nameIndex + fileExtension;
             }
 
-            name = "beat_" + date + "_" + time + "_" + nameIndex + ".mid";
+            // Update the name value to the available name
+            name = name + "_" + nameIndex;
         }
     } catch (err) {
+        console.log("Failed to determine an avaliable filename for midi file");
         console.log(err);
     }
 
-    return name;
+    return name + fileExtension;
 }
 
 function writeMIDIfileFromWriteObject(write) {
-    console.log("Writing MIDI file from midi writer js write object");
+    console.log("Writing MIDI file from midi-writer-js write object");
     filename = createFileName();
 
     const buffer = new Buffer.from(write.buildFile());
-    fs.writeFile(filename + '.mid', buffer, function (err) {
+    fs.writeFile(filename, buffer, function (err) {
         if (err) {
+            console.log("Failed to write the midi file from an midi-writer-js write object");
             console.log(err)
-            debug_print(err)
             throw err;
         }
     });
+
+    console.log('MIDI file created');
 }
 
 function writeMIDIfileFromBase64String(midiBase64String) {
     console.log("Writing MIDI file from base64 string");
-    filename = createFileName()
-    fs.writeFileSync(filename, midiString, { encoding: 'base64' });
-
+    filename = createFileName();
+    try {
+        fs.writeFileSync(filename, midiBase64String, { encoding: 'base64' });
+    } catch (err) {
+        console.log("Failed to write midi file from base64 string");
+        console.log(err);
+    }
     console.log('MIDI file created');
 }
 
