@@ -19,23 +19,25 @@ class Dashboard extends Component {
       currentKey: '',
       currentScale: '',
       currentBPM: '',
+      rawMidiString: '',
       playing: false,
       loggedin: 0
     };
+    this.onDownloadMIDI = this.onDownloadMIDI.bind(this);
   }
 
   onStartPlaying = (id, name, key, scale, bpm) => {
     console.log("playing");
     console.log(id);
     console.log(name);
-    this.setState({currentTrack: name, currentKey: key, currentScale: scale, currentBPM: bpm, playing: true})
+    this.setState({ currentTrack: name, currentKey: key, currentScale: scale, currentBPM: bpm, playing: true })
   }
   onStopPlaying = () => {
 
-    this.setState({playing:false})
+    this.setState({ playing: false })
   }
   onResumePlaying = () => {
-    this.setState({playing:true})
+    this.setState({ playing: true })
   }
   onLogout = (e) => {
     e.preventDefault();
@@ -51,15 +53,19 @@ class Dashboard extends Component {
     }
 
   }
-  componentDidMount(){
-  if (this.state.username == "")
-    {
-        this.setState({ loggedin: 0 });
-       
+
+  // Download midi file
+  onDownloadMIDI() {
+    window.ipcRenderer.send('download_midi_file', this.state.rawMidiString);
+  }
+
+  componentDidMount() {
+    if (this.state.username == "") {
+      this.setState({ loggedin: 0 });
+
     }
-    else 
-    {
-        this.setState({ loggedin: 1 });
+    else {
+      this.setState({ loggedin: 1 });
     }
   }
 
@@ -82,22 +88,22 @@ class Dashboard extends Component {
 
 
 
-      <div class="music-generation-bg" style={{margin:'0'}}>
-          <Sidebar active="dashboard" is_shown="true" logged_in={this.state.loggedin}></Sidebar>
-          <div id="main_content">          
-            <h2>My MIDI</h2>
-            <div class="midi-add" style={{ display: isElectron() ? 'inline-block' : 'none' }}><a href="/music-generation"><i class="material-icons">add</i> Add Track</a></div>
-            <div id="midi-tracks1" style={{marginTop:'10px'}}>
-                <MidiTrack playfn={this.onStartPlaying} track_id="400" track_name="test" isowner={1} privacy={0} link="aefikjeaifi2j930r2r" song_key="C" scale="Minor" bpm="120" ></MidiTrack>
-                <MidiTrack playfn={this.onStartPlaying} track_id="500" track_name="test" isowner={1}  privacy={1} link="eafke930i23903429kfqemfm" song_key="D" scale=" Pentatonic" bpm="60"></MidiTrack>
-            </div>
+      <div class="music-generation-bg" style={{ margin: '0' }}>
+        <Sidebar active="dashboard" is_shown="true" logged_in={this.state.loggedin}></Sidebar>
+        <div id="main_content">
+          <h2>My MIDI</h2>
+          <div class="midi-add" style={{ display: isElectron() ? 'inline-block' : 'none' }}><a href="/music-generation"><i class="material-icons">add</i> Add Track</a></div>
+          <div id="midi-tracks1" style={{ marginTop: '10px' }}>
+            <MidiTrack playfn={this.onStartPlaying} track_id="400" track_name="test" isowner={1} privacy={0} link="aefikjeaifi2j930r2r" song_key="C" scale="Minor" bpm="120" ></MidiTrack>
+            <MidiTrack playfn={this.onStartPlaying} track_id="500" track_name="test" isowner={1} privacy={1} link="eafke930i23903429kfqemfm" song_key="D" scale=" Pentatonic" bpm="60"></MidiTrack>
           </div>
+        </div>
 
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
 
-        
 
-        
+
+
 
         <div id="stream-bar">
           <div class="column" style={{ width: '10%' }}>

@@ -1,4 +1,4 @@
-const { setInstrument, musicGenerationDriver, getOctaveRangeArray, getScaleNotes, getScaleMap, createNotes, addNotesToTrack, getMidiString, writeMIDIfile, getNoteDurationsPerBeatPerSecond, roundTwoDecimalPoints, buildMarkovModel } = require('./music-generation-library');
+const { setInstrument, musicGenerationDriver, getOctaveRangeArray, getScaleNotes, getScaleMap, createNotes, addNotesToTrack, getMidiString, writeMIDIfileFromWriteObject, writeMIDIfileFromBase64String, getNoteDurationsPerBeatPerSecond, roundTwoDecimalPoints, buildMarkovModel } = require('./music-generation-library');
 var MidiWriter = require('midi-writer-js')
 var MidiPlayer = require('midi-player-js');
 const { app, BrowserWindow, ipcMain } = require('electron');
@@ -8,10 +8,17 @@ const { PythonShell } = require('python-shell');
 var kill = require('tree-kill');
 const { start } = require('repl');
 
-let filePath = path.join(__dirname, 'eeg_stream.py');
+// Electron App Data:
 let mainWindow;
-let pyshell
+let devPort = 3000;
+let prodPort = 8001;
+let electronAppPath = String('http://localhost:' + devPort + '/music-generation/');
 
+// EEG Python script data:
+let pyshell;
+let filePath = path.join(__dirname, 'eeg_stream.py');
+
+// MIDI data;
 var startTime = new Date();
 let eegDataQueue = [];
 track = new MidiWriter.Track();
@@ -19,7 +26,6 @@ write = new MidiWriter.Writer(track);
 player = new MidiPlayer.Player();
 midiString = "";
 urlMIDI = "";
-
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -33,7 +39,7 @@ function createWindow() {
   });
   console.log(__dirname);
   mainWindow.setMenuBarVisibility(false);
-  mainWindow.loadURL(isDev ? 'http://localhost:8001/music-generation/' : `file://${path.join(__dirname, '../build/index.html')}`);
+  mainWindow.loadURL(isDev ? electronAppPath : `file://${path.join(__dirname, '../build/index.html')}`);
   mainWindow.on('closed', () => mainWindow = null);
   mainWindow.on('page-title-updated', function (e) {
     e.preventDefault()
@@ -119,23 +125,23 @@ ipcMain.on('end_eeg_script', (event, musicGenerationModel, key, scale, minRange,
   var octaveRangeArray = getOctaveRangeArray(minRange, maxRange);
 
   if (musicGenerationModel == 1) {
-      eegDataQueue.forEach(eegDataPoint => {
-        track = musicGenerationDriver(musicGenerationModel, scaleArray, octaveRangeArray, eegDataPoint, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, scaleMap);
-      });
+    eegDataQueue.forEach(eegDataPoint => {
+      track = musicGenerationDriver(musicGenerationModel, scaleArray, octaveRangeArray, eegDataPoint, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, scaleMap);
+    });
   } else if (musicGenerationModel == 2) {
     track = buildMarkovModel(track, eegDataQueue, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot);
   } else if (musicGenerationModel == 3) {
     track = musicGenerationDriver(musicGenerationModel, scaleArray, octaveRangeArray, eegDataQueue, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, scaleMap);
   }
-  
-  
+
   // Output MIDI file
   write = new MidiWriter.Writer(track);
   urlMIDI = write.dataUri();
   player.loadDataUri(urlMIDI);
   midiString = getMidiString(write);
+  writeMIDIfileFromWriteObject(write);
+  // writeMIDIfileFromBase64String(midiString);
   event.sender.send('end_eeg_script', midiString);
-  writeMIDIfile(write);
 });
 
 function getMaxTimeRecorded(endTime) {
@@ -151,9 +157,10 @@ function sendEEGDataToNode(eeg_data) {
 }
 
 
-ipcMain.on('gen_midi', (event, args) => {
-  // console.log('Loaded midi now')
-  // player.loadDataUri(urlMIDI);
+ipcMain.on('download_midi_file', (event, midiString) => {
+  console.log("ipcMain.on('download_midi_file' midiString");
+  console.log(midiString);
+  writeMIDIfileFromBase64String(midiString);
 });
 
 ipcMain.on('play_midi', (event, args) => {
