@@ -39,10 +39,7 @@ class MusicGeneration extends Component {
             trackLink: "brainbeats.dev/play/",
             loggedin: 0,
             midiString: '',
-<<<<<<< HEAD
-=======
             rawMidiString: '',
->>>>>>> downloadBase64MIDI
             username: '',
             password: ''
         };
