@@ -4,6 +4,8 @@ import { Redirect } from "react-router-dom";
 import MidiTrack from '../components/MidiTrack/index'
 import logo from '../images/logo_dev.png'
 import Sidebar from '../components/Sidebar/index'
+
+
 class Play extends Component {
   constructor(props) {
     super(props);
@@ -19,24 +21,28 @@ class Play extends Component {
       currentKey: '',
       currentScale: '',
       currentBPM: '',
+      rawMidiString: '',
       playing: false,
       loggedin: 0
     };
+
+    this.onDownloadMIDI = this.onDownloadMIDI.bind(this);
   }
 
   onStartPlaying = (id, name, key, scale, bpm) => {
     console.log("playing");
     console.log(id);
     console.log(name);
-    this.setState({currentTrack: name, currentKey: key, currentScale: scale, currentBPM: bpm, playing: true})
+    this.setState({ currentTrack: name, currentKey: key, currentScale: scale, currentBPM: bpm, playing: true })
   }
   onStopPlaying = () => {
 
-    this.setState({playing:false})
+    this.setState({ playing: false })
   }
   onResumePlaying = () => {
-    this.setState({playing:true})
+    this.setState({ playing: true })
   }
+
   onLogout = (e) => {
     e.preventDefault();
     this.setState({
@@ -51,15 +57,21 @@ class Play extends Component {
     }
 
   }
-  componentDidMount(){
-    if (this.state.username == "")
-    {
-        this.setState({ loggedin: 0 });
-       
+
+  // Download midi file
+  // TODO: Needs a button (onClick)
+  // TODO: Need to contact the DB 
+  onDownloadMIDI() {
+    window.ipcRenderer.send('download_midi_file', this.state.rawMidiString);
+  }
+
+  componentDidMount() {
+    if (this.state.username == "") {
+      this.setState({ loggedin: 0 });
+
     }
-    else 
-    {
-        this.setState({ loggedin: 1 });
+    else {
+      this.setState({ loggedin: 1 });
     }
   }
 
@@ -82,69 +94,69 @@ class Play extends Component {
 
 
 
-      <div class="music-generation-bg" style={{margin:'0'}}>
-          <Sidebar active="play" is_shown="true" logged_in={this.state.loggedin} ></Sidebar>
-          <div id="main_content">          
-           
-            <div id="midi-tracks1" style={{marginTop:'10px'}}>
-               <div class="inner_text">
-                 <h2>Track Name</h2> <p>by Author</p>
-                 <br />
-               
-               <MidiTrack playfn={this.onStartPlaying} track_id="400" track_name="test" isowner={0} privacy={1} link="aefikjeaifi2j930r2r" song_key="C" scale="Minor" bpm="120" ></MidiTrack>
-               <br />
-               <br />
-               <br />
-          
-            <h3>Parameters</h3>
-            <table style={{width: '50%', textAlign: 'left'}}>
-              <tr>
-                <th><h4>Base Note</h4></th>
-                <th><h4>Scale</h4></th>
-                <th><h4>BPM</h4></th>
-                <th><h4>Timing</h4></th>
-                
-                
-              </tr>
-              <tr>
-                <td><p>11/02/2021 </p></td>
-                <td><p>Model 1</p></td>
-                <td><p>120</p></td>
-                <td><p>4/4</p></td>
-              </tr>
-            </table>
-            <br />
+      <div class="music-generation-bg" style={{ margin: '0' }}>
+        <Sidebar active="play" is_shown="true" logged_in={this.state.loggedin} ></Sidebar>
+        <div id="main_content">
 
-            <h3>Info</h3>
-            <table style={{width: '50%', textAlign: 'left'}}>
-              <tr>
-                
-                <th><h4>Created On</h4></th>
-                <th><h4>Model Used</h4></th>
-                <th><h4>Instrument</h4></th>
-              </tr>
-              <tr>
-                
-                <td><p>11/02/2021 </p></td>
-                <td><p>Model 1</p></td>
-                <td><p>Piano</p></td>
-             
-              </tr>
-            </table>
-            
-            
-           
+          <div id="midi-tracks1" style={{ marginTop: '10px' }}>
+            <div class="inner_text">
+              <h2>Track Name</h2> <p>by Author</p>
+              <br />
+
+              <MidiTrack playfn={this.onStartPlaying} track_id="400" track_name="test" isowner={0} privacy={1} link="aefikjeaifi2j930r2r" song_key="C" scale="Minor" bpm="120" ></MidiTrack>
+              <br />
+              <br />
+              <br />
+
+              <h3>Parameters</h3>
+              <table style={{ width: '50%', textAlign: 'left' }}>
+                <tr>
+                  <th><h4>Base Note</h4></th>
+                  <th><h4>Scale</h4></th>
+                  <th><h4>BPM</h4></th>
+                  <th><h4>Timing</h4></th>
+
+
+                </tr>
+                <tr>
+                  <td><p>11/02/2021 </p></td>
+                  <td><p>Model 1</p></td>
+                  <td><p>120</p></td>
+                  <td><p>4/4</p></td>
+                </tr>
+              </table>
+              <br />
+
+              <h3>Info</h3>
+              <table style={{ width: '50%', textAlign: 'left' }}>
+                <tr>
+
+                  <th><h4>Created On</h4></th>
+                  <th><h4>Model Used</h4></th>
+                  <th><h4>Instrument</h4></th>
+                </tr>
+                <tr>
+
+                  <td><p>11/02/2021 </p></td>
+                  <td><p>Model 1</p></td>
+                  <td><p>Piano</p></td>
+
+                </tr>
+              </table>
+
+
+
             </div>
-              
-              
-                </div>
+
+
           </div>
+        </div>
 
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
 
-        
 
-        
+
+
 
         <div id="stream-bar">
           <div class="column" style={{ width: '10%' }}>

@@ -1,4 +1,4 @@
-const { musicGenerationDriver, lstmDriver, getOctaveRangeArray, getScaleNotes, getScaleMap, createNotes, addNotesToTrack, getMidiString, writeMIDIfile, getNoteDurationsPerBeatPerSecond, roundTwoDecimalPoints, buildMarkovModel } = require('./music-generation-library');
+const { musicGenerationDriver, lstmDriver, getOctaveRangeArray, getScaleNotes, getScaleMap, createNotes, addNotesToTrack, getMidiString, writeMIDIfileFromWriteObject, writeMIDIfileFromBase64String, getNoteDurationsPerBeatPerSecond, roundTwoDecimalPoints } = require('./music-generation-library');
 var MidiWriter = require('midi-writer-js')
 var MidiPlayer = require('midi-player-js');
 const { app, BrowserWindow, ipcMain } = require('electron');
@@ -8,10 +8,17 @@ const { PythonShell } = require('python-shell');
 var kill = require('tree-kill');
 const { start } = require('repl');
 
-let filePath = path.join(__dirname, 'eeg_stream.py');
+// Electron App Data:
 let mainWindow;
-let pyshell
+let devPort = 3000;
+let prodPort = 8001;
+let electronAppPath = String('http://localhost:' + devPort + '/music-generation/');
 
+// EEG Python script data:
+let pyshell;
+let filePath = path.join(__dirname, 'eeg_stream.py');
+
+// MIDI data;
 var startTime = new Date();
 let eegDataQueue = [];
 track = new MidiWriter.Track();
@@ -20,7 +27,6 @@ player = new MidiPlayer.Player();
 midiString = "";
 urlMIDI = "";
 instrument = "";
-
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -34,7 +40,7 @@ function createWindow() {
   });
   console.log(__dirname);
   mainWindow.setMenuBarVisibility(false);
-  mainWindow.loadURL(isDev ? 'http://localhost:3000/music-generation/' : `file://${path.join(__dirname, '../build/index.html')}`);
+  mainWindow.loadURL(isDev ? electronAppPath : `file://${path.join(__dirname, '../build/index.html')}`);
   mainWindow.on('closed', () => mainWindow = null);
   mainWindow.on('page-title-updated', function (e) {
     e.preventDefault()
@@ -120,31 +126,29 @@ ipcMain.on('end_eeg_script', (event, musicGenerationModel, key, scale, minRange,
   var octaveRangeArray = getOctaveRangeArray(minRange, maxRange);
 
   if (musicGenerationModel == 4) {
+    // Handles the async nature of the LSTM predictions
     let tempPromise = lstmDriver(track, eegDataQueue, scaleArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond, instrument)
       .then((tempTrack) => {
         track = tempTrack;
-
-        // Output MIDI file
-        write = new MidiWriter.Writer(track);
-        urlMIDI = write.dataUri();
-        player.loadDataUri(urlMIDI);
-        midiString = getMidiString(write);
+        midiString = parseMIDIStringFromTrack(track);
         event.sender.send('end_eeg_script', midiString);
-        writeMIDIfile(write);
       });
   } else {
+    // Rest of the music generation functions that aren't async:
     track = musicGenerationDriver(eegDataQueue, musicGenerationModel, scaleArray, scaleMap, octaveRangeArray, totalSeconds, secondsPerEEGSnapShot, noteDurationsPerBeatPerSecond, instrument);
-    // Output MIDI file
-    write = new MidiWriter.Writer(track);
-    urlMIDI = write.dataUri();
-    player.loadDataUri(urlMIDI);
-    midiString = getMidiString(write);
+    midiString = parseMIDIStringFromTrack(track);
     event.sender.send('end_eeg_script', midiString);
-    writeMIDIfile(write);
   }
-
-
 });
+
+
+function parseMIDIStringFromTrack(track) {
+  write = new MidiWriter.Writer(track);
+  urlMIDI = write.dataUri();
+  player.loadDataUri(urlMIDI);
+  midiString = getMidiString(write);
+  return midiString;
+}
 
 function getMaxTimeRecorded(endTime) {
   // Compares recording time rounded by whole number & by two decimal points
@@ -159,9 +163,10 @@ function sendEEGDataToNode(eeg_data) {
 }
 
 
-ipcMain.on('gen_midi', (event, args) => {
-  // console.log('Loaded midi now')
-  // player.loadDataUri(urlMIDI);
+ipcMain.on('download_midi_file', (event, midiString) => {
+  console.log("ipcMain.on('download_midi_file' midiString");
+  console.log(midiString);
+  writeMIDIfileFromBase64String(midiString);
 });
 
 ipcMain.on('play_midi', (event, args) => {

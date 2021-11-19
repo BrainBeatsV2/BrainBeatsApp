@@ -342,7 +342,6 @@ function mapAggregateBandPowerToRandomProbability(track, eegDataPoint, scaleNote
 
 function musicGenModel3(track, eegDataPoint, scaleArray, octaveArray, secondsPerEEGSnapShot, noteDurationsPerBeatPerSecond) {
     console.log("Music Gen Model 3, scales: " + scaleArray + " octaveArray: " + octaveArray + " totalSeconds: " + secondsPerEEGSnapShot + " noteDurationsPerBeatPerSecond: " + noteDurationsPerBeatPerSecond);
-
     var noteEvents = [];
     var scale = [];
     var minPitch = octaveArray[0];
@@ -918,19 +917,79 @@ function getMidiString(write) {
     return write.base64()
 }
 
-function writeMIDIfile(write) {
-    filename = Date.now()
+function createFileName() {
+    // Created all of these variables to make it easier to customize for future generations of Brain Beats
+    console.log("Creating file name for midi file");
+    var rawDateData = Date().toString().split(" ");
+    var fileExtension = ".mid";
+
+    // Grabs the date
+    var month = rawDateData[1];
+    var num_day = rawDateData[2];
+    var year = rawDateData[3];
+    var date = month + num_day + year;
+
+    // Builds the time
+    var timeArray = rawDateData[4].toString().split(":");
+    var hour = timeArray[0];
+    var minute = timeArray[1];
+    var seconds = timeArray[2];
+    var time = hour + minute + seconds;
+
+    // Build midi name template
+    var name = "beat_" + date + "_" + time;
+
+    try {
+        var pathToCheck = "./" + name + fileExtension;
+        var nameIndex = 1;
+
+        // Check to see if this file name is available 
+        if (fs.existsSync(pathToCheck)) {
+            pathToCheck = "./" + name + "_" + nameIndex + fileExtension;
+
+            // Keep hunting until we find the first avaliable name
+            while (fs.existsSync(pathToCheck)) {
+                nameIndex++;
+                pathToCheck = "./" + name + "_" + nameIndex + fileExtension;
+            }
+
+            // Update the name value to the available name
+            name = name + "_" + nameIndex;
+        }
+    } catch (err) {
+        console.log("Failed to determine an avaliable filename for midi file");
+        console.log(err);
+    }
+
+    return name + fileExtension;
+}
+
+function writeMIDIfileFromWriteObject(write) {
+    console.log("Writing MIDI file from midi-writer-js write object");
+    filename = createFileName();
+
     const buffer = new Buffer.from(write.buildFile());
-    debug_print(write.buildFile());
-    debug_print(buffer);
-    fs.writeFile(filename + '.mid', buffer, function (err) {
+    fs.writeFile(filename, buffer, function (err) {
         if (err) {
+            console.log("Failed to write the midi file from an midi-writer-js write object");
             console.log(err)
-            debug_print(err)
             throw err;
         }
     });
-    debug_print('MIDI file created')
+
+    console.log('MIDI file created');
+}
+
+function writeMIDIfileFromBase64String(midiBase64String) {
+    console.log("Writing MIDI file from base64 string");
+    filename = createFileName();
+    try {
+        fs.writeFileSync(filename, midiBase64String, { encoding: 'base64' });
+    } catch (err) {
+        console.log("Failed to write midi file from base64 string");
+        console.log(err);
+    }
+    console.log('MIDI file created');
 }
 
 function debug_print(string) {
@@ -961,7 +1020,8 @@ module.exports = {
     createNotes: createNotes,
     addNotesToTrack: addNotesToTrack,
     getMidiString: getMidiString,
-    writeMIDIfile: writeMIDIfile,
+    writeMIDIfileFromWriteObject: writeMIDIfileFromWriteObject,
+    writeMIDIfileFromBase64String: writeMIDIfileFromBase64String,
     getNoteDurationsPerBeatPerSecond: getNoteDurationsPerBeatPerSecond,
     roundTwoDecimalPoints: roundTwoDecimalPoints,
     buildMarkovModel: buildMarkovModel,

@@ -39,6 +39,10 @@ class MusicGeneration extends Component {
             trackLink: "brainbeats.dev/play/",
             loggedin: 0,
             midiString: '',
+<<<<<<< HEAD
+=======
+            rawMidiString: '',
+>>>>>>> downloadBase64MIDI
             username: '',
             password: ''
         };
@@ -63,7 +67,7 @@ class MusicGeneration extends Component {
         this.changeModel = this.changeModel.bind(this);
         this.changeKey = this.changeKey.bind(this);
         this.changeScale = this.changeScale.bind(this);
-        // this.onDownloadMIDI = this.onDownloadMIDI(this);
+        this.onDownloadMIDI = this.onDownloadMIDI.bind(this);
     }
     // Start MIDI Recording
     onStartRecording() {
@@ -110,11 +114,8 @@ class MusicGeneration extends Component {
             window.ipcRenderer.send('end_eeg_script', this.state.model, this.state.key, this.state.scale, this.state.minRange, this.state.maxRange, this.state.bpm, this.state.timing);
             window.ipcRenderer.on('end_eeg_script', (event, args) => {
                 console.log(args)
-                this.setState({ midiString: 'data:audio/midi;base64,' + args })
-                // this.player.load(args)
-                //this.player.play() 
-
-                window.ipcRenderer.send('gen_midi');
+                this.setState({ midiString: 'data:audio/midi;base64,' + args });
+                this.setState({ rawMidiString: args });
             })
         }
         this.setState({ isEEGScriptRunning: !this.state.isEEGScriptRunning })
@@ -252,14 +253,10 @@ class MusicGeneration extends Component {
     }
     // Radio Button privacy settings switch
 
-    // Started download function!
-    // onDownloadMIDI() {
-    //     this.setState({
-    //         downloadMIDI: true
-    //     })
-
-    //     window.ipcRenderer.send('download_midi');
-    // }
+    // Download midi file
+    onDownloadMIDI() {
+        window.ipcRenderer.send('download_midi_file', this.state.rawMidiString);
+    }
 
     // Save Settings Button
     onChangeTrackSettings() {
@@ -419,7 +416,7 @@ class MusicGeneration extends Component {
                             <table class="save_options">
                                 <tr>
 
-                                    <td><i class="material-icons">file_download</i></td>
+                                    <td><i class="material-icons test" onClick={this.onDownloadMIDI}>file_download</i></td>
                                     <td style={{ display: (this.state.saved || !this.state.loggedin) ? 'none' : 'block' }}><i class="material-icons" onClick={this.onSaveRecording} >cloud_upload</i></td>
                                     <Modal
                                         onClose={this.setOpen}
@@ -458,7 +455,7 @@ class MusicGeneration extends Component {
                                 </tr>
                                 <tr>
 
-                                    <th>Download MIDI</th>
+                                    <th>Download MIDI </th> {/* TODO: This needs to be made a button, putting this here for now?   */}
                                     <th style={{ display: (this.state.saved || !this.state.loggedin) ? 'none' : 'block' }}>Save and Upload</th>
                                     <th style={{ display: this.state.saved ? 'block' : 'none' }}>Share</th>
                                 </tr>
