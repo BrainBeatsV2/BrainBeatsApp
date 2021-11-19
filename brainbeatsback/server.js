@@ -272,7 +272,7 @@ app.get(devPath + '/api/models/:model_name', function (req, res) {
 app.get('/api/midis/public', async function (req, res) {
     // send public midi data
     var skip = 0;
-    var limit = 0;
+    var limit = 10;
 
     if (req.params.skip) {
         skip = req.params.skip;
@@ -301,6 +301,18 @@ app.post(devPath + '/api/midis/mine', async function (req, res) {
     var body = req.body;
     var email = body.email;
     var password = body.password;
+    
+    var skip = 0;
+    var limit = 10;
+
+    if (req.params.skip) {
+        skip = req.params.skip;
+    }
+
+    if (req.params.limit) {
+        limit = req.params.limit;
+    }
+
 
     // check credentials
     User.findOne({ "email": email }).then(function (doc) {
@@ -308,7 +320,7 @@ app.post(devPath + '/api/midis/mine', async function (req, res) {
             res.status(401).send("Incorrect account credentials.");
         } else {
             // send all midi data
-            Midi.find({ "username": email }).then(function (doc) {
+            Midi.find({ "username": email }).skip(skip).limit(limit).then(function (doc) {
                 res.status(200).send(doc);
             });
         }
