@@ -17,6 +17,23 @@ class Home extends Component {
     }
 
     render() {
+      try {
+        if(localStorage.getItem('username') !== null) {
+          this.setState({
+          username: localStorage.getItem('username'),
+          email: localStorage.getItem('email'),
+          password: localStorage.getItem('password'),
+          })
+        }
+        if (localStorage.getItem('loggedIn') == true) {
+            this.setState({ loggedin: 0 });
+          }
+          else {
+            this.setState({ loggedin: 1 });
+          }
+      } catch (e) {
+        this.setState({ loggedin: 1 });
+      }
         if(isElectron())
         {
             return <Redirect to={{
@@ -29,7 +46,7 @@ class Home extends Component {
               }}
             />
         }
-        if (this.props.loggedin == 1)
+        if (this.state.loggedin == 1)
         {
             return <Redirect to={{
                 pathname: "/dashboard",

@@ -1,6 +1,6 @@
 import React, { Component, useState } from 'react';
 import isElectron from '../library/isElectron';
-import { Redirect } from "react-router-dom";
+import { Redirect, Link } from "react-router-dom";
 import MidiTrack from '../components/MidiTrack/index'
 import logo from '../images/logo_dev.png'
 import Sidebar from '../components/Sidebar/index'
@@ -44,31 +44,46 @@ class Dashboard extends Component {
       password: '',
       email: '',
     });
-  }
-  componentDidMount(){
-  if (this.props.location.state.username !== "")
-  {
-    this.setState({
-      username: this.props.location.state.username,
-      email: this.props.location.state.email,
-      password: this.props.location.state.password,
-    })
-  }
-  if (this.props.location.state.username == "")
-    {
-        this.setState({ loggedin: 0 });
-       
+    if (isElectron()) {
+      this.setState({ redirect: "/music-generation" });
+    } else {
+      this.setState({ redirect: "/" });
     }
-    else 
-    {
-        this.setState({ loggedin: 1 });
+  }
+
+  retreiveMyMIDIS = (e) => {
+    e.preventDefault();
+
+  }
+
+  componentDidMount(){
+    try {
+      if(localStorage.getItem('username') !== null) {
+				this.setState({
+				username: localStorage.getItem('username'),
+				email: localStorage.getItem('email'),
+				password: localStorage.getItem('password'),
+				})
+			}
+      console.log(localStorage.getItem('loggedIn'));
+      if (localStorage.getItem('loggedIn') == true) {
+          this.setState({ loggedin: 0 });
+        }
+        else {
+          this.setState({ loggedin: 1 });
+        }
+    } catch (e) {
+      this.setState({ loggedin: 1 });
+      console.log(e);
     }
   }
 
   
 
   render() {
+    console.log(this.state.email);
     if (this.state.redirect) {
+      console.log(this.state.email);
       return <Redirect to={{
         pathname: this.state.redirect,
         state: {
@@ -110,7 +125,7 @@ class Dashboard extends Component {
           ></Sidebar>
           <div id="main_content">          
             <h2>My MIDI</h2>
-            <div class="midi-add" style={{ display: isElectron() ? 'inline-block' : 'none' }}><a href="/music-generation"><i class="material-icons">add</i> Add Track</a></div>
+            <div class="midi-add" style={{ display: isElectron() ? 'inline-block' : 'none' }}><Link to={{pathname: "/music-generation", state: {username: this.state.username, email: this.state.email, password: this.state.password}}}><i class="material-icons">add</i> Add Track</Link></div>
             <div id="midi-tracks1" style={{marginTop:'10px'}}>
                 <MidiTrack playfn={this.onStartPlaying} track_id="400" track_name="test" isowner={1} privacy={0} link="aefikjeaifi2j930r2r" song_key="C" scale="Minor" bpm="120" ></MidiTrack>
                 <MidiTrack playfn={this.onStartPlaying} track_id="500" track_name="test" isowner={1}  privacy={1} link="eafke930i23903429kfqemfm" song_key="D" scale=" Pentatonic" bpm="60"></MidiTrack>

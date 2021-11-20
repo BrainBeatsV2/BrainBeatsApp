@@ -52,22 +52,22 @@ class Settings extends Component {
 
   }
   componentDidMount(){
-    if (this.props.location.state.username !== "")
-    {
-      this.setState({
-        username: this.props.location.state.username,
-        email: this.props.location.state.email,
-        password: this.props.location.state.password,
-      })
-    }
-   if (this.props.location.state.username == "")
-    {
-        this.setState({ loggedin: 0 });
-       
-    }
-    else 
-    {
-        this.setState({ loggedin: 1 });
+    try {
+      if(localStorage.getItem('username') !== null) {
+				this.setState({
+				username: localStorage.getItem('username'),
+				email: localStorage.getItem('email'),
+				password: localStorage.getItem('password'),
+				})
+			}
+      if (localStorage.getItem('loggedIn') == true) {
+          this.setState({ loggedin: 0 });
+        }
+        else {
+          this.setState({ loggedin: 1 });
+        }
+    } catch (e) {
+      this.setState({ loggedin: 1 });
     }
   }
 

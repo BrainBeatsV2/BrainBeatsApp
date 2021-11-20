@@ -140,11 +140,31 @@ class Login extends Component {
 			username: this.state.username,
 			password: this.state.password
 		};
+		console.log(this.state.username);
+		console.log(this.state.password);
 
 		axios.post('/api/login', userObject, options)
 			.then((res) => {
-				//console.log(res.data)
 				if (res.data === "login successful" || 200) {
+
+					axios.post('/api/user', userObject, options)
+						.then((res) => {
+							this.state.username = res.data[0];
+							this.state.email = res.data[1];
+							this.state.password = res.data[2];
+							localStorage.setItem('loggedIn', true);
+							localStorage.setItem('email', this.state.email);
+							localStorage.setItem('username', this.state.username);
+							localStorage.setItem('password', this.state.password);
+							console.log(this.state.username);
+							console.log(this.state.email);
+							console.log(this.state.password);
+						}).catch((error) => {
+							console.log(error)
+							this.state.username = "";
+							this.state.password = "";
+						});
+
 					this.setState({ redirect: "/dashboard" });
 				}
 			}).catch((error) => {
@@ -174,6 +194,25 @@ class Login extends Component {
 				//console.log(res.data)
 				if (res.data === "Successful Register" || 200) {
 					console.log(this.state.username);
+
+					axios.post('/api/user', userObject, options)
+						.then((res) => {
+							this.state.username = res.data[0];
+							this.state.email = res.data[1];
+							this.state.password = res.data[2];
+							localStorage.setItem('loggedIn', true);
+							localStorage.setItem('email', this.state.email);
+							localStorage.setItem('username', this.state.username);
+							localStorage.setItem('password', this.state.password);
+							console.log(this.state.username);
+							console.log(this.state.email);
+							console.log(this.state.password);
+						}).catch((error) => {
+							console.log(error)
+							this.state.username = "";
+							this.state.password = "";
+						});
+
 					this.setState({ redirect: "/dashboard" });
 				}
 				
@@ -196,14 +235,17 @@ class Login extends Component {
 		});
 	}
 	render() {
-		if (this.props.location.state.username !== "")
-		{
-			this.setState({
-			username: this.props.location.state.username,
-			email: this.props.location.state.email,
-			password: this.props.location.state.password,
-			})
-		}
+		try {
+			if(localStorage.getItem('username') !== null) {
+				this.setState({
+				username: localStorage.getItem('username'),
+				email: localStorage.getItem('email'),
+				password: localStorage.getItem('password'),
+				})
+			}
+		  } catch (e) {
+			
+		  }
 		if (this.state.redirect) {
 			return <Redirect to={{
 			  pathname: this.state.redirect,
