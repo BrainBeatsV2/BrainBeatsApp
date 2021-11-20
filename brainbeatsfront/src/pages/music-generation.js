@@ -307,12 +307,36 @@ class MusicGeneration extends Component {
             saveModalOpen: !this.state.saveModalOpen
         })
 
+        const options = {
+			headers: {
+				'Content-type': 'application/json; charset=utf-8'
+			}
+		};
+
+		const midiObject = {
+			email: this.state.email,
+            password: this.state.password,
+            midi_name: this.state.trackName,
+            midi_privacy: this.state.privacySettings,
+            midi_notes: ("Created by: " + this.state.username),
+		};
+
+        axios.post(('/api/midis/'+this.state.midiID+'/update'), midiObject, options)
+            .then((res) => {
+                if(res.data.message === "MIDI updated successfully!") {
+                    console.log("Successful MIDI updating");
+                    this.state.trackLink = this.state.trackLink + res.data.id;
+                    this.state.midiID = res.data.id;
+                    console.log(this.state.midiID);
+                }
+            }).catch((error) => {
+                console.log(error);
+            });
     }
     handleTrackName = (e) => {
         this.setState({ trackName: e.target.value });
     };
     componentDidMount() {
-        console.log(this.state.loggedin);
         try {
             if(localStorage.getItem('username') !== null) {
                 this.setState({
@@ -354,7 +378,6 @@ class MusicGeneration extends Component {
     changePrivacy = (e, { value }) => this.setState({ privacySettings: value });
 
     render() {
-        console.log(this.state.email);
         if (!isElectron()) {
             return <Redirect to={{
                 pathname: this.state.redirect,

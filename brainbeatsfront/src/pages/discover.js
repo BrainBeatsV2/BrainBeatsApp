@@ -4,6 +4,7 @@ import { Redirect } from "react-router-dom";
 import MidiTrack from '../components/MidiTrack/index'
 import logo from '../images/logo_dev.png'
 import Sidebar from '../components/Sidebar/index'
+import axios from 'axios';
 class Discover extends Component {
   constructor(props) {
     super(props);
@@ -20,7 +21,8 @@ class Discover extends Component {
       currentScale: '',
       currentBPM: '',
       playing: false,
-      loggedin:0
+      loggedin:0,
+      publicMidis: [],
     };
     this.onShowMenu = this.onShowMenu.bind(this);
     this.onHideMenu = this.onHideMenu.bind(this);
@@ -68,6 +70,32 @@ class Discover extends Component {
       this.setState({ redirect: "/" });
     }
   }
+
+  showPublicMIDIS = (e) => {
+
+    const options = {
+			headers: {
+				'Content-type': 'application/json; charset=utf-8'
+			}
+		};
+
+    const midiObject = {
+    };
+
+    axios.get('/api/midis/public', midiObject, options)
+            .then((res) => {
+                if(res.status == 200) {
+                    console.log("Getting public MIDIS");
+                    console.log(res.data);
+                    this.setState({publicMidis: res.data});
+                    console.log(this.state.publicMidis[0]);
+                    console.log(this.state.publicMidis[1]);
+                }
+            }).catch((error) => {
+                console.log(error);
+            });
+  }
+
   componentDidMount(){
     try {
       if(localStorage.getItem('username') !== null) {
@@ -100,6 +128,8 @@ class Discover extends Component {
       }}
     />
     }
+    if (this.state.publicMidis.length == 0) 
+      this.showPublicMIDIS();
     if (this.state.electron == null) {
       if (isElectron()) {
         this.setState({

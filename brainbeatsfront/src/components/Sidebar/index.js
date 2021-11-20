@@ -14,10 +14,8 @@ const Index = (props) => {
     try {
       if(localStorage.getItem('loggedIn')) {
         is_logged_in = true;
-        console.log("true!");
       } else {
         is_logged_in = false;
-        console.log("false!");
       }
     } catch (e) {
       
