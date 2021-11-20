@@ -199,7 +199,8 @@ class MusicGeneration extends Component {
         }
     }
     onLogout = (e) => {
-        e.preventDefault();
+        //e.preventDefault();
+        localStorage.clear();
         this.setState({
           username: '',
           password: '',
@@ -210,7 +211,7 @@ class MusicGeneration extends Component {
         } else {
           this.setState({ loggedin: 1 });
         }
-    
+        
       }
     updateRange() {
         console.log("updated")
@@ -311,6 +312,7 @@ class MusicGeneration extends Component {
         this.setState({ trackName: e.target.value });
     };
     componentDidMount() {
+        console.log(this.state.loggedin);
         try {
             if(localStorage.getItem('username') !== null) {
                 this.setState({
@@ -327,6 +329,7 @@ class MusicGeneration extends Component {
             }
           } catch (e) {
             this.setState({ loggedin: 1 });
+            console.log(e);
           }
         var player = document.querySelector("midi-player");
         if (player != null) {

@@ -159,13 +159,12 @@ class Login extends Component {
 							console.log(this.state.username);
 							console.log(this.state.email);
 							console.log(this.state.password);
+							this.setState({ redirect: "/dashboard" });
 						}).catch((error) => {
 							console.log(error)
 							this.state.username = "";
 							this.state.password = "";
 						});
-
-					this.setState({ redirect: "/dashboard" });
 				}
 			}).catch((error) => {
 				console.log(error)

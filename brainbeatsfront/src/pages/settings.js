@@ -38,18 +38,23 @@ class Settings extends Component {
     this.setState({playing:true})
   }
   onLogout = (e) => {
-    e.preventDefault();
+    //e.preventDefault();
+    localStorage.clear();
     this.setState({
       username: '',
       password: '',
       email: '',
     });
     if (isElectron()) {
+      this.setState({ loggedin: 0 });
+    } else {
+      this.setState({ loggedin: 1 });
+    }
+    if (isElectron()) {
       this.setState({ redirect: "/music-generation" });
     } else {
       this.setState({ redirect: "/" });
     }
-
   }
   componentDidMount(){
     try {
@@ -101,7 +106,8 @@ class Settings extends Component {
       <div class="music-generation-bg" style={{margin:'0'}}>
           <Sidebar 
             active="settings" 
-            is_shown="true" 
+            is_shown="true"
+            logout={this.onLogout}
             logged_in={this.state.loggedin}
             username={this.state.username}
             email={this.state.email}

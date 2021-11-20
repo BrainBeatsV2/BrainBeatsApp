@@ -11,6 +11,17 @@ const Index = (props) => {
     var username = props.username;
     var email = props.email;
     var password = props.password;
+    try {
+      if(localStorage.getItem('loggedIn')) {
+        is_logged_in = true;
+        console.log("true!");
+      } else {
+        is_logged_in = false;
+        console.log("false!");
+      }
+    } catch (e) {
+      
+    }
 return (<>
             <div  id="sidebar" class={props.music_generation ?  "hidden_sidebar": ""} style={{display: (is_shown ? "inline-block" : "none"), left: (is_shown ? "0" : "-1000px")}}>
             <img style={{height:'150px'}} src={logo} alt='logo' />
