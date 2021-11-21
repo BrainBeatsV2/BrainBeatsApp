@@ -20,14 +20,16 @@ class Discover extends Component {
       currentKey: '',
       currentScale: '',
       currentBPM: '',
+      rawMidiString: '',
       playing: false,
       loggedin:0,
       publicMidis: [],
     };
     this.onShowMenu = this.onShowMenu.bind(this);
     this.onHideMenu = this.onHideMenu.bind(this);
-
+    this.onDownloadMIDI = this.onDownloadMIDI.bind(this);
   }
+
   onShowMenu() {
     this.setState({
       showMenu: true
@@ -42,14 +44,14 @@ class Discover extends Component {
     console.log("playing");
     console.log(id);
     console.log(name);
-    this.setState({currentTrack: name, currentKey: key, currentScale: scale, currentBPM: bpm, playing: true})
+    this.setState({ currentTrack: name, currentKey: key, currentScale: scale, currentBPM: bpm, playing: true })
   }
   onStopPlaying = () => {
 
-    this.setState({playing:false})
+    this.setState({ playing: false })
   }
   onResumePlaying = () => {
-    this.setState({playing:true})
+    this.setState({ playing: true })
   }
   onLogout = (e) => {
     //e.preventDefault();
@@ -96,6 +98,7 @@ class Discover extends Component {
       });
   }
 
+
   componentDidMount() {
     try {
       if (localStorage.getItem('username') !== null) {
@@ -114,6 +117,12 @@ class Discover extends Component {
     } catch (e) {
       this.setState({ loggedin: 1 });
     }
+  }
+    
+
+  // Download midi file
+  onDownloadMIDI() {
+    window.ipcRenderer.send('download_midi_file', this.state.rawMidiString);
   }
 
   render() {
@@ -145,6 +154,7 @@ class Discover extends Component {
 
 
 
+
       <div class="music-generation-bg" style={{margin:'0'}}>
           <Sidebar 
             active="discover" 
@@ -163,12 +173,13 @@ class Discover extends Component {
               ))}
             </div>
           </div>
+        
 
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
 
-        
 
-        
+
+
 
         <div id="stream-bar">
           <div class="column" style={{ width: '10%' }}>

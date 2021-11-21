@@ -1,35 +1,40 @@
+// import axios from 'axios';
+var axios = require('axios');
 var MidiWriter = require('midi-writer-js')
 const fs = require('fs');
+const serverPath = 'http://143.198.6.2:5000';
+const localPath = 'http://172.20.249.73:5000';
+const lstmPath = localPath;
 
 const brainwaves = ['delta', 'theta', 'alpha', 'beta', 'gamma'];
-// const commonNoteGroupings = [1, 2, 3, 4, 6, 8]; // These are hardcoded values pls don't change
-// const commonNoteDurations = ['2', '4', '8', '8t', '16', '16t'];  // These are hardcoded values pls don't change
 const commonNoteGroupings = [6, 3, 1, 2, 4]; // Ideally keep to five or more
 const commonNoteDurations = ['1', '2', '4', '8', '16']; // Ideally keep to five or more
-
 const DEBUG = false;
 
-// TODO: Mean aggregate of the EEG data
-
-function musicGenerationDriver(musicGenerationModel, scaleNoteArray, octaveArray, eegDataPoint, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, scaleMap) {
+function musicGenerationDriver(eegDataQueue, musicGenerationModel, scaleArray, scaleMap, octaveRangeArray, totalSeconds, secondsPerEEGSnapShot, noteDurationsPerBeatPerSecond, instrument_num) {
     track = new MidiWriter.Track();
-    console.log("musicGenerationDriver, model: " + musicGenerationModel + " scales: " + scaleNoteArray + " octaveArray: " + octaveArray + " secondsPerEEGSnapShot: " + secondsPerEEGSnapShot + " noteDurationsPerBeatPerSecond: ");
-    console.log(eegDataPoint['band_values']);
+    console.log("musicGenerationDriver, model: " + musicGenerationModel + " scales: " + scaleArray + " octaveRangeArray: " + octaveRangeArray + " totalSeconds: " + totalSeconds);
 
     if (musicGenerationModel == 1) {
-        // TODO: Stretch goal: Should this handle loudness?
-        track = mapAggregateBandPowerToRandomProbability(track, eegDataPoint, scaleNoteArray, octaveArray, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot);
+        // TODO: Move this into mapAggregateBandPowerToRandomProbability 
+        for (let i = 0; i < eegDataQueue.length; i++) {
+            track = mapAggregateBandPowerToRandomProbability(track, eegDataQueue[i], scaleArray, octaveRangeArray, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot);
+        }
     } else if (musicGenerationModel == 2) {
-        // track = buildMarkovModel(track, eegDataPoint, scaleNoteArray, octaveArray, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot);
+        track = buildMarkovModel(track, eegDataQueue, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot);
     } else if (musicGenerationModel == 3) {
-        track = musicGenModel3(track, eegDataPoint, scaleNoteArray, octaveArray, secondsPerEEGSnapShot, noteDurationsPerBeatPerSecond);
+        track = musicGenModel3(track, eegDataQueue, scaleArray, octaveRangeArray, secondsPerEEGSnapShot, noteDurationsPerBeatPerSecond);
     } else {
-        noteEvents = createNotes(secondsPerEEGSnapShot, scaleMap);
+        noteEvents = createNotes(totalSeconds, scaleMap);
         track = addNotesToTrack(track, noteEvents);
     }
 
+    track.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: instrument_num }));
+
     return track;
 }
+
+
 
 function buildMarkovModel(track, eegDataQueue, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot) {
     console.log("Music Generation Model 2: Blues Markov Chain");
@@ -54,10 +59,10 @@ function buildMarkovModel(track, eegDataQueue, noteDurationsPerBeatPerSecond, se
 // Markov chain-based blues composition
 function getMarkovBluesModelNotes(noteEvents, eegDataPoint, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, durationRanges, groupingsRanges) {
     console.log("Beginning markov model");
-    
+
     // 1. Determine the shortest note we can generate
     var shortestNoteCombo = getSecondsForNote('16', 3, noteDurationsPerBeatPerSecond);
-    
+
     while (secondsPerEEGSnapShot > 0 && secondsPerEEGSnapShot > shortestNoteCombo) {
         // 2. Determine the random outcomes for the duration & groupings
         /*
@@ -76,9 +81,9 @@ function getMarkovBluesModelNotes(noteEvents, eegDataPoint, noteDurationsPerBeat
         // 4a. If the note duration & grouping is shorter than how many seconds this snapshot needs to produce, then add the notes and update the time!
 
         /* This is where the magic happens... */
-        if (currentSeconds <= secondsPerEEGSnapShot) {
+        if (currentSeconds > 0 && currentSeconds <= secondsPerEEGSnapShot) {
             noteEvents.push(new MidiWriter.NoteEvent({
-                pitch: getNextMarkovNote(noteEvents, eegDataPoint),  
+                pitch: getNextMarkovNote(noteEvents, eegDataPoint),
                 duration: curDurationOutcome.toString(),
                 repeat: Number(curGroupingOutcome),
             }));
@@ -88,7 +93,7 @@ function getMarkovBluesModelNotes(noteEvents, eegDataPoint, noteDurationsPerBeat
         // 4b. If currentSeconds is greater than remaining secondsPerEEGSnapShot but they are within 1 second of each other, just go with the note and update the time!
         if (currentSeconds > secondsPerEEGSnapShot && (currentSeconds - secondsPerEEGSnapShot) <= 1) {
             noteEvents.push(new MidiWriter.NoteEvent({
-                pitch: getNextMarkovNote(noteEvents, eegDataPoint),  
+                pitch: getNextMarkovNote(noteEvents, eegDataPoint),
                 duration: curDurationOutcome.toString(),
                 repeat: Number(curGroupingOutcome),
             }));
@@ -99,7 +104,7 @@ function getMarkovBluesModelNotes(noteEvents, eegDataPoint, noteDurationsPerBeat
         // 4c. If we are very close to the shortestNoteCombo we can make, just make that note and end it!
         if (secondsPerEEGSnapShot <= shortestNoteCombo * 1.5) {
             noteEvents.push(new MidiWriter.NoteEvent({
-                pitch: getNextMarkovNote(noteEvents, eegDataPoint),  
+                pitch: getNextMarkovNote(noteEvents, eegDataPoint),
                 duration: curDurationOutcome.toString(),
                 repeat: 1,
             }));
@@ -112,23 +117,23 @@ function getMarkovBluesModelNotes(noteEvents, eegDataPoint, noteDurationsPerBeat
 
 function getNextMarkovNote(noteEvents, eegDataPoint) {
     var bluesScale = ["C3", "Eb3", "F3", "F#3", "G3", "Bb3", "C4", "Eb4", "F4", "F#4", "G4", "Bb4", "C5"];
-    
+
     var lastNote;
-    
+
     if (noteEvents.length == 0) {
         lastNote = "C3";
     } else {
         lastNote = noteEvents.at(-1)['pitch'][0];
     }
-    
+
     var lastNoteIndex = bluesScale.indexOf(lastNote);
-    
-    var nextNote; 
-    var nextNoteIndex; 
+
+    var nextNote;
+    var nextNoteIndex;
     var selector;
-    
+
     var alpha = eegDataPoint['band_values']['alpha'];
-    
+
     if (alpha < 93) {
         selector = 1;
     } else if (alpha < 93.5) {
@@ -142,20 +147,20 @@ function getNextMarkovNote(noteEvents, eegDataPoint) {
     } else {
         selector = 6;
     }
-    
-    
+
+
     if (selector == 1) {
         nextNoteIndex = lastNoteIndex + 1;
     } else if (selector == 2) {
         nextNoteIndex = lastNoteIndex + 2;
     } else if (selector == 3) {
-        nextNoteIndex = lastNoteIndex + 4; 
+        nextNoteIndex = lastNoteIndex + 4;
     } else if (selector == 4) {
-        nextNoteIndex = lastNoteIndex + 6; 
+        nextNoteIndex = lastNoteIndex + 6;
     } else if (selector == 5) {
         nextNoteIndex = lastNoteIndex - 2;
     } else if (selector == 6) {
-        nextNoteIndex = lastNoteIndex - 4; 
+        nextNoteIndex = lastNoteIndex - 4;
     }
 
     if (nextNoteIndex > bluesScale.length) {
@@ -166,9 +171,159 @@ function getNextMarkovNote(noteEvents, eegDataPoint) {
     return [nextNote];
 }
 
+async function lstmDriver(track, eegDataQueue, scaleNoteArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond, instrument_num) {
+    let outputTrack;
+    console.log("Music Generation Model 4: LSTM");
+    try {
+        // 1. Collect the predictions from the LSTM
+        var scaleLen = scaleNoteArray.length;
+        var octaveLen = octaveRangeArray.length;
+        var lstmInput = getLSTMInput(eegDataQueue, scaleLen, octaveLen);
+        let updatedTrack = await getLSTMPrediction(track, lstmInput, scaleNoteArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond, instrument_num)
+            .then((result) => {
+                outputTrack = result;
+            });
+    } catch (e) {
+        console.log("that failed", e);
+    }
+
+    return outputTrack;
+}
+
+function getLSTMInput(eegDataQueue, NumNotesInScale, NumOctaves) {
+    // TODO: Remove this once the model has been updated!!
+    LastNoteIndex = 0;
+
+    lstmInput = [];
+    for (let i = 0; i < eegDataQueue.length; i++) {
+        var curBandValues = eegDataQueue[i]['band_values'];
+        var brainwaveData = '' + curBandValues['delta'] + ',' + curBandValues['theta'] + ',' + curBandValues['alpha'] + ',' + curBandValues['beta'] + ',' + curBandValues['gamma'] + ',';
+        var musicData = '' + NumNotesInScale + ',' + NumOctaves + ',' + LastNoteIndex;
+
+        // If it's not the last entry, append for to show that more are coming
+        if (i != eegDataQueue.length - 1) {
+            musicData = musicData + '_';
+        }
+
+        lstmInput.push(brainwaveData + musicData);
+    }
+
+    return lstmInput.toString();
+}
+
+async function getLSTMPrediction(track, lstmInput, scaleNoteArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond, instrument_num) {
+    let output;
+
+    try {
+        await axios.post(lstmPath + '/predict', { input: lstmInput })
+            .then((res) => {
+                if (res.status == 200) {
+                    console.log("RES DATA[output]: " + res.data['output']);
+                    lstmPredictions = res.data['output'];
+                    console.log("predictions:")
+                    console.log(lstmPredictions);
+                    finalNotes = getNotesFromLSTMPredictions(lstmPredictions, scaleNoteArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond);
+                    track = addNotesToTrack(track, finalNotes);
+                    track.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: instrument_num }));
+                    output = track;
+                }
+            }).catch((error) => {
+                console.log(error)
+            });
+    } catch (e) {
+        console.log("that failed", e);
+    }
+
+    return output;
+}
+
+function getNotesFromLSTMPredictions(lstmPredictions, scaleNoteArray, octaveArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond) {
+    console.log("getNotesFromLSTMPredictions lstmPredictions: ");
+    console.log(lstmPredictions);
+
+    // 1. Determine the shortest note we can generate
+    var shortestNoteCombo = getSecondsForNote('16', 3, noteDurationsPerBeatPerSecond);
+    var totalPredictions = lstmPredictions.length;
+    console.log("shortestNoteCombo " + shortestNoteCombo + " ,totalPredictions: " + totalPredictions);
+
+    // Build notes, save how long the notes last, until there are no more seconds or can't make even the shortest note combo:
+    var noteEvents = [];
+    var curlstmPredictionsIndex = 0;
+    while (totalSeconds > 0 && totalSeconds > shortestNoteCombo) {
+
+        // 1. Grab the current prediction: Note the % (totalPredictions - 1) is a safety check due to the increasing nature
+        var safetyIndex = curlstmPredictionsIndex % totalPredictions;
+        // todo maybe rename this to curPrediction instead?
+        var curPrediction = lstmPredictions[safetyIndex];
+
+        // 2. Determine the current predicted outcome for duration & groupings
+        var curDurationOutcome = getPredictedOutcome(curPrediction, commonNoteDurations);
+        var curGroupingOutcome = getPredictedOutcome(curPrediction, commonNoteGroupings);
+
+        // 3. Determine the amount of seconds for the note duration and grouping produced. 
+        var currentSeconds = getSecondsForNote(curDurationOutcome, curGroupingOutcome, noteDurationsPerBeatPerSecond);
+        console.log("currentSeconds: " + currentSeconds);
+
+        // 4. Build the Notes: 
+        // 4a. If the note duration & grouping is shorter than how many seconds this snapshot needs to produce, then add the notes and update the time!
+        if (currentSeconds > 0 && currentSeconds <= totalSeconds) {
+            noteEvents.push(new MidiWriter.NoteEvent({
+                pitch: getPredictedNote(curPrediction, scaleNoteArray, octaveArray),
+                duration: curDurationOutcome.toString(),
+                repeat: Number(curGroupingOutcome),
+            }));
+            totalSeconds -= currentSeconds;
+        }
+
+        // 4b. If currentSeconds is greater than remaining totalSeconds but they are within 1 second of each other, just go with the note and update the time!
+        if (currentSeconds > 0 && currentSeconds > totalSeconds && (currentSeconds - totalSeconds) <= 1) {
+            noteEvents.push(new MidiWriter.NoteEvent({
+                pitch: getPredictedNote(curPrediction, scaleNoteArray, octaveArray),
+                duration: curDurationOutcome.toString(),
+                repeat: Number(curGroupingOutcome),
+            }));
+            totalSeconds -= currentSeconds;
+            totalSeconds = totalSeconds > 0 ? totalSeconds : 0;
+        }
+
+        // 4c. If we are very close to the shortestNoteCombo we can make, just make that note and end it!
+        if (currentSeconds > 0 && totalSeconds <= shortestNoteCombo * 4) {
+            noteEvents.push(new MidiWriter.NoteEvent({
+                pitch: getPredictedNote(curPrediction, scaleNoteArray, octaveArray),
+                duration: '16'.toString(),
+                repeat: 3,
+            }));
+            totalSeconds = 0;
+        }
+
+        curlstmPredictionsIndex++;
+    }
+
+    return noteEvents;
+}
+
+function getPredictedOutcome(predictedIndex, outcomes) {
+    var index = predictedIndex % outcomes.length;
+    return outcomes[index];
+}
+
+function getPredictedNote(prediction, scaleNoteArray, octaveArray) {
+    var totalOctaves = octaveArray.length;
+    var sizeOfScale = scaleNoteArray.length / totalOctaves;
+
+    // Pick a note & octave within range of amount of different letter notes & octaves
+    var notePredictionIndex = prediction % (sizeOfScale - 1);
+    var octavePredictionRow = prediction % totalOctaves;
+
+    // Determine the note within the scaleNoteArray (includes both notes & octaves)
+    // subtract octave modifier to put it back to zero index since x^0 = 1
+    var scaleNotePredictedIndex = [notePredictionIndex + ((sizeOfScale ^ octavePredictionRow) - 1)] % scaleNoteArray.length;
+
+    return scaleNoteArray[scaleNotePredictedIndex];
+}
 
 function mapAggregateBandPowerToRandomProbability(track, eegDataPoint, scaleNoteArray, octaveArray, noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot) {
-    console.log("Music Generation Model 1: Map Aggregate Band Power To Random Probability");
+    console.log("Music Gen Model 1, scales: " + scaleNoteArray + " octaveArray: " + octaveArray + " totalSeconds: " + secondsPerEEGSnapShot + " noteDurationsPerBeatPerSecond: " + noteDurationsPerBeatPerSecond);
 
     // 1. Calculate percents and determine outcome ranges for each component of what makes a note!
     var durationRanges = getOutcomeRanges(eegDataPoint, commonNoteDurations);
@@ -185,31 +340,32 @@ function mapAggregateBandPowerToRandomProbability(track, eegDataPoint, scaleNote
     return track;
 }
 
-function musicGenModel3(track, eegDataPoint, scaleArray, octaveArray, secondsPerEEGSnapShot, noteDurationsPerBeatPerSecond)
-{
+function musicGenModel3(track, eegDataPoint, scaleArray, octaveArray, secondsPerEEGSnapShot, noteDurationsPerBeatPerSecond) {
+    console.log("Music Gen Model 3, scales: " + scaleArray + " octaveArray: " + octaveArray + " totalSeconds: " + secondsPerEEGSnapShot + " noteDurationsPerBeatPerSecond: " + noteDurationsPerBeatPerSecond);
     var noteEvents = [];
     var scale = [];
     var minPitch = octaveArray[0];
-    var maxPitch = octaveArray[octaveArray.length-1];
-    var possibleVelocities = [25,30,35,40,45,50,55,60,65,70,75];
+    var maxPitch = octaveArray[octaveArray.length - 1];
+    var possibleVelocities = [25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75];
     var possibleDurations = ['1', '2', '4', '8', '16'];
-
+    console.log("scaleArray[0]: " + scaleArray[0]);
     // Getting just the scale without pitches
     // Ex: c d e f g a b
-    var firstNote = scaleArray[0].substring(0,1);
+    var firstNote = String(scaleArray[0]).substring(0, 1);
     scale.push(firstNote);
-    var scaleArrayIndex = 1;
-    while (scaleArray[scaleArrayIndex].substring(0,1) !== firstNote)
-    {
-      scale.push(scaleArray[scaleArrayIndex].substring(0,1));
-      scaleArrayIndex++;
+
+    var numNotesInScale = scaleArray.len / octaveArray.len;
+    for (let scaleArrayIndex = 0; scaleArrayIndex < numNotesInScale; scaleArrayIndex++) {
+        currentNote = String(scaleArray[scaleArrayIndex]).substring(0, 1);
+        console.log(currentNote);
+        scale.push(currentNote);
     }
 
     // Starting indices for parameters
     var currentVelocityIndex = 5;
-    var currentPitchIndex = Math.floor(octaveArray.length/2);
+    var currentPitchIndex = Math.floor(octaveArray.length / 2);
     var currentDurationIndex = 2;
-    var currentNoteIndex = Math.floor(scale.length/2);
+    var currentNoteIndex = Math.floor(scale.length / 2);
 
     // Previous ratio values for parameters
     var previousVelocityRatio = -1;
@@ -219,45 +375,44 @@ function musicGenModel3(track, eegDataPoint, scaleArray, octaveArray, secondsPer
 
     var avgSecondsPerSnapshot = secondsPerEEGSnapShot;
 
-    for(let i = 0; i < eegDataPoint.length; i++)
-    {
+    for (let i = 0; i < eegDataPoint.length; i++) {
         secondsPerEEGSnapShot = avgSecondsPerSnapshot;
-        while (secondsPerEEGSnapShot > 0)
-        {
+        while (secondsPerEEGSnapShot > 0) {
             // Initialize previous ratio values
-            if (previousVelocityRatio === -1 && previousPitchRatio === -1 && previousDurationRatio === -1 && previousNoteRatio === -1)
-            {
+            if (previousVelocityRatio === -1 && previousPitchRatio === -1 && previousDurationRatio === -1 && previousNoteRatio === -1) {
                 previousNoteRatio = getPowerRatio("first", eegDataPoint[i]);
                 previousPitchRatio = getPowerRatio("second", eegDataPoint[i]);
                 previousVelocityRatio = getPowerRatio("third", eegDataPoint[i]);
                 previousDurationRatio = getPowerRatio("fourth", eegDataPoint[i]);
-            
+
 
                 // Update Time
                 var currentSeconds = getSecondsForNote(possibleDurations[currentDurationIndex], 1, noteDurationsPerBeatPerSecond);
-                secondsPerEEGSnapShot =- currentSeconds;
+                secondsPerEEGSnapShot = - currentSeconds;
 
-                noteEvents.push(new MidiWriter.NoteEvent( {
-                pitch : (scale[currentNoteIndex] + octaveArray[currentPitchIndex]),
-                duration : possibleDurations[currentDurationIndex],
-                velocity : possibleVelocities[currentVelocityIndex],
-                }));
+                if (currentSeconds > 0) {
+                    noteEvents.push(new MidiWriter.NoteEvent({
+                        pitch: (scale[currentNoteIndex] + octaveArray[currentPitchIndex]),
+                        duration: possibleDurations[currentDurationIndex],
+                        velocity: possibleVelocities[currentVelocityIndex],
+                    }));
+                }
             }
             // Determine all parameters and create a note event
-            currentNoteIndex = determineNote(eegDataPoint[i], previousNoteRatio, scale.length-1, currentNoteIndex);
-            currentPitchIndex = determinePitch(eegDataPoint[i], previousPitchRatio, octaveArray.length-1, currentPitchIndex);
-            currentVelocityIndex = determineVelocity(eegDataPoint[i], previousVelocityRatio, possibleVelocities.length-1, currentVelocityIndex);
-            currentDurationIndex = determineDuration(eegDataPoint[i], previousDurationRatio, possibleDurations.length-1, currentDurationIndex);
+            currentNoteIndex = determineNote(eegDataPoint[i], previousNoteRatio, scale.length - 1, currentNoteIndex);
+            currentPitchIndex = determinePitch(eegDataPoint[i], previousPitchRatio, octaveArray.length - 1, currentPitchIndex);
+            currentVelocityIndex = determineVelocity(eegDataPoint[i], previousVelocityRatio, possibleVelocities.length - 1, currentVelocityIndex);
+            currentDurationIndex = determineDuration(eegDataPoint[i], previousDurationRatio, possibleDurations.length - 1, currentDurationIndex);
             // console.log(previousNoteRatio + " " + previousPitchRatio + " " + previousVelocityRatio + " " + previousDurationRatio);
-            noteEvents.push(new MidiWriter.NoteEvent( {
-                pitch : (scale[currentNoteIndex] + octaveArray[currentPitchIndex]),
-                duration : possibleDurations[currentDurationIndex],
-                velocity : possibleVelocities[currentVelocityIndex],
+            noteEvents.push(new MidiWriter.NoteEvent({
+                pitch: (scale[currentNoteIndex] + octaveArray[currentPitchIndex]),
+                duration: possibleDurations[currentDurationIndex],
+                velocity: possibleVelocities[currentVelocityIndex],
             }));
 
             // Update Time
             var currentSeconds = getSecondsForNote(possibleDurations[currentDurationIndex], 1, noteDurationsPerBeatPerSecond);
-            secondsPerEEGSnapShot =- currentSeconds;
+            secondsPerEEGSnapShot = - currentSeconds;
 
             // Update old ratios
             previousNoteRatio = getPowerRatio("first", eegDataPoint[i]);
@@ -274,76 +429,63 @@ function musicGenModel3(track, eegDataPoint, scaleArray, octaveArray, secondsPer
 
 
 // Function to create notes based on one channels relaxation and concentration percentages
-function determineNote(eegDataPoint, previousPowerRatio, maxNoteIndex, previousIndex)
-{
+function determineNote(eegDataPoint, previousPowerRatio, maxNoteIndex, previousIndex) {
     var powerRatio = getPowerRatio("first", eegDataPoint);
     var noteIndex = previousIndex;
-    if (powerRatio > previousPowerRatio && previousIndex !== maxNoteIndex)
-  {
-    noteIndex++;
-  } else if(powerRatio < previousPowerRatio && previousIndex !== 0)
-  {
-    noteIndex--;
-  }
-  return noteIndex;
+    if (powerRatio > previousPowerRatio && previousIndex !== maxNoteIndex) {
+        noteIndex++;
+    } else if (powerRatio < previousPowerRatio && previousIndex !== 0) {
+        noteIndex--;
+    }
+    return noteIndex;
 }
 
-function determinePitch(eegDataPoint, previousPowerRatio, maxPitchIndex, previousIndex)
-{
-  var powerRatio = getPowerRatio("second", eegDataPoint);
-  var pitchIndex = previousIndex;
-  if (powerRatio > previousPowerRatio && previousIndex !== maxPitchIndex)
-  {
-    pitchIndex++;
-  } else if(powerRatio < previousPowerRatio && previousIndex !== 0)
-  {
-    pitchIndex--;
-  }
-  return pitchIndex;
+function determinePitch(eegDataPoint, previousPowerRatio, maxPitchIndex, previousIndex) {
+    var powerRatio = getPowerRatio("second", eegDataPoint);
+    var pitchIndex = previousIndex;
+    if (powerRatio > previousPowerRatio && previousIndex !== maxPitchIndex) {
+        pitchIndex++;
+    } else if (powerRatio < previousPowerRatio && previousIndex !== 0) {
+        pitchIndex--;
+    }
+    return pitchIndex;
 }
 
-function determineVelocity(eegDataPoint, previousPowerRatio, maxVelocityIndex, previousIndex)
-{
-  var powerRatio = getPowerRatio("third", eegDataPoint);
-  var velocityIndex = previousIndex;
-  if (powerRatio > previousPowerRatio && previousIndex !== maxVelocityIndex)
-  {
-    velocityIndex++;
-  } else if(powerRatio < previousPowerRatio && previousIndex !== 0)
-  {
-    velocityIndex--;
-  }
-  return velocityIndex;
+function determineVelocity(eegDataPoint, previousPowerRatio, maxVelocityIndex, previousIndex) {
+    var powerRatio = getPowerRatio("third", eegDataPoint);
+    var velocityIndex = previousIndex;
+    if (powerRatio > previousPowerRatio && previousIndex !== maxVelocityIndex) {
+        velocityIndex++;
+    } else if (powerRatio < previousPowerRatio && previousIndex !== 0) {
+        velocityIndex--;
+    }
+    return velocityIndex;
 }
 
-function determineDuration(eegDataPoint, previousPowerRatio, maxDurationIndex, previousIndex)
-{
-  var powerRatio = getPowerRatio("fourth", eegDataPoint);
-  var durationIndex = previousIndex;
-  if (powerRatio > previousPowerRatio && previousIndex !== maxDurationIndex)
-  {
-    durationIndex++;
-  } else if(powerRatio < previousPowerRatio && previousIndex !== 0)
-  {
-    durationIndex--;
-  }
-  return durationIndex;
+function determineDuration(eegDataPoint, previousPowerRatio, maxDurationIndex, previousIndex) {
+    var powerRatio = getPowerRatio("fourth", eegDataPoint);
+    var durationIndex = previousIndex;
+    if (powerRatio > previousPowerRatio && previousIndex !== maxDurationIndex) {
+        durationIndex++;
+    } else if (powerRatio < previousPowerRatio && previousIndex !== 0) {
+        durationIndex--;
+    }
+    return durationIndex;
 }
 
-function getPowerRatio(channel, eegDataPoint)
-{
-  var bandPowerValues = eegDataPoint[channel + '_values'];
-  var powerRatio = (bandPowerValues['gamma'] + bandPowerValues['beta']) / (bandPowerValues['delta'] + bandPowerValues['theta']);
-  return powerRatio;
+function getPowerRatio(channel, eegDataPoint) {
+    var bandPowerValues = eegDataPoint[channel + '_values'];
+    var powerRatio = (bandPowerValues['gamma'] + bandPowerValues['beta']) / (bandPowerValues['delta'] + bandPowerValues['theta']);
+    return powerRatio;
 }
 
-function getRandomFinalNotesBasedOnTime(noteDurationsPerBeatPerSecond, secondsPerEEGSnapShot, durationRanges, groupingsRanges, scaleNoteRanges, octaveRanges) {
+function getRandomFinalNotesBasedOnTime(noteDurationsPerBeatPerSecond, totalSeconds, durationRanges, groupingsRanges, scaleNoteRanges, octaveRanges) {
     // 1. Determine the shortest note we can generate
     var shortestNoteCombo = getSecondsForNote('16', 3, noteDurationsPerBeatPerSecond);
 
     // Build notes, save how long the notes last, until there are no more seconds or can't make even the shortest note combo:
     var noteEvents = [];
-    while (secondsPerEEGSnapShot > 0 && secondsPerEEGSnapShot > shortestNoteCombo) {
+    while (totalSeconds > 0 && totalSeconds > shortestNoteCombo) {
 
         // 2. Determine the random outcomes for the duration & groupings
         var randomNumber = getRandomTwoPlaceDecimalZeroThruHundred();
@@ -352,39 +494,39 @@ function getRandomFinalNotesBasedOnTime(noteDurationsPerBeatPerSecond, secondsPe
 
         // 3. Determine the amount of seconds for the note duration and grouping randomly produced. 
         var currentSeconds = getSecondsForNote(curDurationOutcome, curGroupingOutcome, noteDurationsPerBeatPerSecond);
-        console.log("Total sec: " + secondsPerEEGSnapShot + ", curSec " + currentSeconds + ", curDuration " + curDurationOutcome + ", curGrouping " + curGroupingOutcome);
+        console.log("Total sec: " + totalSeconds + ", curSec " + currentSeconds + ", curDuration " + curDurationOutcome + ", curGrouping " + curGroupingOutcome);
 
         // 4. Build the Notes: 
         // 4a. If the note duration & grouping is shorter than how many seconds this snapshot needs to produce, then add the notes and update the time!
-        if (currentSeconds <= secondsPerEEGSnapShot) {
+        if (currentSeconds > 0 && currentSeconds <= totalSeconds) {
 
             noteEvents.push(new MidiWriter.NoteEvent({
                 pitch: getRandomOutcome(randomNumber, scaleNoteRanges),
                 duration: curDurationOutcome.toString(),
                 repeat: Number(curGroupingOutcome),
             }));
-            secondsPerEEGSnapShot -= currentSeconds;
+            totalSeconds -= currentSeconds;
         }
 
-        // 4b. If currentSeconds is greater than remaining secondsPerEEGSnapShot but they are within 1 second of each other, just go with the note and update the time!
-        if (currentSeconds > secondsPerEEGSnapShot && (currentSeconds - secondsPerEEGSnapShot) <= 1) {
+        // 4b. If currentSeconds is greater than remaining totalSeconds but they are within 1 second of each other, just go with the note and update the time!
+        if (currentSeconds > 0 && currentSeconds > totalSeconds && (currentSeconds - totalSeconds) <= 1) {
             noteEvents.push(new MidiWriter.NoteEvent({
                 pitch: getRandomOutcome(randomNumber, scaleNoteRanges),
                 duration: curDurationOutcome.toString(),
                 repeat: Number(curGroupingOutcome),
             }));
-            secondsPerEEGSnapShot -= currentSeconds;
-            secondsPerEEGSnapShot = secondsPerEEGSnapShot > 0 ? secondsPerEEGSnapShot : 0;
+            totalSeconds -= currentSeconds;
+            totalSeconds = totalSeconds > 0 ? totalSeconds : 0;
         }
 
         // 4c. If we are very close to the shortestNoteCombo we can make, just make that note and end it!
-        if (secondsPerEEGSnapShot <= shortestNoteCombo * 1.5) {
+        if (currentSeconds > 0 && totalSeconds <= shortestNoteCombo * 1.5) {
             noteEvents.push(new MidiWriter.NoteEvent({
                 pitch: getRandomOutcome(randomNumber, scaleNoteRanges),
                 duration: '16'.toString(),
                 repeat: 3,
             }));
-            secondsPerEEGSnapShot = 0;
+            totalSeconds = 0;
         }
     }
 
@@ -392,10 +534,12 @@ function getRandomFinalNotesBasedOnTime(noteDurationsPerBeatPerSecond, secondsPe
 }
 
 function getSecondsForNote(curDuration, curGrouping, noteDurationsPerBeatPerSecond) {
+    console.log("getSecondsForNote, duration: " + curDuration + ", grouping: " + curGrouping);
+    if (curDuration == undefined || curGrouping == undefined) {
+        return 0;
+    }
+
     let curNoteDuration = noteDurationsPerBeatPerSecond.find(o => o.duration === curDuration);
-    console.log("Note duration: ");
-    console.log(curNoteDuration);
-    
     var curNoteDurationSec = curNoteDuration.seconds;
     return curNoteDurationSec * curGrouping;
 }
@@ -552,12 +696,6 @@ function getOutcomeRangesForFiveOutcomesOrGreater(eegData, outcomesArray) {
     }
 
     return brainwaveRangesToOutcomes;
-}
-
-function setInstrument(track, instrument_num) {
-    track.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: instrument_num }));
-    debug_print('Set instrument to track')
-    return track;
 }
 
 function getBeatsPerSec(bpm) {
@@ -779,19 +917,79 @@ function getMidiString(write) {
     return write.base64()
 }
 
-function writeMIDIfile(write) {
-    filename = Date.now()
+function createFileName() {
+    // Created all of these variables to make it easier to customize for future generations of Brain Beats
+    console.log("Creating file name for midi file");
+    var rawDateData = Date().toString().split(" ");
+    var fileExtension = ".mid";
+
+    // Grabs the date
+    var month = rawDateData[1];
+    var num_day = rawDateData[2];
+    var year = rawDateData[3];
+    var date = month + num_day + year;
+
+    // Builds the time
+    var timeArray = rawDateData[4].toString().split(":");
+    var hour = timeArray[0];
+    var minute = timeArray[1];
+    var seconds = timeArray[2];
+    var time = hour + minute + seconds;
+
+    // Build midi name template
+    var name = "beat_" + date + "_" + time;
+
+    try {
+        var pathToCheck = "./" + name + fileExtension;
+        var nameIndex = 1;
+
+        // Check to see if this file name is available 
+        if (fs.existsSync(pathToCheck)) {
+            pathToCheck = "./" + name + "_" + nameIndex + fileExtension;
+
+            // Keep hunting until we find the first avaliable name
+            while (fs.existsSync(pathToCheck)) {
+                nameIndex++;
+                pathToCheck = "./" + name + "_" + nameIndex + fileExtension;
+            }
+
+            // Update the name value to the available name
+            name = name + "_" + nameIndex;
+        }
+    } catch (err) {
+        console.log("Failed to determine an avaliable filename for midi file");
+        console.log(err);
+    }
+
+    return name + fileExtension;
+}
+
+function writeMIDIfileFromWriteObject(write) {
+    console.log("Writing MIDI file from midi-writer-js write object");
+    filename = createFileName();
+
     const buffer = new Buffer.from(write.buildFile());
-    debug_print(write.buildFile());
-    debug_print(buffer);
-    fs.writeFile(filename + '.mid', buffer, function (err) {
+    fs.writeFile(filename, buffer, function (err) {
         if (err) {
+            console.log("Failed to write the midi file from an midi-writer-js write object");
             console.log(err)
-            debug_print(err)
             throw err;
         }
     });
-    debug_print('MIDI file created')
+
+    console.log('MIDI file created');
+}
+
+function writeMIDIfileFromBase64String(midiBase64String) {
+    console.log("Writing MIDI file from base64 string");
+    filename = createFileName();
+    try {
+        fs.writeFileSync(filename, midiBase64String, { encoding: 'base64' });
+    } catch (err) {
+        console.log("Failed to write midi file from base64 string");
+        console.log(err);
+    }
+    console.log('MIDI file created');
 }
 
 function debug_print(string) {
@@ -815,16 +1013,17 @@ function getKeyByValue(object, value) {
 
 module.exports = {
     musicGenerationDriver: musicGenerationDriver,
-    setInstrument: setInstrument,
+    lstmDriver: lstmDriver,
     getScaleNotes: getScaleNotes,
     getScaleMap: getScaleMap,
     getOctaveRangeArray: getOctaveRangeArray,
     createNotes: createNotes,
     addNotesToTrack: addNotesToTrack,
     getMidiString: getMidiString,
-    writeMIDIfile: writeMIDIfile,
+    writeMIDIfileFromWriteObject: writeMIDIfileFromWriteObject,
+    writeMIDIfileFromBase64String: writeMIDIfileFromBase64String,
     getNoteDurationsPerBeatPerSecond: getNoteDurationsPerBeatPerSecond,
     roundTwoDecimalPoints: roundTwoDecimalPoints,
-    buildMarkovModel: buildMarkovModel, 
+    buildMarkovModel: buildMarkovModel,
 }
 

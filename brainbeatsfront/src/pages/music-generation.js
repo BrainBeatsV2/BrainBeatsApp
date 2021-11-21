@@ -41,6 +41,7 @@ class MusicGeneration extends Component {
             loggedin: 0,
             midiString: '',
             email: '',
+            rawMidiString: '',
             username: '',
             password: '',
             trackName: '',
@@ -67,7 +68,7 @@ class MusicGeneration extends Component {
         this.changeModel = this.changeModel.bind(this);
         this.changeKey = this.changeKey.bind(this);
         this.changeScale = this.changeScale.bind(this);
-        // this.onDownloadMIDI = this.onDownloadMIDI(this);
+        this.onDownloadMIDI = this.onDownloadMIDI.bind(this);
     }
     // Start MIDI Recording
     onStartRecording() {
@@ -114,11 +115,8 @@ class MusicGeneration extends Component {
             window.ipcRenderer.send('end_eeg_script', this.state.model, this.state.key, this.state.scale, this.state.minRange, this.state.maxRange, this.state.bpm, this.state.timing);
             window.ipcRenderer.on('end_eeg_script', (event, args) => {
                 console.log(args)
-                this.setState({ midiString: 'data:audio/midi;base64,' + args })
-                // this.player.load(args)
-                //this.player.play() 
-
-                window.ipcRenderer.send('gen_midi');
+                this.setState({ midiString: 'data:audio/midi;base64,' + args });
+                this.setState({ rawMidiString: args });
             })
         }
         this.setState({ isEEGScriptRunning: !this.state.isEEGScriptRunning })
@@ -199,20 +197,19 @@ class MusicGeneration extends Component {
         }
     }
     onLogout = (e) => {
-        //e.preventDefault();
         localStorage.clear();
         this.setState({
-          username: '',
-          password: '',
-          email: '',
+            username: '',
+            password: '',
+            email: '',
         });
         if (isElectron()) {
-          this.setState({ loggedin: 0 });
+            this.setState({ loggedin: 0 });
         } else {
-          this.setState({ loggedin: 1 });
+            this.setState({ loggedin: 1 });
         }
-        
       }
+
     updateRange() {
         console.log("updated")
     }
@@ -291,14 +288,10 @@ class MusicGeneration extends Component {
     }
     // Radio Button privacy settings switch
 
-    // Started download function!
-    // onDownloadMIDI() {
-    //     this.setState({
-    //         downloadMIDI: true
-    //     })
-
-    //     window.ipcRenderer.send('download_midi');
-    // }
+    // Download midi file
+    onDownloadMIDI() {
+        window.ipcRenderer.send('download_midi_file', this.state.rawMidiString);
+    }
 
     // Save Settings Button
     onChangeTrackSettings() {
@@ -409,7 +402,7 @@ class MusicGeneration extends Component {
 
 
                 </Dimmer.Dimmable>
-                <div class="fade-bg" onMouseEnter={this.onHideMenu} style={{display: (this.state.showMenu)? "block": "none"}}></div>
+                <div class="fade-bg" onMouseEnter={this.onHideMenu} style={{ display: (this.state.showMenu) ? "block" : "none" }}></div>
                 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
                 <script src="https://cdn.jsdelivr.net/combine/npm/tone@14.7.58,npm/@magenta/music@1.22.1/es6/core.js,npm/focus-visible@5,npm/html-midi-player@1.4.0"></script>
 
@@ -436,7 +429,7 @@ class MusicGeneration extends Component {
                 <br />
                 <br />
                 <br />
-                <div id="stream-bar" style={{position: (this.state.showMenu) ? "absolute": "fixed"}}>
+                <div id="stream-bar" style={{ position: (this.state.showMenu) ? "absolute" : "fixed" }}>
                     <div class="column">
                         <div id="rerecord" style={{ display: this.state.saveOptions ? 'inline-block' : 'none' }}>
 
@@ -464,7 +457,7 @@ class MusicGeneration extends Component {
                                 </tr>
                                 <tr>
                                     <td>
-                                        <select id="parameter_model" disabled={this.state.recording} value={this.state.model} onChange={this.changeModel}> 
+                                        <select id="parameter_model" disabled={this.state.recording} value={this.state.model} onChange={this.changeModel}>
                                             <option value="1">Model 1</option>
                                             <option value="2">Model 2</option>
                                             <option value="3">Model 3</option>
@@ -509,7 +502,7 @@ class MusicGeneration extends Component {
                             <table class="save_options">
                                 <tr>
 
-                                    <td><i class="material-icons">file_download</i></td>
+                                    <td><i class="material-icons test" onClick={this.onDownloadMIDI}>file_download</i></td>
                                     <td style={{ display: (this.state.saved || !this.state.loggedin) ? 'none' : 'block' }}><i class="material-icons" onClick={this.onSaveRecording} >cloud_upload</i></td>
                                     <Modal
                                         onClose={this.setOpen}
@@ -548,7 +541,7 @@ class MusicGeneration extends Component {
                                 </tr>
                                 <tr>
 
-                                    <th>Download MIDI</th>
+                                    <th>Download MIDI </th> {/* TODO: This needs to be made a button, putting this here for now?   */}
                                     <th style={{ display: (this.state.saved || !this.state.loggedin) ? 'none' : 'block' }}>Save and Upload</th>
                                     <th style={{ display: this.state.saved ? 'block' : 'none' }}>Share</th>
                                 </tr>

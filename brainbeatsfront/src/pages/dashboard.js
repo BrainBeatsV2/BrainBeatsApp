@@ -20,24 +20,26 @@ class Dashboard extends Component {
       currentKey: '',
       currentScale: '',
       currentBPM: '',
+      rawMidiString: '',
       playing: false,
       loggedin: 0,
       myMidis: [],
     };
+    this.onDownloadMIDI = this.onDownloadMIDI.bind(this);
   }
 
   onStartPlaying = (id, name, key, scale, bpm) => {
     console.log("playing");
     console.log(id);
     console.log(name);
-    this.setState({currentTrack: name, currentKey: key, currentScale: scale, currentBPM: bpm, playing: true})
+    this.setState({ currentTrack: name, currentKey: key, currentScale: scale, currentBPM: bpm, playing: true })
   }
   onStopPlaying = () => {
 
-    this.setState({playing:false})
+    this.setState({ playing: false })
   }
   onResumePlaying = () => {
-    this.setState({playing:true})
+    this.setState({ playing: true })
   }
   onLogout = (e) => {
     //e.preventDefault();
@@ -89,6 +91,7 @@ class Dashboard extends Component {
     }
   }
 
+
   componentDidMount(){
     try {
       if(localStorage.getItem('username') !== null) {
@@ -108,8 +111,13 @@ class Dashboard extends Component {
     } catch (e) {
       this.setState({ loggedin: 1 });
       console.log(e);
-    }
   }
+    
+  // Download midi file
+  onDownloadMIDI() {
+    window.ipcRenderer.send('download_midi_file', this.state.rawMidiString);
+  }
+ 
 
   
 
@@ -143,6 +151,7 @@ class Dashboard extends Component {
 
 
 
+
       <div class="music-generation-bg" style={{margin:'0'}}>
           <Sidebar 
             active="dashboard" 
@@ -165,9 +174,9 @@ class Dashboard extends Component {
 
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
 
-        
 
-        
+
+
 
         <div id="stream-bar">
           <div class="column" style={{ width: '10%' }}>

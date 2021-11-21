@@ -4,6 +4,8 @@ import { Redirect } from "react-router-dom";
 import MidiTrack from '../components/MidiTrack/index'
 import logo from '../images/logo_dev.png'
 import Sidebar from '../components/Sidebar/index'
+
+
 class Play extends Component {
   constructor(props) {
     super(props);
@@ -19,26 +21,29 @@ class Play extends Component {
       currentKey: '',
       currentScale: '',
       currentBPM: '',
+      rawMidiString: '',
       playing: false,
       loggedin: 0
     };
+
+    this.onDownloadMIDI = this.onDownloadMIDI.bind(this);
   }
 
   onStartPlaying = (id, name, key, scale, bpm) => {
     console.log("playing");
     console.log(id);
     console.log(name);
-    this.setState({currentTrack: name, currentKey: key, currentScale: scale, currentBPM: bpm, playing: true})
+    this.setState({ currentTrack: name, currentKey: key, currentScale: scale, currentBPM: bpm, playing: true })
   }
   onStopPlaying = () => {
 
-    this.setState({playing:false})
+    this.setState({ playing: false })
   }
   onResumePlaying = () => {
-    this.setState({playing:true})
+    this.setState({ playing: true })
   }
+
   onLogout = (e) => {
-    //e.preventDefault();
     localStorage.clear();
     this.setState({
       username: '',
@@ -56,7 +61,14 @@ class Play extends Component {
       this.setState({ redirect: "/" });
     }
   }
-  componentDidMount(){
+    // Download midi file
+  // TODO: Needs a button (onClick)
+  // TODO: Need to contact the DB 
+  onDownloadMIDI() {
+    window.ipcRenderer.send('download_midi_file', this.state.rawMidiString);
+  }
+
+   componentDidMount(){
     try {
       if(localStorage.getItem('username') !== null) {
 				this.setState({
@@ -104,6 +116,7 @@ class Play extends Component {
 
 
 
+
       <div class="music-generation-bg" style={{margin:'0'}}>
           <Sidebar 
             active="play" 
@@ -144,37 +157,37 @@ class Play extends Component {
               </tr>
             </table>
             <br />
+              <h3>Info</h3>
+              <table style={{ width: '50%', textAlign: 'left' }}>
+                <tr>
 
-            <h3>Info</h3>
-            <table style={{width: '50%', textAlign: 'left'}}>
-              <tr>
-                
-                <th><h4>Created On</h4></th>
-                <th><h4>Model Used</h4></th>
-                <th><h4>Instrument</h4></th>
-              </tr>
-              <tr>
-                
-                <td><p>11/02/2021 </p></td>
-                <td><p>Model 1</p></td>
-                <td><p>Piano</p></td>
-             
-              </tr>
-            </table>
-            
-            
-           
+                  <th><h4>Created On</h4></th>
+                  <th><h4>Model Used</h4></th>
+                  <th><h4>Instrument</h4></th>
+                </tr>
+                <tr>
+
+                  <td><p>11/02/2021 </p></td>
+                  <td><p>Model 1</p></td>
+                  <td><p>Piano</p></td>
+
+                </tr>
+              </table>
+
+
+
+
             </div>
-              
-              
-                </div>
+
+
           </div>
+        </div>
 
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
 
-        
 
-        
+
+
 
         <div id="stream-bar">
           <div class="column" style={{ width: '10%' }}>
