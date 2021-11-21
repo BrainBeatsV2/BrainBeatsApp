@@ -18,12 +18,13 @@ const Index = (props) => {
     var key = props.song_key;
     var scale = props.scale;
     var bpm = props.bpm;
+    var midiData = props.midiData;
     console.log(props);
     
 return (<>
         <div class="midi-track" style={{display: hide? 'none':'block'}}>
                                                 
-            <i class="material-icons midi-play" onClick={() => props.playfn(props.track_id,name,key,scale,bpm)} >play_circle</i>{name}
+            <i class="material-icons midi-play" onClick={() => props.playfn(props.track_id,name,key,scale,bpm,midiData)} >play_circle</i>{name}
             <i class="material-icons midi-delete" onClick={function() {delete_track(props); setHidden(true);}} style={{display: props.isowner == "1" ? 'inline-block' : 'none'}}>delete</i>
             
             <Modal

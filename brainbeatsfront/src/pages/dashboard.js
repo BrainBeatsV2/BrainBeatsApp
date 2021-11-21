@@ -28,11 +28,11 @@ class Dashboard extends Component {
     this.onDownloadMIDI = this.onDownloadMIDI.bind(this);
   }
 
-  onStartPlaying = (id, name, key, scale, bpm) => {
+  onStartPlaying = (id, name, key, scale, bpm, midiData) => {
     console.log("playing");
     console.log(id);
     console.log(name);
-    this.setState({ currentTrack: name, currentKey: key, currentScale: scale, currentBPM: bpm, playing: true })
+    this.setState({ currentTrack: name, currentKey: key, currentScale: scale, currentBPM: bpm, playing: true , rawMidiString: midiData})
   }
   onStopPlaying = () => {
 
@@ -49,13 +49,13 @@ class Dashboard extends Component {
       password: '',
       email: '',
     });
-    
+
     if (isElectron()) {
       this.setState({ loggedin: 0 });
     } else {
       this.setState({ loggedin: 1 });
     }
-    
+
     if (isElectron()) {
       this.setState({ redirect: "/music-generation" });
     } else {
@@ -73,7 +73,7 @@ class Dashboard extends Component {
 
       const midiObject = {
         email: this.state.email,
-			  password: this.state.password
+        password: this.state.password
       };
 
       axios.post('/api/midis/mine', midiObject, options)
@@ -113,14 +113,14 @@ class Dashboard extends Component {
       console.log(e);
     }
   }
-    
+
   // Download midi file
   onDownloadMIDI() {
     window.ipcRenderer.send('download_midi_file', this.state.rawMidiString);
   }
- 
 
-  
+
+
 
   render() {
     if (this.state.redirect) {
@@ -129,10 +129,10 @@ class Dashboard extends Component {
         state: {
           username: this.state.username,
           email: this.state.email,
-          password: this.state.password 
+          password: this.state.password
         }
       }}
-    />
+      />
     }
 
     if (this.state.electron == null) {
@@ -146,29 +146,30 @@ class Dashboard extends Component {
         });
       }
     }
-    if (this.state.myMidis.length == 0) 
+    if (this.state.myMidis.length == 0)
       this.showMyMIDIS();
     return (
 
 
 
 
-      <div class="music-generation-bg" style={{margin:'0'}}>
-          <Sidebar 
-            active="dashboard" 
-            is_shown="true"
-            logout={this.onLogout} 
-            logged_in={this.state.loggedin} 
-            username={this.state.username}
-            email={this.state.email}
-            password={this.state.password}
-          ></Sidebar>
-          <div id="main_content">          
-            <h2>My MIDI</h2>
-            <div class="midi-add" style={{ display: isElectron() ? 'inline-block' : 'none' }}><Link to={{pathname: "/music-generation", state: {username: this.state.username, email: this.state.email, password: this.state.password}}}><i class="material-icons">add</i> Add Track</Link></div>
+      <div class="music-generation-bg" style={{ margin: '0' }}>
+        <Sidebar
+          active="dashboard"
+          is_shown="true"
+          logout={this.onLogout}
+          logged_in={this.state.loggedin}
+          username={this.state.username}
+          email={this.state.email}
+          password={this.state.password}
+        ></Sidebar>
+        <midi-player style={{ display: 'none' }} src={this.state.rawMidiString} ></midi-player>
+        <div id="main_content">
+          <h2>My MIDI</h2>
+          <div class="midi-add" style={{ display: isElectron() ? 'inline-block' : 'none' }}><Link to={{ pathname: "/music-generation", state: { username: this.state.username, email: this.state.email, password: this.state.password } }}><i class="material-icons">add</i> Add Track</Link></div>
           <div id="midi-tracks1" style={{ marginTop: '10px' }}>
-            {this.state.myMidis.map(listitem => (
-              <MidiTrack playfn={this.onStartPlaying} track_id={listitem._id} track_name={listitem.name} isowner={1} privacy={listitem.privacy} link={"brainbeats.dev/play?id=" + listitem._id} song_key={listitem.key} scale={listitem.scale} bpm={listitem.bpm}></MidiTrack>
+            {this.state.myMidis.length ? '': this.state.myMidis.map(listitem => (
+              <MidiTrack playfn={this.onStartPlaying} midiData={listitem.midiData} track_id={listitem._id} track_name={listitem.name} isowner={1} privacy={listitem.privacy} link={listitem.midiData} song_key={listitem.key} scale={listitem.scale} bpm={listitem.bpm}></MidiTrack>
             ))}
           </div>
         </div>

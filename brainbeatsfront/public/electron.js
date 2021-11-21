@@ -26,7 +26,6 @@ write = new MidiWriter.Writer(track);
 player = new MidiPlayer.Player();
 midiString = "";
 urlMIDI = "";
-instrument = "";
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -72,7 +71,6 @@ function clearMidiWriter() {
   write = new MidiWriter.Writer(track);
   midiString = "";
   urlMIDI = "";
-  instrument = "";
   console.log("Cleared MIDI track");
   return
 }
@@ -82,10 +80,6 @@ function stopEEGScript() {
   console.log('Terminated EEG Python script');
   return;
 }
-
-ipcMain.on('set_instrument', (event, args) => {
-  instrument = Number(args);
-});
 
 ipcMain.on('start_eeg_script', (event, arguments) => {
   clearMidiWriter();
@@ -111,7 +105,7 @@ ipcMain.on('start_eeg_script', (event, arguments) => {
 });
 
 
-ipcMain.on('end_eeg_script', (event, musicGenerationModel, key, scale, minRange, maxRange, BPM, timeSignature) => {
+ipcMain.on('end_eeg_script', (event, musicGenerationModel, key, scale, minRange, maxRange, BPM, timeSignature, instrument_num) => {
   if (pyshell == null || pyshell == undefined) return;
 
   stopEEGScript();
@@ -125,9 +119,10 @@ ipcMain.on('end_eeg_script', (event, musicGenerationModel, key, scale, minRange,
   var scaleMap = getScaleMap(key, scale, minRange, maxRange);
   var octaveRangeArray = getOctaveRangeArray(minRange, maxRange);
 
+
   if (musicGenerationModel == 4) {
     // Handles the async nature of the LSTM predictions
-    let tempPromise = lstmDriver(track, eegDataQueue, scaleArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond, instrument)
+    let tempPromise = lstmDriver(track, eegDataQueue, scaleArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond, instrument_num)
       .then((tempTrack) => {
         track = tempTrack;
         midiString = parseMIDIStringFromTrack(track);
@@ -135,7 +130,7 @@ ipcMain.on('end_eeg_script', (event, musicGenerationModel, key, scale, minRange,
       });
   } else {
     // Rest of the music generation functions that aren't async:
-    track = musicGenerationDriver(eegDataQueue, musicGenerationModel, scaleArray, scaleMap, octaveRangeArray, totalSeconds, secondsPerEEGSnapShot, noteDurationsPerBeatPerSecond, instrument);
+    track = musicGenerationDriver(eegDataQueue, musicGenerationModel, scaleArray, scaleMap, octaveRangeArray, totalSeconds, secondsPerEEGSnapShot, noteDurationsPerBeatPerSecond, instrument_num);
     midiString = parseMIDIStringFromTrack(track);
     event.sender.send('end_eeg_script', midiString);
   }
