@@ -66,13 +66,13 @@ class Account extends Component {
 				})
 			}
       if (localStorage.getItem('loggedIn') == true) {
-          this.setState({ loggedin: 0 });
-        }
-        else {
           this.setState({ loggedin: 1 });
         }
+        else {
+          this.setState({ loggedin: 0 });
+        }
     } catch (e) {
-      this.setState({ loggedin: 1 });
+      this.setState({ loggedin: 0 });
     }
   }
 

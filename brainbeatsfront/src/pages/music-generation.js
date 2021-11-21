@@ -36,7 +36,7 @@ class MusicGeneration extends Component {
             saved: false,
             downloadMIDI: false,
             privacySettings: "private",
-            trackLink: "brainbeats.dev/play/?id=",
+            trackLink: "brainbeats.dev/play?id=",
             loggedin: 0,
             midiString: '',
             email: '',
@@ -214,12 +214,8 @@ class MusicGeneration extends Component {
             password: '',
             email: '',
         });
-        if (isElectron()) {
-            this.setState({ loggedin: 0 });
-        } else {
-            this.setState({ loggedin: 1 });
-        }
-    }
+      }
+
 
     updateRange() {
         console.log("updated")
@@ -249,8 +245,6 @@ class MusicGeneration extends Component {
     // Clicking Save and Upload and show loading screen
     onSaveRecording = (e) => {
         e.preventDefault();
-        console.log(this.state.email);
-        console.log(this.state.password);
         this.setState({
             saving: true,
             saved: true
@@ -289,11 +283,8 @@ class MusicGeneration extends Component {
             .then((res) => {
                 if (res.data.message === "MIDI uploaded successfully!") {
                     console.log("Successful MIDI creation");
-                    this.setState({
-                        trackLink = this.state.trackLink + res.data.id,
-                        midiID = res.data.id
-                    });
-                    
+                    this.setState({trackLink: this.state.trackLink + res.data.id});
+                    this.setState({midiID: res.data.id});
                     console.log(this.state.midiID);
                 }
             }).catch((error) => {
@@ -332,10 +323,8 @@ class MusicGeneration extends Component {
             .then((res) => {
                 if (res.data.message === "MIDI updated successfully!") {
                     console.log("Successful MIDI updating");
-                    this.setState({
-                        trackLink = this.state.trackLink + res.data.id,
-                        midiID = res.data.id
-                    });
+                    this.setState({trackLink: this.state.trackLink + res.data.id});
+                    this.setState({midiID: res.data.id});
                     console.log(this.state.midiID);
                 }
             }).catch((error) => {
@@ -365,13 +354,13 @@ class MusicGeneration extends Component {
                 })
             }
             if (localStorage.getItem('loggedIn') == true) {
-                this.setState({ loggedin: 0 });
-            }
-            else {
                 this.setState({ loggedin: 1 });
             }
-        } catch (e) {
-            this.setState({ loggedin: 1 });
+            else {
+                this.setState({ loggedin: 0 });
+            }
+          } catch (e) {
+            this.setState({ loggedin: 0 });
             console.log(e);
         }
         var player = document.querySelector("midi-player");
@@ -407,6 +396,9 @@ class MusicGeneration extends Component {
                 }
             }}
             />
+        }
+        if (localStorage.getItem('loggedIn') == 'true' && this.state.loggedin == 0) {
+            this.setState({ loggedin: 1 });
         }
         return (
 
