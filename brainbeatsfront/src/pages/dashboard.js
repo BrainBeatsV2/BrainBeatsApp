@@ -28,11 +28,11 @@ class Dashboard extends Component {
     this.onDownloadMIDI = this.onDownloadMIDI.bind(this);
   }
 
-  onStartPlaying = (id, name, key, scale, bpm) => {
+  onStartPlaying = (id, name, key, scale, bpm, midiData) => {
     console.log("playing");
     console.log(id);
     console.log(name);
-    this.setState({ currentTrack: name, currentKey: key, currentScale: scale, currentBPM: bpm, playing: true })
+    this.setState({ currentTrack: name, currentKey: key, currentScale: scale, currentBPM: bpm, playing: true , rawMidiString: midiData})
   }
   onStopPlaying = () => {
 
@@ -163,12 +163,13 @@ class Dashboard extends Component {
           email={this.state.email}
           password={this.state.password}
         ></Sidebar>
+        <midi-player style={{ display: 'none' }} src={this.state.rawMidiString} ></midi-player>
         <div id="main_content">
           <h2>My MIDI</h2>
           <div class="midi-add" style={{ display: isElectron() ? 'inline-block' : 'none' }}><Link to={{ pathname: "/music-generation", state: { username: this.state.username, email: this.state.email, password: this.state.password } }}><i class="material-icons">add</i> Add Track</Link></div>
           <div id="midi-tracks1" style={{ marginTop: '10px' }}>
-            {this.state.myMidis.map(listitem => (
-              <MidiTrack playfn={this.onStartPlaying} track_id={listitem._id} track_name={listitem.name} isowner={1} privacy={listitem.privacy} link={listitem.midiData} song_key={listitem.key} scale={listitem.scale} bpm={listitem.bpm}></MidiTrack>
+            {this.state.myMidis.length ? '': this.state.myMidis.map(listitem => (
+              <MidiTrack playfn={this.onStartPlaying} midiData={listitem.midiData} track_id={listitem._id} track_name={listitem.name} isowner={1} privacy={listitem.privacy} link={listitem.midiData} song_key={listitem.key} scale={listitem.scale} bpm={listitem.bpm}></MidiTrack>
             ))}
           </div>
         </div>
