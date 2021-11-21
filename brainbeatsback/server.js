@@ -4,7 +4,6 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
 const jwt = require('jsonwebtoken');
-
 const Timidity = require('timidity')
 
 const PORT = 4000;
@@ -45,6 +44,41 @@ app.get(devPath + '/api/users', (req, res) => {
             res.send(data);
         }
     });
+})
+
+app.post(devPath + '/api/user', function (req, res) {
+    var body = req.body;
+    var username = body.username;
+    var password = body.password;
+    const result = [];
+
+    User.findOne({ "username": username }).then(function (doc) {
+        if (doc == null) {
+            User.findOne({ "email": username }).then(function (doc) {
+                if (doc == null) {
+                    res.status(400).send("Invalid username or password");
+                } else if (doc.password != password) {
+                    res.status(400).send("Invalid username or password");
+                }
+                else if (doc.password == password) {
+                    result[0] = doc.username;
+                    result[1] = doc.email;
+                    result[2] = doc.password;
+                    res.status(200).send(result);
+                }
+            });
+        }
+        else if (doc.password != password) {
+            res.status(400).send("Invalid username or password");
+        }
+        else if (doc.password == password) {
+                result[0] = doc.username;
+                result[1] = doc.email;
+                result[2] = doc.password;
+                res.status(200).send(result);
+        }
+    });
+
 })
 
 /*
@@ -334,7 +368,9 @@ app.post(devPath + '/api/midis/mine', async function (req, res) {
         Body- {"email": "harry@hsauers.net", "password": "Passwd123!",
                 "midi_name": "midi_name1", "midi_data", "12345",
                 "midi_privacy": "private", "midi_notes": "lorem ipsum"
-                "midi_bpm": "123" }
+                "midi_bpm": "123", "midi_scale": "major"
+                "midi_key": "c"
+                }
         Response- 200 OK
     * You MUST supply the exact Content-Type above, or it won't work.
     * Note the user's account info in the body.
@@ -361,9 +397,6 @@ app.post(devPath + '/api/midis/create', async function (req, res) {
     }
     if (midi_data == null || midi_data == "") {
         res.status(400).send("midi_data missing!")
-    }
-    if (midi_model_id == null || midi_model_id == "") {
-        res.status(400).send("midi_model_id missing!")
     }
     if (midi_privacy == null || midi_privacy == "") {
         midi_privacy = "private";

@@ -38,34 +38,55 @@ class Help extends Component {
     this.setState({playing:true})
   }
   onLogout = (e) => {
-    e.preventDefault();
+    //e.preventDefault();
+    localStorage.clear();
     this.setState({
       username: '',
       password: '',
       email: '',
     });
     if (isElectron()) {
+      this.setState({ loggedin: 0 });
+    } else {
+      this.setState({ loggedin: 1 });
+    }
+    if (isElectron()) {
       this.setState({ redirect: "/music-generation" });
     } else {
       this.setState({ redirect: "/" });
     }
-
   }
   componentDidMount(){
-    if (this.state.username == "")
-    {
-        this.setState({ loggedin: 0 });
-       
-    }
-    else 
-    {
-        this.setState({ loggedin: 1 });
+    try {
+      if(localStorage.getItem('username') !== null) {
+				this.setState({
+				username: localStorage.getItem('username'),
+				email: localStorage.getItem('email'),
+				password: localStorage.getItem('password'),
+				})
+			}
+      if (localStorage.getItem('loggedIn') == true) {
+          this.setState({ loggedin: 0 });
+        }
+        else {
+          this.setState({ loggedin: 1 });
+        }
+    } catch (e) {
+      this.setState({ loggedin: 1 });
     }
   }
 
   render() {
     if (this.state.redirect) {
-      return <Redirect to={this.state.redirect} />
+      return <Redirect to={{
+        pathname: this.state.redirect,
+        state: {
+          username: this.state.username,
+          email: this.state.email,
+          password: this.state.password 
+        }
+      }}
+    />
     }
     if (this.state.electron == null) {
       if (isElectron()) {
@@ -83,7 +104,15 @@ class Help extends Component {
 
 
       <div class="music-generation-bg" style={{margin:'0'}}>
-          <Sidebar active="help" is_shown="true" logged_in={this.state.loggedin}></Sidebar>
+          <Sidebar 
+            active="help" 
+            is_shown="true"
+            logout={this.onLogout}
+            logged_in={this.state.loggedin}
+            username={this.state.username}
+            email={this.state.email}
+            password={this.state.password}
+          ></Sidebar>
           <div id="main_content" class="help_screen">          
             <h2>Help</h2>
             <br />

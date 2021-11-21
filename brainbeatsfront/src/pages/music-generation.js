@@ -8,6 +8,7 @@ import recording_img from '../images/recording.gif'
 import Sidebar from '../components/Sidebar/index'
 import { Button, Checkbox, Grid, Modal, Header, Segment, Dimmer, Loader } from 'semantic-ui-react'
 import { PlayerElement } from 'html-midi-player';
+import axios from 'axios';
 class MusicGeneration extends Component {
 
     constructor(props) {
@@ -35,13 +36,16 @@ class MusicGeneration extends Component {
             saving: false,
             saved: false,
             downloadMIDI: false,
-            privacySettings: 0,
-            trackLink: "brainbeats.dev/play/",
+            privacySettings: "private",
+            trackLink: "brainbeats.dev/play/?id=",
             loggedin: 0,
             midiString: '',
+            email: '',
             rawMidiString: '',
             username: '',
-            password: ''
+            password: '',
+            trackName: '',
+            midiID: '',
         };
         this.onStartRecording = this.onStartRecording.bind(this);
         this.onStopRecording = this.onStopRecording.bind(this);
@@ -193,7 +197,7 @@ class MusicGeneration extends Component {
         }
     }
     onLogout = (e) => {
-        // e.preventDefault();
+        localStorage.clear();
         this.setState({
             username: '',
             password: '',
@@ -204,8 +208,8 @@ class MusicGeneration extends Component {
         } else {
             this.setState({ loggedin: 1 });
         }
+      }
 
-    }
     updateRange() {
         console.log("updated")
     }
@@ -232,7 +236,10 @@ class MusicGeneration extends Component {
         })
     }
     // Clicking Save and Upload and show loading screen
-    onSaveRecording() {
+    onSaveRecording = (e) => {
+        e.preventDefault();
+        console.log(this.state.email);
+        console.log(this.state.password);
         this.setState({
             saving: true,
             saved: true
@@ -247,6 +254,37 @@ class MusicGeneration extends Component {
                 .bind(this),
             3000
         );
+
+        const options = {
+			headers: {
+				'Content-type': 'application/json; charset=utf-8'
+			}
+		};
+
+		const midiObject = {
+			email: this.state.email,
+            password: this.state.password,
+            midi_name: this.state.trackName,
+            midi_data: this.state.midiString,
+            midi_privacy: this.state.privacySettings,
+            midi_notes: ("Created by: " + this.state.username),
+            midi_bpm: this.state.bpm,
+            midi_scale: this.state.scale,
+            midi_key: this.state.key,
+            midi_time_signature: this.state.timing,
+		};
+
+        axios.post('/api/midis/create', midiObject, options)
+            .then((res) => {
+                if(res.data.message === "MIDI uploaded successfully!") {
+                    console.log("Successful MIDI creation");
+                    this.state.trackLink = this.state.trackLink + res.data.id;
+                    this.state.midiID = res.data.id;
+                    console.log(this.state.midiID);
+                }
+            }).catch((error) => {
+                console.log(error);
+            });
     }
     // Radio Button privacy settings switch
 
@@ -262,11 +300,54 @@ class MusicGeneration extends Component {
             saveModalOpen: !this.state.saveModalOpen
         })
 
+        const options = {
+			headers: {
+				'Content-type': 'application/json; charset=utf-8'
+			}
+		};
+
+		const midiObject = {
+			email: this.state.email,
+            password: this.state.password,
+            midi_name: this.state.trackName,
+            midi_privacy: this.state.privacySettings,
+            midi_notes: ("Created by: " + this.state.username),
+		};
+
+        axios.post(('/api/midis/'+this.state.midiID+'/update'), midiObject, options)
+            .then((res) => {
+                if(res.data.message === "MIDI updated successfully!") {
+                    console.log("Successful MIDI updating");
+                    this.state.trackLink = this.state.trackLink + res.data.id;
+                    this.state.midiID = res.data.id;
+                    console.log(this.state.midiID);
+                }
+            }).catch((error) => {
+                console.log(error);
+            });
     }
     handleTrackName = (e) => {
         this.setState({ trackName: e.target.value });
     };
     componentDidMount() {
+        try {
+            if(localStorage.getItem('username') !== null) {
+                this.setState({
+                username: localStorage.getItem('username'),
+                email: localStorage.getItem('email'),
+                password: localStorage.getItem('password'),
+                })
+            }
+            if (localStorage.getItem('loggedIn') == true) {
+                this.setState({ loggedin: 0 });
+            }
+            else {
+                this.setState({ loggedin: 1 });
+            }
+          } catch (e) {
+            this.setState({ loggedin: 1 });
+            console.log(e);
+          }
         var player = document.querySelector("midi-player");
         if (player != null) {
 
@@ -282,15 +363,6 @@ class MusicGeneration extends Component {
 
             });
         }
-
-        if (this.state.username == "") {
-            this.setState({ loggedin: 0 });
-
-        }
-        else {
-            this.setState({ loggedin: 1 });
-        }
-
     }
     changeInstrument(event) { this.setState({ instrument: event.target.value }); }
     changeModel(event) { this.setState({ model: event.target.value }); }
@@ -300,13 +372,29 @@ class MusicGeneration extends Component {
 
     render() {
         if (!isElectron()) {
-            return <Redirect to="/" />
+            return <Redirect to={{
+                pathname: this.state.redirect,
+                state: {
+                  username: this.state.username,
+                  email: this.state.email,
+                  password: this.state.password 
+                }
+              }}
+            />
         }
         return (
 
 
             <div class="music-generation-bg" >
-                <Sidebar music_generation="true" logout={this.onLogout} is_shown={this.state.showMenu} logged_in={this.state.loggedin}></Sidebar>
+                <Sidebar 
+                    music_generation="true" 
+                    logout={this.onLogout} 
+                    is_shown={this.state.showMenu} 
+                    logged_in={this.state.loggedin}
+                    username={this.state.username}
+                    email={this.state.email}
+                    password={this.state.password}
+                ></Sidebar>
                 <Dimmer.Dimmable dimmed={this.state.saving}>
                     <Dimmer active={this.state.saving} page>
                         <Loader>Uploading</Loader>
@@ -349,11 +437,12 @@ class MusicGeneration extends Component {
                                 <tr>
 
                                     <td ><i style={{ display: this.state.saved ? 'none' : 'block' }} class="material-icons" onClick={this.onReRecord}>backspace</i></td>
-
+                                    <td ><input class="input100 midi_name" placeholder="MIDI Name" type="text" name="TrackName" value={this.state.trackName} onChange={this.handleTrackName} required /></td>
                                 </tr>
                                 <tr>
 
                                     <th ><span style={{ display: this.state.saved ? 'none' : 'block' }}>Record Again</span></th>
+                                    <th ><span style={{ display: this.state.saved ? 'none' : 'block' }}>Track Name</span></th>
                                 </tr>
                             </table>
                         </div>
@@ -425,11 +514,11 @@ class MusicGeneration extends Component {
                                         <Modal.Content text>
                                             <Modal.Description>
                                                 <Header>Sharing and Privacy Settings</Header>
-                                                <Checkbox input onChange={this.changePrivacy} value='0' checked={this.state.privacySettings == 0} radio label='Track is visible on MIDI Discover section' />
+                                                <Checkbox input onChange={this.changePrivacy} value='public' checked={this.state.privacySettings == "public"} radio label='Track is visible on MIDI Discover section' />
                                                 <br />
-                                                <Checkbox onChange={this.changePrivacy} value='1' checked={this.state.privacySettings == 1} radio label='Track is only visible to anyone with my link' />
+                                                <Checkbox onChange={this.changePrivacy} value='link' checked={this.state.privacySettings == "link"} radio label='Track is only visible to anyone with my link' />
                                                 <br />
-                                                <Checkbox onChange={this.changePrivacy} value='2' checked={this.state.privacySettings == 2} radio label='Track is only visible to me' />
+                                                <Checkbox onChange={this.changePrivacy} value='private' checked={this.state.privacySettings == "private"} radio label='Track is only visible to me' />
                                                 <br />
                                                 <br />
                                                 MIDI Link: <input className="modal_input" value={this.state.trackLink} type="text" readOnly={true} />

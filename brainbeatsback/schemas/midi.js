@@ -6,7 +6,6 @@ const Midi = mongoose.Schema({
     },
     modelId: {
         type: String,
-        required: true,
     },
     name: {
         type: String,

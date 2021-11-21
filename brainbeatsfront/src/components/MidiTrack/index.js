@@ -52,11 +52,11 @@ return (<>
                         defaultValue={'https://brainbeats.dev/track/'+props.link}
                         />      
                         <Header>Sharing and Privacy Settings</Header>
-                        <Checkbox input  value='0' onClick={() => setPrivacy(0)} checked={privacy == 0} radio label='Track is visible on MIDI Discover section' />
+                        <Checkbox input  value='public' onClick={() => setPrivacy('public')} checked={privacy == 'public'} radio label='Track is visible on MIDI Discover section' />
                         <br />
-                        <Checkbox value='1' onClick={() => setPrivacy(1)} checked={privacy == 1} radio label='Track is only visible to anyone with my link' />
+                        <Checkbox value='link' onClick={() => setPrivacy('link')} checked={privacy == 'link'} radio label='Track is only visible to anyone with my link' />
                         <br />
-                        <Checkbox value='2' onClick={() => setPrivacy(2)} checked={privacy == 2} radio label='Track is only visible to me' />
+                        <Checkbox value='private' onClick={() => setPrivacy('private')} checked={privacy == 'private'} radio label='Track is only visible to me' />
                         <br />
                         <br />
                                  

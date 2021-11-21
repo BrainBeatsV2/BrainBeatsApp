@@ -25,11 +25,14 @@ const User = mongoose.Schema({
     token: {
         type: String,
         required: false,
-      },
+    },
     tokenExpires: {
         type: Date,
         default: Date.now() + 86400 * 1000
-    }
+    },
+    jwtToken: {
+        type: String,
+    },
 });
 
 module.exports = mongoose.model('User', User, 'users');

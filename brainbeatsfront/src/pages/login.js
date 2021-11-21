@@ -140,15 +140,36 @@ class Login extends Component {
 			username: this.state.username,
 			password: this.state.password
 		};
+		console.log(this.state.username);
+		console.log(this.state.password);
 
 		axios.post('/api/login', userObject, options)
 			.then((res) => {
-				//console.log(res.data)
 				if (res.data === "login successful" || 200) {
-					this.setState({ redirect: "/dashboard" });
+
+					axios.post('/api/user', userObject, options)
+						.then((res) => {
+							this.state.username = res.data[0];
+							this.state.email = res.data[1];
+							this.state.password = res.data[2];
+							localStorage.setItem('loggedIn', true);
+							localStorage.setItem('email', this.state.email);
+							localStorage.setItem('username', this.state.username);
+							localStorage.setItem('password', this.state.password);
+							console.log(this.state.username);
+							console.log(this.state.email);
+							console.log(this.state.password);
+							this.setState({ redirect: "/dashboard" });
+						}).catch((error) => {
+							console.log(error)
+							this.state.username = "";
+							this.state.password = "";
+						});
 				}
 			}).catch((error) => {
 				console.log(error)
+				this.state.username = "";
+				this.state.password = "";
 			});
 	}
 
@@ -171,8 +192,29 @@ class Login extends Component {
 			.then((res) => {
 				//console.log(res.data)
 				if (res.data === "Successful Register" || 200) {
+					console.log(this.state.username);
+
+					axios.post('/api/user', userObject, options)
+						.then((res) => {
+							this.state.username = res.data[0];
+							this.state.email = res.data[1];
+							this.state.password = res.data[2];
+							localStorage.setItem('loggedIn', true);
+							localStorage.setItem('email', this.state.email);
+							localStorage.setItem('username', this.state.username);
+							localStorage.setItem('password', this.state.password);
+							console.log(this.state.username);
+							console.log(this.state.email);
+							console.log(this.state.password);
+						}).catch((error) => {
+							console.log(error)
+							this.state.username = "";
+							this.state.password = "";
+						});
+
 					this.setState({ redirect: "/dashboard" });
 				}
+				
 			}).catch((error) => {
 				console.log(error)
 			});
@@ -192,12 +234,38 @@ class Login extends Component {
 		});
 	}
 	render() {
+		try {
+			if(localStorage.getItem('username') !== null) {
+				this.setState({
+				username: localStorage.getItem('username'),
+				email: localStorage.getItem('email'),
+				password: localStorage.getItem('password'),
+				})
+			}
+		  } catch (e) {
+			
+		  }
 		if (this.state.redirect) {
-			return <Redirect to={this.state.redirect} />
-		}
+			return <Redirect to={{
+			  pathname: this.state.redirect,
+			  state: {
+				username: this.state.username,
+				email: this.state.email,
+				password: this.state.password 
+			  }
+			}}
+		  />
+		  }
 		return (
 			<div >
-				<Sidebar active="login" is_shown="true" logged_in={false}></Sidebar>
+				<Sidebar 
+					active="login" 
+					is_shown="true" 
+					logged_in={false}
+					username={this.state.username}
+					email={this.state.email}
+					password={this.state.password}
+				></Sidebar>
 
 
 				<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
