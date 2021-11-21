@@ -92,25 +92,26 @@ class Dashboard extends Component {
   }
 
 
-  componentDidMount(){
+  componentDidMount() {
     try {
-      if(localStorage.getItem('username') !== null) {
-				this.setState({
-				username: localStorage.getItem('username'),
-				email: localStorage.getItem('email'),
-				password: localStorage.getItem('password'),
-				})
-			}
+      if (localStorage.getItem('username') !== null) {
+        this.setState({
+          username: localStorage.getItem('username'),
+          email: localStorage.getItem('email'),
+          password: localStorage.getItem('password'),
+        })
+      }
       console.log(localStorage.getItem('loggedIn'));
       if (localStorage.getItem('loggedIn') == true) {
-          this.setState({ loggedin: 0 });
-        }
-        else {
-          this.setState({ loggedin: 1 });
-        }
+        this.setState({ loggedin: 0 });
+      }
+      else {
+        this.setState({ loggedin: 1 });
+      }
     } catch (e) {
       this.setState({ loggedin: 1 });
       console.log(e);
+    }
   }
     
   // Download midi file
