@@ -444,7 +444,7 @@ class MusicGeneration extends Component {
                                 <tr>
 
                                     <td ><i style={{ display: this.state.saved ? 'none' : 'block' }} class="material-icons" onClick={this.onReRecord}>backspace</i></td>
-                                    <td ><input class="input100" placeholder="MIDI Name" type="text" name="TrackName" value={this.state.trackName} onChange={this.handleTrackName} required /></td>
+                                    <td ><input class="input100 midi_name" placeholder="MIDI Name" type="text" name="TrackName" value={this.state.trackName} onChange={this.handleTrackName} required /></td>
                                 </tr>
                                 <tr>
 

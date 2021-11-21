@@ -159,7 +159,7 @@ class Discover extends Component {
             <h2>MIDI Discover</h2>
             <div id="midi-tracks1" style={{marginTop:'10px'}}>
               {this.state.publicMidis.map(listitem => (
-                <MidiTrack playfn={this.onStartPlaying} track_id={listitem._id} track_name={listitem.name} isowner={0}  privacy={1} link={listitem.midiData} song_key={listitem.key} scale={listitem.scale} bpm={listitem.bpm}></MidiTrack>
+                <MidiTrack playfn={this.onStartPlaying} track_id={listitem._id} track_name={listitem.name} isowner={0} privacy={'public'} link={listitem.midiData} song_key={listitem.key} scale={listitem.scale} bpm={listitem.bpm}></MidiTrack>
               ))}
             </div>
           </div>
