@@ -4,6 +4,7 @@ import { Redirect, Link } from "react-router-dom";
 import MidiTrack from '../components/MidiTrack/index'
 import logo from '../images/logo_dev.png'
 import Sidebar from '../components/Sidebar/index'
+import axios from 'axios';
 class Dashboard extends Component {
   constructor(props) {
     super(props);
@@ -20,7 +21,8 @@ class Dashboard extends Component {
       currentScale: '',
       currentBPM: '',
       playing: false,
-      loggedin: 0
+      loggedin: 0,
+      myMidis: [],
     };
   }
 
@@ -59,9 +61,32 @@ class Dashboard extends Component {
     }
   }
 
-  retreiveMyMIDIS = (e) => {
-    e.preventDefault();
+  showMyMIDIS = (e) => {
+    if (this.state.email && this.state.password) {
+      const options = {
+        headers: {
+          'Content-type': 'application/json; charset=utf-8'
+        }
+      };
 
+      const midiObject = {
+        email: this.state.email,
+			  password: this.state.password
+      };
+
+      axios.post('/api/midis/mine', midiObject, options)
+        .then((res) => {
+          if (res.status == 200) {
+            console.log("Getting my MIDIS");
+            console.log(res.data);
+            this.setState({ myMidis: res.data });
+            console.log(this.state.myMidis[0]);
+            console.log(this.state.myMidis[1]);
+          }
+        }).catch((error) => {
+          console.log(error);
+        });
+    }
   }
 
   componentDidMount(){
@@ -89,9 +114,7 @@ class Dashboard extends Component {
   
 
   render() {
-    console.log(this.state.email);
     if (this.state.redirect) {
-      console.log(this.state.email);
       return <Redirect to={{
         pathname: this.state.redirect,
         state: {
@@ -102,6 +125,7 @@ class Dashboard extends Component {
       }}
     />
     }
+
     if (this.state.electron == null) {
       if (isElectron()) {
         this.setState({
@@ -113,11 +137,8 @@ class Dashboard extends Component {
         });
       }
     }
-    if (true)
-    {
-      console.log(this.props.location.state.username);
-      console.log(this.props);
-    }
+    if (this.state.myMidis.length == 0) 
+      this.showMyMIDIS();
     return (
 
 
@@ -135,11 +156,12 @@ class Dashboard extends Component {
           <div id="main_content">          
             <h2>My MIDI</h2>
             <div class="midi-add" style={{ display: isElectron() ? 'inline-block' : 'none' }}><Link to={{pathname: "/music-generation", state: {username: this.state.username, email: this.state.email, password: this.state.password}}}><i class="material-icons">add</i> Add Track</Link></div>
-            <div id="midi-tracks1" style={{marginTop:'10px'}}>
-                <MidiTrack playfn={this.onStartPlaying} track_id="400" track_name="test" isowner={1} privacy={0} link="aefikjeaifi2j930r2r" song_key="C" scale="Minor" bpm="120" ></MidiTrack>
-                <MidiTrack playfn={this.onStartPlaying} track_id="500" track_name="test" isowner={1}  privacy={1} link="eafke930i23903429kfqemfm" song_key="D" scale=" Pentatonic" bpm="60"></MidiTrack>
-            </div>
+          <div id="midi-tracks1" style={{ marginTop: '10px' }}>
+            {this.state.myMidis.map(listitem => (
+              <MidiTrack playfn={this.onStartPlaying} track_id={listitem._id} track_name={listitem.name} isowner={0} privacy={1} link={listitem.midiData} song_key={listitem.key} scale={listitem.scale} bpm={listitem.bpm}></MidiTrack>
+            ))}
           </div>
+        </div>
 
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
 

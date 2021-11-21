@@ -74,43 +74,43 @@ class Discover extends Component {
   showPublicMIDIS = (e) => {
 
     const options = {
-			headers: {
-				'Content-type': 'application/json; charset=utf-8'
-			}
-		};
+      headers: {
+        'Content-type': 'application/json; charset=utf-8'
+      }
+    };
 
     const midiObject = {
     };
 
     axios.get('/api/midis/public', midiObject, options)
-            .then((res) => {
-                if(res.status == 200) {
-                    console.log("Getting public MIDIS");
-                    console.log(res.data);
-                    this.setState({publicMidis: res.data});
-                    console.log(this.state.publicMidis[0]);
-                    console.log(this.state.publicMidis[1]);
-                }
-            }).catch((error) => {
-                console.log(error);
-            });
+      .then((res) => {
+        if (res.status == 200) {
+          console.log("Getting public MIDIS");
+          console.log(res.data);
+          this.setState({ publicMidis: res.data });
+          console.log(this.state.publicMidis[0]);
+          console.log(this.state.publicMidis[1]);
+        }
+      }).catch((error) => {
+        console.log(error);
+      });
   }
 
-  componentDidMount(){
+  componentDidMount() {
     try {
-      if(localStorage.getItem('username') !== null) {
-				this.setState({
-				username: localStorage.getItem('username'),
-				email: localStorage.getItem('email'),
-				password: localStorage.getItem('password'),
-				})
-			}
+      if (localStorage.getItem('username') !== null) {
+        this.setState({
+          username: localStorage.getItem('username'),
+          email: localStorage.getItem('email'),
+          password: localStorage.getItem('password'),
+        })
+      }
       if (localStorage.getItem('loggedIn') == true) {
-          this.setState({ loggedin: 0 });
-        }
-        else {
-          this.setState({ loggedin: 1 });
-        }
+        this.setState({ loggedin: 0 });
+      }
+      else {
+        this.setState({ loggedin: 1 });
+      }
     } catch (e) {
       this.setState({ loggedin: 1 });
     }
@@ -123,10 +123,10 @@ class Discover extends Component {
         state: {
           username: this.state.username,
           email: this.state.email,
-          password: this.state.password 
+          password: this.state.password
         }
       }}
-    />
+      />
     }
     if (this.state.publicMidis.length == 0) 
       this.showPublicMIDIS();
@@ -158,8 +158,9 @@ class Discover extends Component {
           <div id="main_content">          
             <h2>MIDI Discover</h2>
             <div id="midi-tracks1" style={{marginTop:'10px'}}>
-                <MidiTrack playfn={this.onStartPlaying} track_id="400" track_name="test" isowner={0} privacy={0} link="aefikjeaifi2j930r2r" song_key="C" scale="Minor" bpm="120" ></MidiTrack>
-                <MidiTrack playfn={this.onStartPlaying} track_id="500" track_name="test" isowner={0}  privacy={1} link="eafke930i23903429kfqemfm" song_key="D" scale=" Pentatonic" bpm="60"></MidiTrack>
+              {this.state.publicMidis.map(listitem => (
+                <MidiTrack playfn={this.onStartPlaying} track_id={listitem._id} track_name={listitem.name} isowner={0}  privacy={1} link={listitem.midiData} song_key={listitem.key} scale={listitem.scale} bpm={listitem.bpm}></MidiTrack>
+              ))}
             </div>
           </div>
 
