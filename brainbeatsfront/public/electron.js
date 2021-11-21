@@ -10,7 +10,7 @@ const { start } = require('repl');
 
 // Electron App Data:
 let mainWindow;
-let devPort = 3000;
+let devPort = 8002;
 let prodPort = 8001;
 let electronAppPath = String('http://localhost:' + devPort + '/music-generation/');
 

@@ -4,6 +4,7 @@ import { Redirect } from "react-router-dom";
 import MidiTrack from '../components/MidiTrack/index'
 import logo from '../images/logo_dev.png'
 import Sidebar from '../components/Sidebar/index'
+import axios from 'axios';
 
 
 class Play extends Component {
@@ -23,7 +24,9 @@ class Play extends Component {
       currentBPM: '',
       rawMidiString: '',
       playing: false,
-      loggedin: 0
+      loggedin: 0,
+      midiId: null,
+      midiPlayed: [],
     };
 
     this.onDownloadMIDI = this.onDownloadMIDI.bind(this);
@@ -68,6 +71,27 @@ class Play extends Component {
     window.ipcRenderer.send('download_midi_file', this.state.rawMidiString);
   }
 
+  loadMidi = (e) => {
+    const options = {
+      headers: {
+        'Content-type': 'application/json; charset=utf-8'
+      }
+    };
+
+    const midiObject = {
+
+    };
+
+    axios.post('/api/midis/:' + this.state.midiId, midiObject, options)
+      .then((res) => {
+        if (res.status == 200) {
+          this.setState({ midiPlayed: res.data });
+        }
+      }).catch((error) => {
+        console.log(error);
+      });
+  }
+
    componentDidMount(){
     try {
       if(localStorage.getItem('username') !== null) {
@@ -78,13 +102,13 @@ class Play extends Component {
 				})
 			}
       if (localStorage.getItem('loggedIn') == true) {
-          this.setState({ loggedin: 0 });
-        }
-        else {
           this.setState({ loggedin: 1 });
         }
+        else {
+          this.setState({ loggedin: 0 });
+        }
     } catch (e) {
-      this.setState({ loggedin: 1 });
+      this.setState({ loggedin: 0 });
     }
   }
  
@@ -112,11 +136,15 @@ class Play extends Component {
         });
       }
     }
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const id = urlParams.get('id');
+    console.log(id);
+    if (this.state.midiId == null && id != null && id != "") {
+      this.setState({midiId: id});
+      this.loadMidi();
+    }
     return (
-
-
-
-
       <div class="music-generation-bg" style={{margin:'0'}}>
           <Sidebar 
             active="play" 
@@ -134,7 +162,7 @@ class Play extends Component {
                  <h2>Track Name</h2> <p>by Author</p>
                  <br />
                
-               <MidiTrack playfn={this.onStartPlaying} track_id="400" track_name="test" isowner={0} privacy={1} link="aefikjeaifi2j930r2r" song_key="C" scale="Minor" bpm="120" ></MidiTrack>
+               <MidiTrack playfn={this.onStartPlaying} track_id={this.state.midiPlayed._id} track_name={this.state.midiPlayed.name} isowner={0} privacy={'link'} link={"brainbeats.dev/play/?id=" + this.state.midiPlayed._id} song_key={this.state.midiPlayed.key} scale={this.state.midiPlayed.scale} bpm={this.state.midiPlayed.bpm} ></MidiTrack>
                <br />
                <br />
                <br />

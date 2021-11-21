@@ -103,13 +103,13 @@ class Dashboard extends Component {
       }
       console.log(localStorage.getItem('loggedIn'));
       if (localStorage.getItem('loggedIn') == true) {
-        this.setState({ loggedin: 0 });
-      }
-      else {
         this.setState({ loggedin: 1 });
       }
+      else {
+        this.setState({ loggedin: 0 });
+      }
     } catch (e) {
-      this.setState({ loggedin: 1 });
+      this.setState({ loggedin: 0 });
       console.log(e);
     }
   }
@@ -168,7 +168,7 @@ class Dashboard extends Component {
             <div class="midi-add" style={{ display: isElectron() ? 'inline-block' : 'none' }}><Link to={{pathname: "/music-generation", state: {username: this.state.username, email: this.state.email, password: this.state.password}}}><i class="material-icons">add</i> Add Track</Link></div>
           <div id="midi-tracks1" style={{ marginTop: '10px' }}>
             {this.state.myMidis.map(listitem => (
-              <MidiTrack playfn={this.onStartPlaying} track_id={listitem._id} track_name={listitem.name} isowner={1} privacy={listitem.privacy} link={listitem.midiData} song_key={listitem.key} scale={listitem.scale} bpm={listitem.bpm}></MidiTrack>
+              <MidiTrack playfn={this.onStartPlaying} track_id={listitem._id} track_name={listitem.name} isowner={1} privacy={listitem.privacy} link={"brainbeats.dev/play?id=" + listitem._id} song_key={listitem.key} scale={listitem.scale} bpm={listitem.bpm}></MidiTrack>
             ))}
           </div>
         </div>
