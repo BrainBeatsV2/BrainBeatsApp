@@ -45,6 +45,7 @@ class MusicGeneration extends Component {
             password: '',
             trackName: '',
             midiID: '',
+            canSave: false,
         };
         this.onStartRecording = this.onStartRecording.bind(this);
         this.onStopRecording = this.onStopRecording.bind(this);
@@ -142,7 +143,9 @@ class MusicGeneration extends Component {
         this.setState({
             playing: false,
             saveOptions: false,
-            recording: false
+            recording: false,
+            midiString: '',
+            rawMidiString: ''
         });
     }
     // Show Account Menu
@@ -159,36 +162,49 @@ class MusicGeneration extends Component {
     }
     // Range : Decreased Min
     onDecreaseMin() {
-        if (this.state.minRange > 1) {
-            this.setState({
-                minRange: (this.state.minRange - 1)
-            });
+        if (!this.state.recording)
+        {
+            if (this.state.minRange > 1) {
+                this.setState({
+                    minRange: (this.state.minRange - 1)
+                });
+            }
         }
+
     }
     // Range : Decreased Max
     onDecreaseMax() {
         // Decrease max as long as max >= min
-        if (this.state.maxRange > this.state.minRange) {
-            this.setState({
-                maxRange: (this.state.maxRange - 1)
-            });
+        if (!this.state.recording)
+        {
+            if (this.state.maxRange > this.state.minRange) {
+                this.setState({
+                    maxRange: (this.state.maxRange - 1)
+                });
+            }
         }
     }
     // Range : Increase Min
     onIncreaseMin() {
         // Increase min as long as min <= max
-        if (this.state.minRange < this.state.maxRange) {
-            this.setState({
-                minRange: (this.state.minRange + 1)
-            });
+        if (!this.state.recording)
+        {
+            if (this.state.minRange < this.state.maxRange) {
+                this.setState({
+                    minRange: (this.state.minRange + 1)
+                });
+            }
         }
     }
     // Range : Increase Max
     onIncreaseMax() {
-        if (this.state.maxRange < 7) {
-            this.setState({
-                maxRange: (this.state.maxRange + 1)
-            });
+        if (!this.state.recording)
+        {
+            if (this.state.maxRange < 7) {
+                this.setState({
+                    maxRange: (this.state.maxRange + 1)
+                });
+            }
         }
     }
     onLogout = (e) => {
@@ -273,8 +289,11 @@ class MusicGeneration extends Component {
             .then((res) => {
                 if (res.data.message === "MIDI uploaded successfully!") {
                     console.log("Successful MIDI creation");
-                    this.state.trackLink = this.state.trackLink + res.data.id;
-                    this.state.midiID = res.data.id;
+                    this.setState({
+                        trackLink = this.state.trackLink + res.data.id,
+                        midiID = res.data.id
+                    });
+                    
                     console.log(this.state.midiID);
                 }
             }).catch((error) => {
@@ -313,8 +332,10 @@ class MusicGeneration extends Component {
             .then((res) => {
                 if (res.data.message === "MIDI updated successfully!") {
                     console.log("Successful MIDI updating");
-                    this.state.trackLink = this.state.trackLink + res.data.id;
-                    this.state.midiID = res.data.id;
+                    this.setState({
+                        trackLink = this.state.trackLink + res.data.id,
+                        midiID = res.data.id
+                    });
                     console.log(this.state.midiID);
                 }
             }).catch((error) => {
@@ -323,6 +344,16 @@ class MusicGeneration extends Component {
     }
     handleTrackName = (e) => {
         this.setState({ trackName: e.target.value });
+        if (e.target.value.length == 0)
+        {
+            
+            this.setState({ canSave: false });
+        }
+        else
+        {
+            this.setState({ canSave: true });
+            
+        }
     };
     componentDidMount() {
         try {
@@ -401,7 +432,7 @@ class MusicGeneration extends Component {
                 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
                 <script src="https://cdn.jsdelivr.net/combine/npm/tone@14.7.58,npm/@magenta/music@1.22.1/es6/core.js,npm/focus-visible@5,npm/html-midi-player@1.4.0"></script>
 
-                <a id="back" class="showmenu" href="#" onMouseEnter={this.onShowMenu}><i class="material-icons" >menu</i> <span>MENU</span></a>
+                <a id="back" style={{display: ((this.state.recording || this.state.saveOptions) && (!this.state.saved && this.state.loggedin)) ? 'none' : 'block'}}class="showmenu" href="#" onMouseEnter={this.onShowMenu}><i class="material-icons" >menu</i> <span>MENU</span></a>
 
                 <div id="headset_selection" class="">
                     <p>{this.state.headsetMode} Mode</p>
@@ -426,18 +457,20 @@ class MusicGeneration extends Component {
                 <br />
                 <div id="stream-bar" style={{ position: (this.state.showMenu) ? "absolute" : "fixed" }}>
                     <div class="column">
-                        <div id="rerecord" style={{ display: this.state.saveOptions ? 'inline-block' : 'none' }}>
+                        <div id="rerecord" style={{ display: this.state.saveOptions ? 'inline-block' : 'none', width: '100%' }}>
 
-                            <table >
+                            <table  style={{width: '100%' }}>
                                 <tr>
-
-                                    <td ><i style={{ display: this.state.saved ? 'none' : 'block' }} class="material-icons" onClick={this.onReRecord}>backspace</i></td>
-                                    <td ><input class="input100 midi_name" placeholder="MIDI Name" type="text" name="TrackName" value={this.state.trackName} onChange={this.handleTrackName} required /></td>
+                                <td ><i style={{ display: this.state.saved ? 'none' : 'block' }} class="material-icons" onClick={this.onReRecord}>replay</i></td>
+                                  
+                                    <td><i class="material-icons test" onClick={this.onDownloadMIDI}>file_download</i></td>
+                                   
                                 </tr>
                                 <tr>
 
-                                    <th ><span style={{ display: this.state.saved ? 'none' : 'block' }}>Record Again</span></th>
-                                    <th ><span style={{ display: this.state.saved ? 'none' : 'block' }}>Track Name</span></th>
+                                <th ><span style={{ display: this.state.saved ? 'none' : 'block' }}>Record Again</span></th>
+                                    <th>Download MIDI </th> {/* TODO: This needs to be made a button, putting this here for now?   */}
+                                  
                                 </tr>
                             </table>
                         </div>
@@ -496,9 +529,9 @@ class MusicGeneration extends Component {
                         <div id="saveoptions" style={{ display: this.state.saveOptions ? 'block' : 'none' }}>
                             <table class="save_options">
                                 <tr>
-
-                                    <td><i class="material-icons test" onClick={this.onDownloadMIDI}>file_download</i></td>
-                                    <td style={{ display: (this.state.saved || !this.state.loggedin) ? 'none' : 'block' }}><i class="material-icons" onClick={this.onSaveRecording} >cloud_upload</i></td>
+                                <td ><input class="input100 midi_name" placeholder="Untitled" type="text" name="TrackName" style={{border: this.state.saved ? 'none' : '1px solid gray',cursor: this.state.saved ? 'pointer' : 'cursor'}} value={this.state.trackName} onChange={this.handleTrackName} readOnly={this.state.saved ? 'readonly' : ''} required /></td>
+                                
+                                     <td style={{ display: (this.state.saved || !this.state.loggedin || !this.state.canSave ) ? 'none' : 'block' }}><i class="material-icons" onClick={this.onSaveRecording} >cloud_upload</i></td>
                                     <Modal
                                         onClose={this.setOpen}
                                         onOpen={this.setOpen}
@@ -532,13 +565,14 @@ class MusicGeneration extends Component {
                                             />
                                         </Modal.Actions>
                                     </Modal>
-
+                                   
                                 </tr>
                                 <tr>
-
-                                    <th>Download MIDI </th> {/* TODO: This needs to be made a button, putting this here for now?   */}
-                                    <th style={{ display: (this.state.saved || !this.state.loggedin) ? 'none' : 'block' }}>Save and Upload</th>
+                                <th class="leftText"><span >Track Name</span></th>
+                                  
+                                    <th style={{ display: (this.state.saved || !this.state.loggedin || !this.state.canSave)  ? 'none' : 'block' }}>Save and Upload</th>
                                     <th style={{ display: this.state.saved ? 'block' : 'none' }}>Share</th>
+                                 
                                 </tr>
                             </table>
                         </div>

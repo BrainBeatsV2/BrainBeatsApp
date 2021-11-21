@@ -945,3 +945,14 @@ margin: 0 auto;
   color:white;
   border:1px solid white;
 }
+.midi_name
+{
+  border: 1px solid gray;
+  color:lightgray;
+  height:24px;
+  max-width: 200px;
+}
+.leftText
+{
+  text-align: left;
+}
