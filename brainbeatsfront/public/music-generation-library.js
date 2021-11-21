@@ -13,7 +13,8 @@ const DEBUG = false;
 
 function musicGenerationDriver(eegDataQueue, musicGenerationModel, scaleArray, scaleMap, octaveRangeArray, totalSeconds, secondsPerEEGSnapShot, noteDurationsPerBeatPerSecond, instrument_num) {
     track = new MidiWriter.Track();
-    console.log("musicGenerationDriver, model: " + musicGenerationModel + " scales: " + scaleArray + " octaveRangeArray: " + octaveRangeArray + " totalSeconds: " + totalSeconds);
+    console.log("musicGenerationDriver, model: " + musicGenerationModel + " scales: " + scaleArray + " octaveRangeArray: " + octaveRangeArray + " totalSeconds: " + totalSeconds + "Instrument num: " + instrument_num);
+    track.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: instrument_num }));
 
     if (musicGenerationModel == 1) {
         // TODO: Move this into mapAggregateBandPowerToRandomProbability 
@@ -28,8 +29,6 @@ function musicGenerationDriver(eegDataQueue, musicGenerationModel, scaleArray, s
         noteEvents = createNotes(totalSeconds, scaleMap);
         track = addNotesToTrack(track, noteEvents);
     }
-
-    track.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: instrument_num }));
 
     return track;
 }

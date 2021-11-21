@@ -12,7 +12,6 @@ import axios from 'axios';
 class MusicGeneration extends Component {
 
     constructor(props) {
-
         super(props);
         this.state = {
             name: "React",
@@ -83,9 +82,6 @@ class MusicGeneration extends Component {
         if (!this.state.isEEGScriptRunning) {
             console.log('Started recording!');
 
-            // Sets the MIDI instrument for MIDI writer
-            window.ipcRenderer.send('set_instrument', this.state.instrument);
-
             // Starts EEG script
             window.ipcRenderer.send('start_eeg_script', {
                 data: "-m " + this.state.model + " -h " + this.state.headsetMode
@@ -109,10 +105,9 @@ class MusicGeneration extends Component {
 
         // If EEG Script is running, stop it right now
         if (this.state.isEEGScriptRunning) {
-
             console.log('Ended recording!')
             // Parameters: key,scale
-            window.ipcRenderer.send('end_eeg_script', this.state.model, this.state.key, this.state.scale, this.state.minRange, this.state.maxRange, this.state.bpm, this.state.timing);
+            window.ipcRenderer.send('end_eeg_script', this.state.model, this.state.key, this.state.scale, this.state.minRange, this.state.maxRange, this.state.bpm, this.state.timing, this.state.instrument);
             window.ipcRenderer.on('end_eeg_script', (event, args) => {
                 console.log(args)
                 this.setState({ midiString: 'data:audio/midi;base64,' + args });
@@ -208,7 +203,7 @@ class MusicGeneration extends Component {
         } else {
             this.setState({ loggedin: 1 });
         }
-      }
+    }
 
     updateRange() {
         console.log("updated")
@@ -256,13 +251,13 @@ class MusicGeneration extends Component {
         );
 
         const options = {
-			headers: {
-				'Content-type': 'application/json; charset=utf-8'
-			}
-		};
+            headers: {
+                'Content-type': 'application/json; charset=utf-8'
+            }
+        };
 
-		const midiObject = {
-			email: this.state.email,
+        const midiObject = {
+            email: this.state.email,
             password: this.state.password,
             midi_name: this.state.trackName,
             midi_data: this.state.midiString,
@@ -272,11 +267,11 @@ class MusicGeneration extends Component {
             midi_scale: this.state.scale,
             midi_key: this.state.key,
             midi_time_signature: this.state.timing,
-		};
+        };
 
         axios.post('/api/midis/create', midiObject, options)
             .then((res) => {
-                if(res.data.message === "MIDI uploaded successfully!") {
+                if (res.data.message === "MIDI uploaded successfully!") {
                     console.log("Successful MIDI creation");
                     this.state.trackLink = this.state.trackLink + res.data.id;
                     this.state.midiID = res.data.id;
@@ -301,22 +296,22 @@ class MusicGeneration extends Component {
         })
 
         const options = {
-			headers: {
-				'Content-type': 'application/json; charset=utf-8'
-			}
-		};
+            headers: {
+                'Content-type': 'application/json; charset=utf-8'
+            }
+        };
 
-		const midiObject = {
-			email: this.state.email,
+        const midiObject = {
+            email: this.state.email,
             password: this.state.password,
             midi_name: this.state.trackName,
             midi_privacy: this.state.privacySettings,
             midi_notes: ("Created by: " + this.state.username),
-		};
+        };
 
-        axios.post(('/api/midis/'+this.state.midiID+'/update'), midiObject, options)
+        axios.post(('/api/midis/' + this.state.midiID + '/update'), midiObject, options)
             .then((res) => {
-                if(res.data.message === "MIDI updated successfully!") {
+                if (res.data.message === "MIDI updated successfully!") {
                     console.log("Successful MIDI updating");
                     this.state.trackLink = this.state.trackLink + res.data.id;
                     this.state.midiID = res.data.id;
@@ -331,11 +326,11 @@ class MusicGeneration extends Component {
     };
     componentDidMount() {
         try {
-            if(localStorage.getItem('username') !== null) {
+            if (localStorage.getItem('username') !== null) {
                 this.setState({
-                username: localStorage.getItem('username'),
-                email: localStorage.getItem('email'),
-                password: localStorage.getItem('password'),
+                    username: localStorage.getItem('username'),
+                    email: localStorage.getItem('email'),
+                    password: localStorage.getItem('password'),
                 })
             }
             if (localStorage.getItem('loggedIn') == true) {
@@ -344,10 +339,10 @@ class MusicGeneration extends Component {
             else {
                 this.setState({ loggedin: 1 });
             }
-          } catch (e) {
+        } catch (e) {
             this.setState({ loggedin: 1 });
             console.log(e);
-          }
+        }
         var player = document.querySelector("midi-player");
         if (player != null) {
 
@@ -375,21 +370,21 @@ class MusicGeneration extends Component {
             return <Redirect to={{
                 pathname: this.state.redirect,
                 state: {
-                  username: this.state.username,
-                  email: this.state.email,
-                  password: this.state.password 
+                    username: this.state.username,
+                    email: this.state.email,
+                    password: this.state.password
                 }
-              }}
+            }}
             />
         }
         return (
 
 
             <div class="music-generation-bg" >
-                <Sidebar 
-                    music_generation="true" 
-                    logout={this.onLogout} 
-                    is_shown={this.state.showMenu} 
+                <Sidebar
+                    music_generation="true"
+                    logout={this.onLogout}
+                    is_shown={this.state.showMenu}
                     logged_in={this.state.loggedin}
                     username={this.state.username}
                     email={this.state.email}
