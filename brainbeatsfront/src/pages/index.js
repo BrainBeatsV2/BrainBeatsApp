@@ -16,24 +16,29 @@ class Home extends Component {
         };
     }
 
-    render() {
+    componentDidMount() {
       try {
-        if(localStorage.getItem('username') !== null) {
+        if (localStorage.getItem('username') !== null) {
           this.setState({
-          username: localStorage.getItem('username'),
-          email: localStorage.getItem('email'),
-          password: localStorage.getItem('password'),
+            username: localStorage.getItem('username'),
+            email: localStorage.getItem('email'),
+            password: localStorage.getItem('password'),
           })
         }
+        console.log(localStorage.getItem('loggedIn'));
         if (localStorage.getItem('loggedIn') == true) {
-            this.setState({ loggedin: 1 });
-          }
-          else {
-            this.setState({ loggedin: 0 });
-          }
+          this.setState({ loggedin: 1 });
+        }
+        else {
+          this.setState({ loggedin: 0 });
+        }
       } catch (e) {
         this.setState({ loggedin: 0 });
+        console.log(e);
       }
+    }
+
+    render() {
         if(isElectron())
         {
             return <Redirect to={{
