@@ -149,9 +149,11 @@ class Login extends Component {
 
 					axios.post('/api/user', userObject, options)
 						.then((res) => {
-							this.state.username = res.data[0];
-							this.state.email = res.data[1];
-							this.state.password = res.data[2];
+							this.setState({
+								username: res.data[0],
+								email: res.data[1],
+								password: res.data[2]
+							});
 							localStorage.setItem('loggedIn', true);
 							localStorage.setItem('email', this.state.email);
 							localStorage.setItem('username', this.state.username);
@@ -162,8 +164,11 @@ class Login extends Component {
 							this.setState({ redirect: "/dashboard" });
 						}).catch((error) => {
 							console.log(error)
-							this.state.username = "";
-							this.state.password = "";
+							this.setState({
+								username: "",
+								email: "",
+								password: ""
+							});
 						});
 				}
 			}).catch((error) => {
@@ -208,6 +213,7 @@ class Login extends Component {
 							console.log(this.state.username);
 							console.log(this.state.email);
 							console.log(this.state.password);
+							this.setState({ redirect: "/dashboard" });
 						}).catch((error) => {
 							console.log(error)
 							this.setState({
@@ -216,8 +222,6 @@ class Login extends Component {
 								password: ""
 							});
 						});
-
-					this.setState({ redirect: "/dashboard" });
 				}
 				
 			}).catch((error) => {
