@@ -5,6 +5,8 @@ import MidiTrack from '../components/MidiTrack/index'
 import logo from '../images/logo_dev.png'
 import Sidebar from '../components/Sidebar/index'
 import axios from 'axios';
+import 'html-midi-player'
+import { PlayerElement } from 'html-midi-player';
 class Discover extends Component {
   constructor(props) {
     super(props);
@@ -24,10 +26,15 @@ class Discover extends Component {
       playing: false,
       loggedin:0,
       publicMidis: [],
+      loadedMidis: false,
+      noMidis: true
     };
     this.onShowMenu = this.onShowMenu.bind(this);
     this.onHideMenu = this.onHideMenu.bind(this);
     this.onDownloadMIDI = this.onDownloadMIDI.bind(this);
+    this.startPlay = this.startPlay.bind(this);
+    this.stopPlay = this.stopPlay.bind(this);
+    this.resumePlay = this.resumePlay.bind(this);
   }
 
   onShowMenu() {
@@ -40,18 +47,43 @@ class Discover extends Component {
       showMenu: false
     });
   }
-  onStartPlaying = (id, name, key, scale, bpm) => {
+  onStartPlaying = (id, name, key, scale, bpm, midiData) => {
     console.log("playing");
     console.log(id);
     console.log(name);
-    this.setState({ currentTrack: name, currentKey: key, currentScale: scale, currentBPM: bpm, playing: true })
+    this.setState({ currentTrack: name, currentKey: key, currentScale: scale, currentBPM: bpm, playing: true, rawMidiString: 'data:audio/midi;base64,' + midiData })
+    setTimeout(
+      function () {
+        this.startPlay();
+      }.bind(this),1000);
   }
   onStopPlaying = () => {
 
     this.setState({ playing: false })
+    this.stopPlay();
   }
   onResumePlaying = () => {
     this.setState({ playing: true })
+    this.resumePlay();
+  }
+  startPlay() {
+    var player = document.querySelector("midi-player");
+    player.start();
+    console.log("STARTPLAY");
+    console.log(player);
+    console.log(document.querySelector("midi-player"));
+  }
+  stopPlay(){
+    var player = document.querySelector("midi-player");
+    player.stop();
+    console.log("STOPPLAY");
+
+  }
+  resumePlay(){
+    var player = document.querySelector("midi-player");
+    player.start();
+    console.log("RESUMEPLAY");
+
   }
   onLogout = (e) => {
     //e.preventDefault();
@@ -89,7 +121,16 @@ class Discover extends Component {
         if (res.status == 200) {
           console.log("Getting public MIDIS");
           console.log(res.data);
-          this.setState({ publicMidis: res.data });
+          if (res.data == [])
+          {
+            this.setState({ noMidis: true });
+          }
+          else
+          {
+            this.setState({ noMidis: false });
+            
+          }
+          this.setState({ publicMidis: res.data, loadedMidis: true });
           console.log(this.state.publicMidis[0]);
           console.log(this.state.publicMidis[1]);
         }
@@ -117,6 +158,7 @@ class Discover extends Component {
     } catch (e) {
       this.setState({ loggedin: 0 });
     }
+    var player = document.querySelector("midi-player");
   }
     
 
@@ -137,8 +179,9 @@ class Discover extends Component {
       }}
       />
     }
-    if (this.state.publicMidis.length == 0) 
+    if (!this.state.loadedMidis) 
       this.showPublicMIDIS();
+      
     if (this.state.electron == null) {
       if (isElectron()) {
         this.setState({
@@ -167,9 +210,13 @@ class Discover extends Component {
           ></Sidebar>
           <div id="main_content">          
             <h2>MIDI Discover</h2>
+            <script src="https://cdn.jsdelivr.net/combine/npm/tone@14.7.58,npm/@magenta/music@1.22.1/es6/core.js,npm/focus-visible@5,npm/html-midi-player@1.4.0"></script>
+
+            <midi-player style={{ display: 'none' }} src={this.state.rawMidiString} ></midi-player>
+
             <div id="midi-tracks1" style={{marginTop:'10px'}}>
               {this.state.publicMidis.map(listitem => (
-                <MidiTrack playfn={this.onStartPlaying} track_id={listitem._id} track_name={listitem.name} isowner={0} privacy={'public'} link={"brainbeats.dev/play?id=" + listitem._id} song_key={listitem.key} scale={listitem.scale} bpm={listitem.bpm}></MidiTrack>
+                <MidiTrack playfn={this.onStartPlaying} midiData={listitem.midiData} track_id={listitem._id} track_name={listitem.name} isowner={0} privacy={'public'} link={"brainbeats.dev/play?id=" + listitem._id} song_key={listitem.key} scale={listitem.scale} bpm={listitem.bpm}></MidiTrack>
               ))}
             </div>
           </div>
