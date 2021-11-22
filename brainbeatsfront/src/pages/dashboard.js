@@ -5,6 +5,8 @@ import MidiTrack from '../components/MidiTrack/index'
 import logo from '../images/logo_dev.png'
 import Sidebar from '../components/Sidebar/index'
 import axios from 'axios';
+import 'html-midi-player'
+import { PlayerElement } from 'html-midi-player';
 class Dashboard extends Component {
   constructor(props) {
     super(props);
@@ -24,22 +26,60 @@ class Dashboard extends Component {
       playing: false,
       loggedin: 0,
       myMidis: [],
+      loadedMidis: false,
+      noMidis: true
     };
     this.onDownloadMIDI = this.onDownloadMIDI.bind(this);
+    this.startPlay = this.startPlay.bind(this);
+    this.stopPlay = this.stopPlay.bind(this);
+    this.resumePlay = this.resumePlay.bind(this);
   }
 
   onStartPlaying = (id, name, key, scale, bpm, midiData) => {
     console.log("playing");
     console.log(id);
     console.log(name);
-    this.setState({ currentTrack: name, currentKey: key, currentScale: scale, currentBPM: bpm, playing: true , rawMidiString: midiData})
+    this.setState({ currentTrack: name, 
+                    currentKey: key,
+                    currentScale: scale, 
+                    currentBPM: bpm, 
+                    playing: true , 
+                    rawMidiString: 'data:audio/midi;base64,' + midiData})
+    
+    setTimeout(
+      function () {
+        this.startPlay();
+      }.bind(this),1000);
   }
+
   onStopPlaying = () => {
 
     this.setState({ playing: false })
+  this.stopPlay();
   }
   onResumePlaying = () => {
     this.setState({ playing: true })
+    this.resumePlay();
+  }
+
+  startPlay() {
+    var player = document.querySelector("midi-player");
+    player.start();
+    console.log("STARTPLAY");
+    console.log(player);
+    console.log(document.querySelector("midi-player"));
+  }
+  stopPlay(){
+    var player = document.querySelector("midi-player");
+    player.stop();
+    console.log("STOPPLAY");
+
+  }
+  resumePlay(){
+    var player = document.querySelector("midi-player");
+    player.start();
+    console.log("RESUMEPLAY");
+
   }
   onLogout = (e) => {
     //e.preventDefault();
@@ -81,7 +121,17 @@ class Dashboard extends Component {
           if (res.status == 200) {
             console.log("Getting my MIDIS");
             console.log(res.data);
-            this.setState({ myMidis: res.data });
+            if (res.data == [])
+            {
+              this.setState({ noMidis: true });
+            }
+            else
+            {
+              this.setState({ noMidis: false });
+              
+            }
+
+            this.setState({ myMidis: res.data ,loadedMidis: true});
             console.log(this.state.myMidis[0]);
             console.log(this.state.myMidis[1]);
           }
@@ -112,6 +162,7 @@ class Dashboard extends Component {
       this.setState({ loggedin: 0 });
       console.log(e);
     }
+    var player = document.querySelector("midi-player");
   }
 
   // Download midi file
@@ -146,11 +197,13 @@ class Dashboard extends Component {
         });
       }
     }
+
     if (localStorage.getItem('loggedIn') == 'true' && this.state.loggedin == 0) {
       this.setState({ loggedin: 1 });
     }
-    if (this.state.myMidis.length == 0)
+    if (!this.state.loadedMidis)
       this.showMyMIDIS();
+    
     return (
       <div class="music-generation-bg" style={{ margin: '0' }}>
         <Sidebar
@@ -162,13 +215,15 @@ class Dashboard extends Component {
           email={this.state.email}
           password={this.state.password}
         ></Sidebar>
+         <script src="https://cdn.jsdelivr.net/combine/npm/tone@14.7.58,npm/@magenta/music@1.22.1/es6/core.js,npm/focus-visible@5,npm/html-midi-player@1.4.0"></script>
+
         <midi-player style={{ display: 'none' }} src={this.state.rawMidiString} ></midi-player>
         <div id="main_content">
           <h2>My MIDI</h2>
           <div class="midi-add" style={{ display: isElectron() ? 'inline-block' : 'none' }}><Link to={{ pathname: "/music-generation", state: { username: this.state.username, email: this.state.email, password: this.state.password } }}><i class="material-icons">add</i> Add Track</Link></div>
           <div id="midi-tracks1" style={{ marginTop: '10px' }}>
-            {this.state.myMidis.length ? '': this.state.myMidis.map(listitem => (
-              <MidiTrack playfn={this.onStartPlaying} midiData={listitem.midiData} track_id={listitem._id} track_name={listitem.name} isowner={1} privacy={listitem.privacy} link={"brainbeats.dev/play?id=" + listitem._id} song_key={listitem.key} scale={listitem.scale} bpm={listitem.bpm}></MidiTrack>
+            {this.state.noMidis ? '': this.state.myMidis.map(listitem => (
+              <MidiTrack playfn={this.onStartPlaying} midiData={listitem.midiData} track_id={listitem._id} track_name={listitem.name} isowner={1} privacy={listitem.privacy} link={listitem.link} song_key={listitem.key} scale={listitem.scale} bpm={listitem.bpm}></MidiTrack>
             ))}
           </div>
         </div>

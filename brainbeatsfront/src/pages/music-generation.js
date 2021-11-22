@@ -270,7 +270,7 @@ class MusicGeneration extends Component {
             email: this.state.email,
             password: this.state.password,
             midi_name: this.state.trackName,
-            midi_data: this.state.midiString,
+            midi_data: this.state.rawMidiString,
             midi_privacy: this.state.privacySettings,
             midi_notes: ("Created by: " + this.state.username),
             midi_bpm: this.state.bpm,
