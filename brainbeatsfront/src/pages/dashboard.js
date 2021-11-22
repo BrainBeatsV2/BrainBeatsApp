@@ -197,14 +197,14 @@ class Dashboard extends Component {
         });
       }
     }
+
+    if (localStorage.getItem('loggedIn') == 'true' && this.state.loggedin == 0) {
+      this.setState({ loggedin: 1 });
+    }
     if (!this.state.loadedMidis)
       this.showMyMIDIS();
     
     return (
-
-
-
-
       <div class="music-generation-bg" style={{ margin: '0' }}>
         <Sidebar
           active="dashboard"
