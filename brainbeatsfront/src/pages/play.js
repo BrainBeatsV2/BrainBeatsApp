@@ -27,6 +27,7 @@ class Play extends Component {
       loggedin: 0,
       midiId: null,
       midiPlayed: [],
+      noMidis: true,
     };
 
     this.onDownloadMIDI = this.onDownloadMIDI.bind(this);
@@ -66,7 +67,7 @@ class Play extends Component {
   }
     // Download midi file
   // TODO: Needs a button (onClick)
-  // TODO: Need to contact the DB 
+  // TODO: Need to contact the DB
   onDownloadMIDI() {
     window.ipcRenderer.send('download_midi_file', this.state.rawMidiString);
   }
@@ -82,10 +83,20 @@ class Play extends Component {
 
     };
 
-    axios.post('/api/midis/:' + this.state.midiId, midiObject, options)
+    axios.post(('/api/midis/' + e), midiObject, options)
       .then((res) => {
         if (res.status == 200) {
-          this.setState({ midiPlayed: res.data });
+          if (res.data == [])
+          {
+            this.setState({ noMidis: true });
+          }
+          else
+          {
+            console.log(res.data);
+            this.setState({ noMidis: false });
+            this.setState({ midiPlayed: res.data });
+          }
+
         }
       }).catch((error) => {
         console.log(error);
@@ -111,7 +122,7 @@ class Play extends Component {
       this.setState({ loggedin: 0 });
     }
   }
- 
+
 
   render() {
     if (this.state.redirect) {
@@ -120,7 +131,7 @@ class Play extends Component {
 			  state: {
 				username: this.state.username,
 				email: this.state.email,
-				password: this.state.password 
+				password: this.state.password
 			  }
 			}}
 		  />
@@ -140,33 +151,37 @@ class Play extends Component {
     const urlParams = new URLSearchParams(queryString);
     const id = urlParams.get('id');
     console.log(id);
-    if (this.state.midiId == null && id != null && id != "") {
+    console.log(this.state.midiId);
+    if ((this.state.midiId == null) && (id != null) && (id != "")) {
       this.setState({midiId: id});
-      this.loadMidi();
+      this.loadMidi(id);
     }
     return (
       <div class="music-generation-bg" style={{margin:'0'}}>
-          <Sidebar 
-            active="play" 
+          <Sidebar
+            active="play"
             is_shown="true"
             logout={this.onLogout}
-            logged_in={this.state.loggedin} 
+            logged_in={this.state.loggedin}
             username={this.state.username}
             email={this.state.email}
             password={this.state.password}
           ></Sidebar>
-          <div id="main_content">          
-           
+          <div id="main_content">
+
             <div id="midi-tracks1" style={{marginTop:'10px'}}>
                <div class="inner_text">
                  <h2>Track Name</h2> <p>by Author</p>
                  <br />
-               
-               <MidiTrack playfn={this.onStartPlaying} track_id={this.state.midiPlayed._id} track_name={this.state.midiPlayed.name} isowner={0} privacy={'link'} link={"brainbeats.dev/play/?id=" + this.state.midiPlayed._id} song_key={this.state.midiPlayed.key} scale={this.state.midiPlayed.scale} bpm={this.state.midiPlayed.bpm} ></MidiTrack>
+                 {console.log(this.state.midiPlayed.length)}
+                 {(!this.state.midiPlayed) ? '': (
+                   <MidiTrack playfn={this.onStartPlaying} track_id={this.state.midiPlayed._id} track_name={this.state.midiPlayed.name} isowner={0} privacy={'link'} link={"brainbeats.dev/play/?id=" + this.state.midiPlayed._id} song_key={this.state.midiPlayed.key} scale={this.state.midiPlayed.scale} bpm={this.state.midiPlayed.bpm} ></MidiTrack>
+                 )}
+
                <br />
                <br />
                <br />
-          
+
             <h3>Parameters</h3>
             <table style={{width: '50%', textAlign: 'left'}}>
               <tr>
@@ -174,8 +189,8 @@ class Play extends Component {
                 <th><h4>Scale</h4></th>
                 <th><h4>BPM</h4></th>
                 <th><h4>Timing</h4></th>
-                
-                
+
+
               </tr>
               <tr>
                 <td><p>11/02/2021 </p></td>
