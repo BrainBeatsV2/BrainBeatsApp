@@ -5,7 +5,8 @@ import MidiTrack from '../components/MidiTrack/index'
 import logo from '../images/logo_dev.png'
 import Sidebar from '../components/Sidebar/index'
 import axios from 'axios';
-
+import 'html-midi-player'
+import { PlayerElement } from 'html-midi-player';
 
 class Play extends Component {
   constructor(props) {
@@ -30,22 +31,49 @@ class Play extends Component {
     };
 
     this.onDownloadMIDI = this.onDownloadMIDI.bind(this);
+    this.startPlay = this.startPlay.bind(this);
+    this.stopPlay = this.stopPlay.bind(this);
+    this.resumePlay = this.resumePlay.bind(this);
   }
 
-  onStartPlaying = (id, name, key, scale, bpm) => {
+  onStartPlaying = (id, name, key, scale, bpm, midiData) => {
     console.log("playing");
     console.log(id);
     console.log(name);
-    this.setState({ currentTrack: name, currentKey: key, currentScale: scale, currentBPM: bpm, playing: true })
+    this.setState({ currentTrack: name, currentKey: key, currentScale: scale, currentBPM: bpm, playing: true , rawMidiString: 'data:audio/midi;base64,' + midiData })
+    setTimeout(
+      function () {
+        this.startPlay();
+      }.bind(this),500);
   }
   onStopPlaying = () => {
 
     this.setState({ playing: false })
+    this.stopPlay();
   }
   onResumePlaying = () => {
     this.setState({ playing: true })
+    this.resumePlay();
   }
+  startPlay() {
+    var player = document.querySelector("midi-player");
+    player.start();
+    console.log("STARTPLAY");
+    console.log(player);
+    console.log(document.querySelector("midi-player"));
+  }
+  stopPlay(){
+    var player = document.querySelector("midi-player");
+    player.stop();
+    console.log("STOPPLAY");
 
+  }
+  resumePlay(){
+    var player = document.querySelector("midi-player");
+    player.start();
+    console.log("RESUMEPLAY");
+
+  }
   onLogout = (e) => {
     localStorage.clear();
     this.setState({
@@ -53,11 +81,6 @@ class Play extends Component {
       password: '',
       email: '',
     });
-    if (isElectron()) {
-      this.setState({ loggedin: 0 });
-    } else {
-      this.setState({ loggedin: 1 });
-    }
     if (isElectron()) {
       this.setState({ redirect: "/music-generation" });
     } else {
@@ -158,6 +181,9 @@ class Play extends Component {
           <div id="main_content">          
            
             <div id="midi-tracks1" style={{marginTop:'10px'}}>
+            <script src="https://cdn.jsdelivr.net/combine/npm/tone@14.7.58,npm/@magenta/music@1.22.1/es6/core.js,npm/focus-visible@5,npm/html-midi-player@1.4.0"></script>
+
+            <midi-player style={{ display: 'none' }} src={this.state.rawMidiString} ></midi-player>
                <div class="inner_text">
                  <h2>Track Name</h2> <p>by Author</p>
                  <br />
