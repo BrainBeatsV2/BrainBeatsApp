@@ -1,7 +1,6 @@
 import './App.css';
 import 'semantic-ui-css/semantic.css';
 import isElectron from './library/isElectron';
-import Navbar from './components/Navbar'
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom'
 import Home from './pages'
 import Login from './pages/login'

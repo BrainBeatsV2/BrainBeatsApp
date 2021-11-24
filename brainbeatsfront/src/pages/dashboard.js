@@ -29,7 +29,6 @@ class Dashboard extends Component {
       loadedMidis: false,
       noMidis: true
     };
-    this.onDownloadMIDI = this.onDownloadMIDI.bind(this);
     this.startPlay = this.startPlay.bind(this);
     this.stopPlay = this.stopPlay.bind(this);
     this.resumePlay = this.resumePlay.bind(this);
@@ -51,6 +50,7 @@ class Dashboard extends Component {
         this.startPlay();
       }.bind(this),1000);
   }
+    // Save Settings Button
 
   onStopPlaying = () => {
 
@@ -164,15 +164,7 @@ class Dashboard extends Component {
     }
     var player = document.querySelector("midi-player");
   }
-
-  // Download midi file
-  onDownloadMIDI() {
-    window.ipcRenderer.send('download_midi_file', this.state.rawMidiString);
-  }
-
-
-
-
+  
   render() {
     if (this.state.redirect) {
       return <Redirect to={{
@@ -223,7 +215,7 @@ class Dashboard extends Component {
           <div class="midi-add" style={{ display: isElectron() ? 'inline-block' : 'none' }}><Link to={{ pathname: "/music-generation", state: { username: this.state.username, email: this.state.email, password: this.state.password } }}><i class="material-icons">add</i> Add Track</Link></div>
           <div id="midi-tracks1" style={{ marginTop: '10px' }}>
             {this.state.noMidis ? '': this.state.myMidis.map(listitem => (
-              <MidiTrack playfn={this.onStartPlaying} midiData={listitem.midiData} track_id={listitem._id} track_name={listitem.name} isowner={1} privacy={listitem.privacy} link={listitem.link} song_key={listitem.key} scale={listitem.scale} bpm={listitem.bpm}></MidiTrack>
+              <MidiTrack playfn={this.onStartPlaying} midiData={listitem.midiData} track_id={listitem._id} track_name={listitem.name} isowner={1} privacy={listitem.privacy} link={listitem._id} song_key={listitem.key} scale={listitem.scale} bpm={listitem.bpm}></MidiTrack>
             ))}
           </div>
         </div>
@@ -264,7 +256,18 @@ class Dashboard extends Component {
 
           </div>
           <div class="column" style={{ width: '10%' }}>
+          <table style={{ textAlign: 'center', display: (this.state.rawMidiString == '') ? 'none' : 'inline-block' }}>
+              <tr>
+                <td><a href={this.state.rawMidiString} download={this.state.currentTrack == "" ? "" : (this.state.currentTrack + ".mid") }><i class="material-icons">file_download</i></a></td>
 
+
+              </tr>
+              <tr>
+              <th>DOWNLOAD</th>
+              
+                
+              </tr>
+            </table>
           </div>
 
 

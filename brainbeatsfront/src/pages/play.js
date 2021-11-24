@@ -31,7 +31,6 @@ class Play extends Component {
       noMidis: true,
     };
 
-    this.onDownloadMIDI = this.onDownloadMIDI.bind(this);
     this.startPlay = this.startPlay.bind(this);
     this.stopPlay = this.stopPlay.bind(this);
     this.resumePlay = this.resumePlay.bind(this);
@@ -41,7 +40,7 @@ class Play extends Component {
     console.log("playing");
     console.log(id);
     console.log(name);
-    this.setState({ currentTrack: name, currentKey: key, currentScale: scale, currentBPM: bpm, playing: true , rawMidiString: 'data:audio/midi;base64,' + midiData })
+    this.setState({ currentTrack: name, currentKey: key, currentScale: scale, currentBPM: bpm, playing: true , rawMidiString: 'data:audio/midi;base64,' + midiData });
     setTimeout(
       function () {
         this.startPlay();
@@ -88,12 +87,6 @@ class Play extends Component {
       this.setState({ redirect: "/" });
     }
   }
-    // Download midi file
-  // TODO: Needs a button (onClick)
-  // TODO: Need to contact the DB
-  onDownloadMIDI() {
-    window.ipcRenderer.send('download_midi_file', this.state.rawMidiString);
-  }
 
   loadMidi = (e) => {
     const options = {
@@ -118,6 +111,7 @@ class Play extends Component {
             console.log(res.data);
             this.setState({ noMidis: false });
             this.setState({ midiPlayed: res.data });
+            console.log(this.state.midiPlayed);
           }
 
         }
@@ -143,6 +137,24 @@ class Play extends Component {
         }
     } catch (e) {
       this.setState({ loggedin: 0 });
+    }
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const id = urlParams.get('id');
+    console.log(id);
+    console.log(this.state.midiId);
+    if ((this.state.midiId == null) && (id != null) && (id != "")) {
+      this.setState({midiId: id});
+      this.loadMidi(id);
+    }
+    else
+    {
+      // if play page not found -- take user to discover instead 
+      if (isElectron()) {
+        this.setState({ redirect: "/music-generation" });
+      } else {
+        this.setState({ redirect: "/discover" });
+      }
     }
   }
 
@@ -170,15 +182,7 @@ class Play extends Component {
         });
       }
     }
-    const queryString = window.location.search;
-    const urlParams = new URLSearchParams(queryString);
-    const id = urlParams.get('id');
-    console.log(id);
-    console.log(this.state.midiId);
-    if ((this.state.midiId == null) && (id != null) && (id != "")) {
-      this.setState({midiId: id});
-      this.loadMidi(id);
-    }
+
     return (
       <div class="music-generation-bg" style={{margin:'0'}}>
           <Sidebar
@@ -197,12 +201,20 @@ class Play extends Component {
 
             <midi-player style={{ display: 'none' }} src={this.state.rawMidiString} ></midi-player>
                <div class="inner_text">
-                 <h2>Track Name</h2> <p>by Author</p>
+                 <table>
+                  <tr>
+                    <td><h2>{this.state.midiPlayed.name}</h2>
+                        <p>{this.state.midiPlayed.notes}</p>
+                    </td>
+                    <td>{(!this.state.midiPlayed) ? '': (
+                   <MidiTrack playonly={true} playfn={this.onStartPlaying} midiData={this.state.midiPlayed.midiData} track_id={this.state.midiPlayed._id} track_name={this.state.midiPlayed.name} isowner={0} privacy={'link'} link={"brainbeats.dev/play?id=" + this.state.midiPlayed._id} song_key={this.state.midiPlayed.key} scale={this.state.midiPlayed.scale} bpm={this.state.midiPlayed.bpm} ></MidiTrack>
+                 )}</td>
+                  </tr>
+                  </table>
+                
                  <br />
-                 {console.log(this.state.midiPlayed.length)}
-                 {(!this.state.midiPlayed) ? '': (
-                   <MidiTrack playfn={this.onStartPlaying} track_id={this.state.midiPlayed._id} track_name={this.state.midiPlayed.name} isowner={0} privacy={'link'} link={"brainbeats.dev/play/?id=" + this.state.midiPlayed._id} song_key={this.state.midiPlayed.key} scale={this.state.midiPlayed.scale} bpm={this.state.midiPlayed.bpm} ></MidiTrack>
-                 )}
+                 
+                 
 
                <br />
                <br />
@@ -219,65 +231,40 @@ class Play extends Component {
 
               </tr>
               <tr>
-                <td><p>11/02/2021 </p></td>
-                <td><p>Model 1</p></td>
-                <td><p>120</p></td>
-                <td><p>4/4</p></td>
+                <td><p>{this.state.midiPlayed.key}</p></td>
+                <td><p>{this.state.midiPlayed.scale}</p></td>
+                <td><p>{this.state.midiPlayed.bpm}</p></td>
+                <td><p>{this.state.midiPlayed.timeSignature}</p></td>
               </tr>
             </table>
             <br />
               <h3>Info</h3>
               <table style={{ width: '50%', textAlign: 'left' }}>
                 <tr>
-
                   <th><h4>Created On</h4></th>
-                  <th><h4>Model Used</h4></th>
-                  <th><h4>Instrument</h4></th>
                 </tr>
                 <tr>
-
-                  <td><p>11/02/2021 </p></td>
-                  <td><p>Model 1</p></td>
-                  <td><p>Piano</p></td>
-
+                  <td><p>{this.state.midiPlayed.createdAt}</p></td>
                 </tr>
               </table>
-
-
-
-
             </div>
-
-
           </div>
         </div>
-
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
-
-
-
-
-
         <div id="stream-bar">
           <div class="column" style={{ width: '10%' }}>
-            <   div id="play_stream" style={{ display: this.state.saveOptions ? 'none' : 'block' }}>
+            <div id="play_stream" style={{ display: this.state.saveOptions ? 'none' : 'block' }}>
               <i class="material-icons" onClick={this.onResumePlaying} style={{ display: this.state.playing ? 'none' : 'inline-block', fontSize: '59px' }}>play_circle_filled</i>
               <i class="material-icons" onClick={this.onStopPlaying} style={{ display: this.state.playing ? 'inline-block' : 'none', fontSize: '59px' }}>pause</i>
-
             </div>
-
           </div>
           <div class="column" style={{ width: '80%' }}>
             <h3 style={{ marginBottom: '0px' }} >{this.state.currentTrack}</h3>
-
-
-
             <table style={{ textAlign: 'center', display: 'inline-block' }}>
               <tr>
                 <th>KEY</th>
                 <th>SCALE</th>
                 <th>BPM</th>
-
               </tr>
               <tr>
                 <td>{this.state.currentKey}</td>
@@ -285,10 +272,18 @@ class Play extends Component {
                 <td>{this.state.currentBPM}</td>
               </tr>
             </table>
-
           </div>
           <div class="column" style={{ width: '10%' }}>
-
+          <table style={{ textAlign: 'center', display: (this.state.rawMidiString == '') ? 'none' : 'inline-block' }}>
+              <tr>
+                <td><a href={this.state.rawMidiString} download={this.state.currentTrack == "" ? "" : (this.state.currentTrack + ".mid") }><i class="material-icons">file_download</i></a></td>
+              </tr>
+              <tr>
+              <th>DOWNLOAD</th>
+              
+                
+              </tr>
+            </table>
           </div>
 
 

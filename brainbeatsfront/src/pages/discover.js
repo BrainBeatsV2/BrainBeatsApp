@@ -31,7 +31,6 @@ class Discover extends Component {
     };
     this.onShowMenu = this.onShowMenu.bind(this);
     this.onHideMenu = this.onHideMenu.bind(this);
-    this.onDownloadMIDI = this.onDownloadMIDI.bind(this);
     this.startPlay = this.startPlay.bind(this);
     this.stopPlay = this.stopPlay.bind(this);
     this.resumePlay = this.resumePlay.bind(this);
@@ -160,12 +159,6 @@ class Discover extends Component {
     }
     var player = document.querySelector("midi-player");
   }
-    
-
-  // Download midi file
-  onDownloadMIDI() {
-    window.ipcRenderer.send('download_midi_file', this.state.rawMidiString);
-  }
 
   render() {
     if (this.state.redirect) {
@@ -258,7 +251,18 @@ class Discover extends Component {
 
           </div>
           <div class="column" style={{ width: '10%' }}>
+          <table style={{ textAlign: 'center', display: (this.state.rawMidiString == '') ? 'none' : 'inline-block' }}>
+              <tr>
+                <td><a href={this.state.rawMidiString} download={this.state.currentTrack == "" ? "" : (this.state.currentTrack + ".mid") }><i class="material-icons">file_download</i></a></td>
 
+
+              </tr>
+              <tr>
+              <th>DOWNLOAD</th>
+              
+                
+              </tr>
+            </table>
           </div>
 
 
