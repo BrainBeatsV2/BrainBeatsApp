@@ -45,11 +45,6 @@ return (<>
                       <Link to={{pathname: "/dashboard", state: {username: username, email: email, password: password}}}>Dashboard</Link>
                   </li>
 
-                  <li style={{display: (!is_logged_in) ? 'none' : ''}} class={(active_page == "play") ? "active" : ""}>
-                      <i class="material-icons">play_arrow</i>
-                      <Link to={{pathname: "/play", state: {username: username, email: email, password: password}}}>Play</Link>
-                  </li>
-
                   <li style={{display: (!is_logged_in) ? 'none' : ''}} class={(active_page == "discover") ? "active" : ""}>
                     <i class="material-icons">travel_explore</i>
                     <Link to={{pathname: "/discover", state: {username: username, email: email, password: password}}}>MIDI Discover</Link>
