@@ -54,16 +54,6 @@ return (<>
                     <i class="material-icons">travel_explore</i>
                     <Link to={{pathname: "/discover", state: {username: username, email: email, password: password}}}>MIDI Discover</Link>
                   </li>
-
-                  <li style={{display: (!is_logged_in) ? 'none' : ''}} class={(active_page == "my-account") ? "active" : ""}>
-                    <i class="material-icons">account_circle</i>
-                    <Link to={{pathname: "/my-account", state: {username: username, email: email, password: password}}}>My Account</Link>
-                  </li>
-                   
-                  <li style={{display: (!is_logged_in) ? 'none' : ''}} class={(active_page == "settings") ? "active" : ""}>
-                    <i class="material-icons">settings</i>
-                    <Link to={{pathname: "/settings", state: {username: username, email: email, password: password}}}>Settings</Link>
-                  </li>
                   
                   <li style={{display: (!is_logged_in) ? 'none' : ''}} class={(active_page == "help") ? "active" : ""}>
                     <i class="material-icons">help</i>
