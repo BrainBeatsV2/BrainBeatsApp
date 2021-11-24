@@ -1,7 +1,6 @@
 import React, { Component, useState } from 'react';
 import isElectron from '../library/isElectron';
 import { Redirect } from "react-router-dom";
-import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar/index'
 class Home extends Component {
     constructor(props) {
@@ -76,7 +75,9 @@ class Home extends Component {
                 ></Sidebar>
                 <div id="main_content" class="help_screen">          
                   <h2>Brain Beats</h2>
-      
+                  <h3>About</h3>
+                  <h3>How To Get Started</h3>
+                  <h3>Help</h3>
                 </div>
       
               <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />

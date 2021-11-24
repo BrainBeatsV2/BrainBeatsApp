@@ -272,7 +272,7 @@ class MusicGeneration extends Component {
             midi_name: this.state.trackName,
             midi_data: this.state.rawMidiString,
             midi_privacy: this.state.privacySettings,
-            midi_notes: ("Created by: " + this.state.username),
+            midi_notes: this.state.username,
             midi_bpm: this.state.bpm,
             midi_scale: this.state.scale,
             midi_key: this.state.key,
@@ -295,7 +295,7 @@ class MusicGeneration extends Component {
 
     // Download midi file
     onDownloadMIDI() {
-        window.ipcRenderer.send('download_midi_file', this.state.rawMidiString);
+      //  window.ipcRenderer.send('download_midi_file', this.state.rawMidiString);
     }
 
     // Save Settings Button
@@ -316,7 +316,7 @@ class MusicGeneration extends Component {
             password: this.state.password,
             midi_name: this.state.trackName,
             midi_privacy: this.state.privacySettings,
-            midi_notes: ("Created by: " + this.state.username),
+            midi_notes: this.state.username,
         };
 
         axios.post(('/api/midis/' + this.state.midiID + '/update'), midiObject, options)
@@ -455,7 +455,7 @@ class MusicGeneration extends Component {
                                 <tr>
                                 <td ><i style={{ display: this.state.saved ? 'none' : 'block' }} class="material-icons" onClick={this.onReRecord}>replay</i></td>
                                   
-                                    <td><i class="material-icons test" onClick={this.onDownloadMIDI}>file_download</i></td>
+                                    <td><a href={'data:audio/midi;base64,'+this.state.rawMidiString} download={ (this.state.loggedin && this.state.trackName != "" )? (this.state.trackName + ".mid"): "untitled.mid"}><i class="material-icons test">file_download</i></a></td>
                                    
                                 </tr>
                                 <tr>
@@ -478,11 +478,10 @@ class MusicGeneration extends Component {
                                 <tr>
                                     <td>
                                         <select id="parameter_model" disabled={this.state.recording} value={this.state.model} onChange={this.changeModel}>
-                                            <option value="1">Model 1</option>
-                                            <option value="2">Model 2</option>
-                                            <option value="3">Model 3</option>
-                                            <option value="4">Model 4</option>
-                                            <option value="5">Model 5</option>
+                                            <option value="1">Probabilistic Mapping</option>
+                                            <option value="2">Blues Improvisation</option>
+                                            <option value="3">Neumann's 1:1</option>
+                                            <option value="4">Melody Improvisation</option>
                                         </select>
                                     </td>
                                     <td>
