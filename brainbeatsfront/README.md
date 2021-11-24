@@ -9,11 +9,7 @@ cd release
 ```
 npm install
 ```
-### 4) Build the application
-```
-npm run build
-```
-### 5) Run the app!
+### 4) Run the app!
 ```
 npm run desktop
 ```
