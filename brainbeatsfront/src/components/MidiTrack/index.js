@@ -41,6 +41,39 @@ const updateSettings = (id,privacy,name) => {
         console.log(error);
     });
 }
+
+const deleteMidi = (id) => {
+    var user_email = "";
+    var user_password = "";
+    const options = {
+        headers: {
+            'Content-type': 'application/json; charset=utf-8'
+        }
+    };
+    try {
+        if (localStorage.getItem('username') !== null) {
+            user_email = localStorage.getItem('email');
+            user_password = localStorage.getItem('password');
+        }
+
+    } catch (e) {
+    }
+
+    const midiObject = {
+        email: user_email,
+        password: user_password,
+    };
+
+    axios.post(('/api/midis/' + id + '/delete'), midiObject, options)
+        .then((res) => {
+            if (res.data.message === "MIDI deleted successfully!") {
+                console.log("Successful MIDI deletion");
+            }
+        }).catch((error) => {
+            console.log(error);
+        });
+}
+
 const Index = (props) => {
     const [open , setOpen] = useState(false);
     const [privacy, setPrivacy] = useState(props.privacy);
@@ -57,7 +90,7 @@ return (<>
         <div class="midi-track" style={{display: hide? 'none':'block', background: playonly? 'none': ''}}>
                                                 
             <i class="material-icons midi-play" onClick={() => props.playfn(props.track_id,name,key,scale,bpm,midiData)}  style={{fontSize: playonly? '37px':'24px',marginTop: playonly? '-12px':'0px'}}>play_circle</i>{name}
-            <i class="material-icons midi-delete" onClick={function() {delete_track(props); setHidden(true);}} style={{display: props.isowner == "1" ? 'inline-block' : 'none'}}>delete</i>
+            <i class="material-icons midi-delete" onClick={function() {delete_track(props); setHidden(true); deleteMidi(props.track_id)}} style={{display: props.isowner == "1" ? 'inline-block' : 'none'}}>delete</i>
             
             <Modal
                 onClose={() => setOpen(false)}
