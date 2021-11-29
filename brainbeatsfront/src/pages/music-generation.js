@@ -32,6 +32,7 @@ class MusicGeneration extends Component {
             maxRange: 3,
             headsetMode: 'Synthetic',
             saveModalOpen: false,
+            saveEEGOpen: false,
             saving: false,
             saved: false,
             downloadMIDI: false,
@@ -46,6 +47,8 @@ class MusicGeneration extends Component {
             trackName: '',
             midiID: '',
             canSave: false,
+            eegMAC: '',
+            eegSerial: ''
         };
         this.onStartRecording = this.onStartRecording.bind(this);
         this.onStopRecording = this.onStopRecording.bind(this);
@@ -64,11 +67,14 @@ class MusicGeneration extends Component {
         this.setOpen = this.setOpen.bind(this);
         this.onSaveRecording = this.onSaveRecording.bind(this);
         this.onChangeTrackSettings = this.onChangeTrackSettings.bind(this);
+        this.onChangeEEGPorts = this.onChangeEEGPorts.bind(this);
         this.changeInstrument = this.changeInstrument.bind(this);
         this.changeModel = this.changeModel.bind(this);
         this.changeKey = this.changeKey.bind(this);
         this.changeScale = this.changeScale.bind(this);
         this.onDownloadMIDI = this.onDownloadMIDI.bind(this);
+        this.onCancelEEGMode = this.onCancelEEGMode.bind(this);
+        this.onOpenEEGMode = this.onOpenEEGMode.bind(this);
     }
     // Start MIDI Recording
     onStartRecording() {
@@ -242,6 +248,20 @@ class MusicGeneration extends Component {
             saveModalOpen: !this.state.saveModalOpen
         })
     }
+    onOpenEEGMode()
+    {
+        this.setState({
+            saveEEGOpen: !this.state.saveEEGOpen,
+            headsetMode: 'EEG'
+        })
+    }
+    onCancelEEGMode()
+    {
+        this.setState({
+            saveEEGOpen: !this.state.saveEEGOpen,
+            headsetMode: 'Synthetic'
+        })
+    }
     // Clicking Save and Upload and show loading screen
     onSaveRecording = (e) => {
         e.preventDefault();
@@ -297,7 +317,13 @@ class MusicGeneration extends Component {
     onDownloadMIDI() {
       //  window.ipcRenderer.send('download_midi_file', this.state.rawMidiString);
     }
-
+    // Changing MAC/Serial Ports
+    onChangeEEGPorts(){
+        this.setState({
+            saveEEGOpen: !this.state.saveEEGOpen,
+            headsetMode: 'EEG'
+        })
+    }
     // Save Settings Button
     onChangeTrackSettings() {
         this.setState({
@@ -384,7 +410,13 @@ class MusicGeneration extends Component {
     changeKey(event) { this.setState({ key: event.target.value }); }
     changeScale(event) { this.setState({ scale: event.target.value }); }
     changePrivacy = (e, { value }) => this.setState({ privacySettings: value });
+    handleEEGMac = (e) => {
+		this.setState({ eegMAC: e.target.value });
+	};
 
+	handleEEGSerial = (e) => {
+		this.setState({ eegSerial: e.target.value });
+	};
     render() {
         if (!isElectron()) {
             return <Redirect to={{
@@ -424,12 +456,39 @@ class MusicGeneration extends Component {
                 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
                 <script src="https://cdn.jsdelivr.net/combine/npm/tone@14.7.58,npm/@magenta/music@1.22.1/es6/core.js,npm/focus-visible@5,npm/html-midi-player@1.4.0"></script>
 
-                <a id="back" style={{display: ((this.state.recording || this.state.saveOptions) && (!this.state.saved && this.state.loggedin)) ? 'none' : 'block'}}class="showmenu" href="#" onMouseEnter={this.onShowMenu}><i class="material-icons" >menu</i> <span>MENU</span></a>
+                <a id="back" style={{display: ((this.state.recording || this.state.saveOptions) && (!this.state.saved && this.state.loggedin)) ? 'none' : 'inline-block'}}class="showmenu" href="#" onMouseEnter={this.onShowMenu}><i class="material-icons" >menu</i> <span>MENU</span></a>
 
                 <div id="headset_selection" class="">
                     <p>{this.state.headsetMode} Mode</p>
                     <i class="material-icons" onClick={this.onSynthetic} style={{ color: (this.state.headsetMode == 'Synthetic') ? 'white' : 'rgba(48,50,54)' }}>memory</i>
-                    <i class="material-icons" onClick={this.onEEG} style={{ color: (this.state.headsetMode == 'EEG') ? 'white' : 'rgba(48,50,54)' }}>headset</i>
+                    <Modal
+                    onClose={this.onOpenEEGMode}
+                    onOpen={this.onOpenEEGMode}
+                    open={this.state.saveEEGOpen}
+                    trigger={<i class="material-icons" onClick={this.onEEG} style={{ color: (this.state.headsetMode == 'EEG') ? 'white' : 'rgba(48,50,54)' }}>headset</i>}
+                    closeOnDimmerClick={false} >
+                    <Modal.Header>EEG Settings</Modal.Header>
+                    <Modal.Content text>
+                        <Modal.Description>
+                            <Header>Connected MAC Address</Header>
+                            <input className="modal_input" defaultValue={this.state.eegMAC} type="text" onChange={this.handleEEGMac} />
+                            <Header>Connected Serial Port</Header>
+                            <input className="modal_input" defaultValue={this.state.eegSerial} type="text" onChange={this.handleEEGSerial} />
+                        </Modal.Description>
+                    </Modal.Content>
+                    <Modal.Actions>
+                        <Button color='black' onClick={this.onCancelEEGMode}>
+                            Cancel
+                        </Button>
+                        <Button
+                            content="Adjust EEG Settings"
+                            labelPosition='right'
+                            icon='checkmark'
+                            onClick={this.onChangeEEGPorts}
+                            positive
+                        />
+                    </Modal.Actions>
+                </Modal>
                 </div>
 
                 <div class="stream">
