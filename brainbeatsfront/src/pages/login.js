@@ -20,6 +20,7 @@ class Login extends Component {
 			newPassword: '',
 			confirmedPassword: '',
 			redirect: null,
+			error: ''
 		};
 		this.onShowRegister = this.onShowRegister.bind(this);
 		this.onShowLogin = this.onShowLogin.bind(this);
@@ -107,6 +108,9 @@ class Login extends Component {
 				});
 			}).catch((error) => {
 				console.log(error)
+				this.setState({
+					error:error
+				})
 			});
 	}
 
@@ -128,8 +132,12 @@ class Login extends Component {
 		axios.post('/api/resetpassword', userObject, options)
 			.then((res) => {
 				console.log(res.data)
+				this.setState({ redirect: "/login" });
 			}).catch((error) => {
 				console.log(error)
+				this.setState({
+					error:error
+				})
 			});
 	}
 
@@ -173,7 +181,8 @@ class Login extends Component {
 							this.setState({
 								username: "",
 								email: "",
-								password: ""
+								password: "",
+								error: error
 							});
 						});
 				}
@@ -225,7 +234,8 @@ class Login extends Component {
 							this.setState({
 								username: "",
 								email: "",
-								password: ""
+								password: "",
+								error: error
 							});
 						});
 				}
@@ -287,7 +297,7 @@ class Login extends Component {
 				<div id="main_content" >
 				<div class="wrap-login100" style={{margin: '0 auto'}}>
 					<img style={{ height: '150px', margin: '0 auto', display: isElectron() ? 'block' : 'none' }} src={logo} alt='logo' />
-					<div id="banner" class="alert m-b-38" role="alert"></div>
+					<div id="banner" class="alert m-b-38" role="alert">{this.state.error}</div>
 					<form id="loginform" action="" method="post" class="login100-form validate-form" style={{ display: this.state.showLogin ? 'block' : 'none' }} onSubmit={this.handleLogin}>
 						<div class="wrap-input100 validate-input" >
 							<input class="input100" placeholder="Username or Email" type="text" name="USERNAME" value={this.state.username} onChange={this.handleUsername} required />
