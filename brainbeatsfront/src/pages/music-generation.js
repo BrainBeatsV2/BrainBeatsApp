@@ -413,6 +413,9 @@ class MusicGeneration extends Component {
     handleEEGMac = (e) => {
 		this.setState({ eegMAC: e.target.value });
 	};
+    handleBPMChange = (e) => {
+		this.setState({ bpm: e.target.value });
+	};
 
 	handleEEGSerial = (e) => {
 		this.setState({ eegSerial: e.target.value });
@@ -669,7 +672,7 @@ class MusicGeneration extends Component {
 
                                         </select>
                                     </td>
-                                    <td><input id="parameter_bpm" type="text" class="border-input bpm" defaultValue="120" disabled={this.state.recording} /></td>
+                                    <td><input id="parameter_bpm" type="text" class="border-input bpm" defaultValue="120" disabled={this.state.recording} onChange={this.handleBPMChange} /></td>
                                 </tr>
                             </table>
                         </div>
