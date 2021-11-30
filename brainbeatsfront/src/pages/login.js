@@ -99,6 +99,12 @@ class Login extends Component {
 		axios.post('/api/requestreset', userObject, options)
 			.then((res) => {
 				console.log(res.data)
+				this.setState({
+					showRegister: false,
+					showLogin: false,
+					showResetPassword: false,
+					showVerify: true
+				});
 			}).catch((error) => {
 				console.log(error)
 			});
