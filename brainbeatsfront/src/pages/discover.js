@@ -130,8 +130,6 @@ class Discover extends Component {
             
           }
           this.setState({ publicMidis: res.data, loadedMidis: true });
-          console.log(this.state.publicMidis[0]);
-          console.log(this.state.publicMidis[1]);
         }
       }).catch((error) => {
         console.log(error);
@@ -208,7 +206,7 @@ class Discover extends Component {
             <midi-player style={{ display: 'none' }} src={this.state.rawMidiString} ></midi-player>
 
             <div id="midi-tracks1" style={{marginTop:'10px'}}>
-              {this.state.publicMidis.map(listitem => (
+              {this.state.noMidis? '': this.state.publicMidis.map(listitem => (
                 <MidiTrack playfn={this.onStartPlaying} midiData={listitem.midiData} track_id={listitem._id} track_name={listitem.name} isowner={0} privacy={'public'} link={"brainbeats.dev/play?id=" + listitem._id} song_key={listitem.key} scale={listitem.scale} bpm={listitem.bpm}></MidiTrack>
               ))}
             </div>

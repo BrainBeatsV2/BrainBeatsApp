@@ -880,7 +880,10 @@ min-width:217px;
   .active a{
     color:white!Important;
   }
-  
+  .black_text
+  {
+    color:#000;
+  }
   #main_content
   {
     min-width: 767px;
@@ -889,7 +892,7 @@ min-width:217px;
     background:linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.2));
     color:white;
     padding:80px 40px 40px 40px;
-    height: 100vh;
+    min-height: 100vh;
   }
   .main_header li a:hover
 {
