@@ -880,7 +880,10 @@ min-width:217px;
   .active a{
     color:white!Important;
   }
-  
+  .black_text
+  {
+    color:#000;
+  }
   #main_content
   {
     min-width: 767px;

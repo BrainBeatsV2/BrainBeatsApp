@@ -103,18 +103,13 @@ return (<>
                 <Modal.Content text>
                     <Modal.Description>
                         <Header>Info</Header>
-                        Track Name <br />
+                        <span className="black_text">Track Name</span><br />
                         <Input 
                         defaultValue={name} onChange={(e) => setName(e.target.value)}
                         />     
                         <br /><br />
-                        MIDI Link<br />
-                        <Input readOnly={true} action={{
-                                            color: 'teal',
-                                            labelPosition: 'right',
-                                            icon: 'copy',
-                                            content: 'Copy',
-                                        }}
+                        <span className="black_text">MIDI Link </span><br />
+                        <Input readOnly={true}
                         defaultValue={'https://brainbeats.dev/play?id=' + props.link}
                         />      
                         <Header>Sharing and Privacy Settings</Header>

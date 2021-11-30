@@ -602,7 +602,7 @@ class MusicGeneration extends Component {
                                                 <Checkbox onChange={this.changePrivacy} value='private' checked={this.state.privacySettings == "private"} radio label='Track is only visible to me' />
                                                 <br />
                                                 <br />
-                                                MIDI Link: <input className="modal_input" value={this.state.trackLink} type="text" readOnly={true} />
+                                               <span className="black_text">MIDI Link:</span> <input className="modal_input" value={this.state.trackLink} type="text" readOnly={true} />
                                             </Modal.Description>
                                         </Modal.Content>
                                         <Modal.Actions>
