@@ -49,8 +49,11 @@ class MusicGeneration extends Component {
             canSave: false,
             eegMAC: '',
             eegSerial: '',
-            eegBoardID: '-1',
+            recievedData: false,
+            statusText: 'INITIALIZING',
+            eegBoardID: '-1'
         };
+      
         this.onStartRecording = this.onStartRecording.bind(this);
         this.onStopRecording = this.onStopRecording.bind(this);
         this.onShowMenu = this.onShowMenu.bind(this);
@@ -119,6 +122,10 @@ class MusicGeneration extends Component {
             // Opens a channel between the EEG script & recieves the output from the EEG script as args
             window.ipcRenderer.on('start_eeg_script', (event, args) => {
                 console.log(args)
+                this.setState({
+                    recievedData:true,
+                    statusText: 'RECORDING...'
+                })
             })
         }
         this.setState({ isEEGScriptRunning: !this.state.isEEGScriptRunning })
@@ -142,6 +149,8 @@ class MusicGeneration extends Component {
                 console.log(args)
                 this.setState({ midiString: 'data:audio/midi;base64,' + args });
                 this.setState({ rawMidiString: args });
+                this.setState({recievedData: false,
+                    statusText: 'INITIALIZING'})
             })
         }
         this.setState({ isEEGScriptRunning: !this.state.isEEGScriptRunning })
@@ -588,7 +597,9 @@ class MusicGeneration extends Component {
                         </div>
                     </div>
                     <div class="column" style={{ width: '10%' }}>
-                        <div id="play_stream" style={{ display: this.state.saveOptions ? 'block' : 'none' }}>
+                    <span style={{ fontSize: '10px', color: this.state.recievedData ? 'red' : 'white',display: this.state.recording ? 'inline': 'none'}} >{this.state.statusText}</span>
+                        <div id="play_stream" style={{  display: this.state.saveOptions ? 'block' : 'none' }}>
+                            
                             <i class="material-icons" onClick={this.onStartPlaying} style={{ display: this.state.playing ? 'none' : 'inline-block' }}>play_circle_filled</i>
                             <i class="material-icons" onClick={this.onStopPlaying} style={{ display: this.state.playing ? 'inline-block' : 'none' }}>pause</i>
 

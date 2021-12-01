@@ -138,11 +138,17 @@ class Help extends Component {
             <h4>How does this even work?</h4>
             <p>Depending on the selected model, your data from the EEG headset gets passed through some algorithmic and machine learning techniques that translates the brain wave data into musical notes. You can then export this data and use it in a music composition</p>
             <br />
-            <h3>Sharing My MIDI</h3>
+            <h3>Helpful Resources</h3>
             <br />
             <h4>What is MIDI Discover?</h4>
             <p>MIDI Discover is our sharing network, where you're able to listen to ,share and download other users' midi</p>
             <br />
+            <h4>How Does the Play Page work?</h4>
+            <p>The play page is where we are able to listen to MIDIs created by other users on Brain Beats. Each link is unique and gives you access to download it and use it in your DAW</p> <br />
+            <br />
+            <h4>How Does the Play Page work?</h4>
+            <p>The play page is where we are able to listen to MIDIs created by other users on Brain Beats. Each link is unique and gives you access to download it and use it in your DAW</p> <br />
+           
             </div>
 
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
