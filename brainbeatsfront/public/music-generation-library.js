@@ -4,7 +4,7 @@ var MidiWriter = require('midi-writer-js')
 const fs = require('fs');
 const serverPath = 'http://143.198.6.2:5000';
 const localPath = 'http://172.20.249.73:5000';
-const lstmPath = localPath;
+const lstmPath = serverPath;
 
 const brainwaves = ['delta', 'theta', 'alpha', 'beta', 'gamma'];
 const commonNoteGroupings = [6, 3, 1, 2, 4]; // Ideally keep to five or more

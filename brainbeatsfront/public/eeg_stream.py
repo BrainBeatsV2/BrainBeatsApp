@@ -11,14 +11,12 @@ from brainflow.data_filter import DataFilter, FilterTypes, AggOperations, Window
 from brainflow.ml_model import MLModel, BrainFlowMetrics, BrainFlowClassifiers, BrainFlowModelParams
 from brainflow.exit_codes import *
 
-# TODO: Input into script https://ourcodeworld.com/articles/read/286/how-to-execute-a-python-script-and-retrieve-output-data-and-errors-in-node-js
-# TODO Create an impedance test, a way to find the mac address for faster connectivity
-# TODO When customizing adding a circuit board, need to allow for the user to input the serial port, mac address, and board-id in order for it to work well with it.
-# Based off of the board id, update the brainflow input params [offer default settings recommended by the docs and offer for the user to customize it as well]
-# https://stackoverflow.com/questions/23450534/how-to-call-a-python-function-from-node-js
-# TODO have the EEG data save in a cleaner spot aka in it's own directory
-# TODO: Potentially add plotting with plt.plot https://brainflow.readthedocs.io/en/stable/notebooks/band_power.html
+# Easy way to control if the developer wants to have the debug values print or write to csv
+# When this script is communicating with node, the only print statement should be the EEG data!
+# The print option is for when the developer wants to see the print values when just running the script by itself
 
+DEBUG_MODE = ''
+DEBUG_OPTIONS = ['', 'write_file', 'print']
 
 def configure_eeg_headset():
     """ Configures EEG Headset board specifications for Ganglion and synthetic boards """
@@ -137,32 +135,6 @@ def get_relaxation_percent(data, eeg_channels_count, sampling_rate):
 
 
 def main():
-
-    # # Process script arguments.
-    # argumentList = sys.argv[1:]
-    # print_debug(argumentList)
-    # user_music_generation_model = 1
-    # user_headset = 'synthetic'
-
-    # # checking each argument
-    # for i in range(len(argumentList)):
-
-    #     # Music Generation Models Mappings:
-    #     # 1 = Map Aggregate Band Power to Random Probability
-    #     # 2 = Map EEG Channels to Music Characteristics
-    #     # 3 = Complexity Relationship with BPM
-    #     # 4 = Blue Improvisation
-    #     # 5 = Chord Progression & Melody Improvisation (LSTM)
-    #     if (argumentList[i] == "-m" or argumentList[i] == "--model") and i+1 < len(argumentList):
-    #         if int(argumentList[i+1]) > 0 and int(argumentList[i+1]) < 6:
-    #             user_music_generation_model = int(argumentList[i+1])
-
-    #     if (argumentList[i] == "-eeg" or argumentList[i] == "--headset") and i+1 < len(argumentList):
-    #         user_headset = argumentList[i+1]
-
-    # print_debug(str(("usermodel: " + str(user_music_generation_model) +
-    #                  " userheadset: " + user_headset)))
-
     # Enable loggers
     BoardShim.enable_board_logger()
     DataFilter.enable_data_logger()
@@ -192,13 +164,6 @@ def main():
     eeg_channels_count = BoardShim.get_eeg_channels(int(master_board_id))
     print_debug(
         f'Board ID: {master_board_id}, Sampling rate: {sampling_rate}, Total Channels: {eeg_channels_count}')
-
-    # Starting the streamming session with a buffer of 450000, pausing the script to get the EEG readings
-    # board.prepare_session()
-    # print_debug('Preparing to log EEG data')
-    # board.start_stream(45000, eeg_args.streamer_params)
-    # BoardShim.log_message(LogLevels.LEVEL_INFO.value,
-    #                       'start sleeping in the main thread')
 
     print_debug(' Preparing board to stream EEG data...')
     if (eeg_args.board_id == 1):
@@ -255,12 +220,13 @@ def main():
 
 
 def print_debug(string):
-    debug = 1
-    # print(string)
-    file1 = open("myfile.txt", "a")  
-    file1.write(str(string))
-    file1.write(str("\n"))
-    file1.close()   
+    if DEBUG_MODE == 'print':
+        print(string)
+    if DEBUG_MODE == 'write_file': 
+        file1 = open("myfile.txt", "a")  
+        file1.write(str(string))
+        file1.write(str("\n"))
+        file1.close()   
 
 
 
