@@ -26,7 +26,7 @@ class MusicGeneration extends Component {
             instrument: 1,
             key: "C",
             scale: "pentatonic",
-            timing: "4/4",
+            timeSignature: "4/4",
             bpm: 120,
             minRange: 3,
             maxRange: 3,
@@ -49,7 +49,7 @@ class MusicGeneration extends Component {
             canSave: false,
             eegMAC: '',
             eegSerial: '',
-            eegBoardID: '-1'
+            eegBoardID: '-1',
         };
         this.onStartRecording = this.onStartRecording.bind(this);
         this.onStopRecording = this.onStopRecording.bind(this);
@@ -76,6 +76,8 @@ class MusicGeneration extends Component {
         this.onDownloadMIDI = this.onDownloadMIDI.bind(this);
         this.onCancelEEGMode = this.onCancelEEGMode.bind(this);
         this.onOpenEEGMode = this.onOpenEEGMode.bind(this);
+        this.changeTimeSignature = this.changeTimeSignature.bind(this);
+        this.changeBPM = this.changeBPM.bind(this);
     }
     // Start MIDI Recording
     onStartRecording() {
@@ -134,7 +136,8 @@ class MusicGeneration extends Component {
         if (this.state.isEEGScriptRunning) {
             console.log('Ended recording!')
             // Parameters: key,scale
-            window.ipcRenderer.send('end_eeg_script', this.state.model, this.state.key, this.state.scale, this.state.minRange, this.state.maxRange, this.state.bpm, this.state.timing, this.state.instrument);
+            console.log("BPM: " + this.state.bpm + " timeSignature: " + this.state.timeSignature)
+            window.ipcRenderer.send('end_eeg_script', this.state.model, this.state.key, this.state.scale, this.state.minRange, this.state.maxRange, this.state.instrument, this.state.bpm, this.state.timeSignature);
             window.ipcRenderer.on('end_eeg_script', (event, args) => {
                 console.log(args)
                 this.setState({ midiString: 'data:audio/midi;base64,' + args });
@@ -312,7 +315,7 @@ class MusicGeneration extends Component {
             midi_bpm: this.state.bpm,
             midi_scale: this.state.scale,
             midi_key: this.state.key,
-            midi_time_signature: this.state.timing,
+            midi_time_signature: this.state.timeSignature,
         };
 
         axios.post('/api/midis/create', midiObject, options)
@@ -424,16 +427,19 @@ class MusicGeneration extends Component {
     changeKey(event) { this.setState({ key: event.target.value }); }
     changeScale(event) { this.setState({ scale: event.target.value }); }
     changePrivacy = (e, { value }) => this.setState({ privacySettings: value });
-    handleEEGMac = (e) => {
-        this.setState({ eegMAC: e.target.value });
-    };
-    handleBPMChange = (e) => {
+    changeTimeSignature(event) { this.setState({ timeSignature: event.target.value }); }
+    changeBPM = (e) => {
         this.setState({ bpm: e.target.value });
     };
+    changeEEGMac = (e) => {
+        this.setState({ eegMAC: e.target.value });
+    };
 
-    handleEEGSerial = (e) => {
+    changeEEGSerial = (e) => {
         this.setState({ eegSerial: e.target.value });
     };
+
+
     render() {
         if (!isElectron()) {
             return <Redirect to={{
@@ -488,9 +494,9 @@ class MusicGeneration extends Component {
                         <Modal.Content text>
                             <Modal.Description>
                                 <Header>Connected MAC Address</Header>
-                                <input className="modal_input" defaultValue={this.state.eegMAC} type="text" onChange={this.handleEEGMac} />
+                                <input className="modal_input" defaultValue={this.state.eegMAC} type="text" onChange={this.changeEEGMac} />
                                 <Header>Connected Serial Port</Header>
-                                <input className="modal_input" defaultValue={this.state.eegSerial} type="text" onChange={this.handleEEGSerial} />
+                                <input className="modal_input" defaultValue={this.state.eegSerial} type="text" onChange={this.changeEEGSerial} />
                             </Modal.Description>
                         </Modal.Content>
                         <Modal.Actions>
@@ -678,15 +684,14 @@ class MusicGeneration extends Component {
                                         </select>
                                     </td>
                                     <td>
-                                        <select id="parameter_timing" disabled={this.state.recording}>
-                                            <option>4/4</option>
-                                            <option>2/4</option>
-                                            <option>2/2</option>
-                                            <option>6/8</option>
-
+                                        <select id="parameter_timing" disabled={this.state.recording} value={this.state.timeSignature} onChange={this.changeTimeSignature} >
+                                            <option value="4/4">4/4</option>
+                                            <option value="2/4">2/4</option>
+                                            <option value="2/2">2/2</option>
+                                            <option value="6/8">6/8</option>
                                         </select>
                                     </td>
-                                    <td><input id="parameter_bpm" type="text" class="border-input bpm" defaultValue="120" disabled={this.state.recording} onChange={this.handleBPMChange} /></td>
+                                    <td><input id="parameter_bpm" type="text" class="border-input bpm" defaultValue="120" disabled={this.state.recording} value={this.state.bpm} onChange={this.changeBPM} /></td>
                                 </tr>
                             </table>
                         </div>

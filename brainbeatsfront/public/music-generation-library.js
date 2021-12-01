@@ -11,10 +11,14 @@ const commonNoteGroupings = [6, 3, 1, 2, 4]; // Ideally keep to five or more
 const commonNoteDurations = ['1', '2', '4', '8', '16']; // Ideally keep to five or more
 const DEBUG = false;
 
-function musicGenerationDriver(eegDataQueue, musicGenerationModel, scaleArray, scaleMap, octaveRangeArray, totalSeconds, secondsPerEEGSnapShot, noteDurationsPerBeatPerSecond, instrument_num) {
+
+function musicGenerationDriver(eegDataQueue, musicGenerationModel, scaleArray, scaleMap, octaveRangeArray, totalSeconds, secondsPerEEGSnapShot, noteDurationsPerBeatPerSecond, instrument_num, bpm, timeSignature) {
     track = new MidiWriter.Track();
     console.log("musicGenerationDriver, model: " + musicGenerationModel + " scales: " + scaleArray + " octaveRangeArray: " + octaveRangeArray + " totalSeconds: " + totalSeconds + "Instrument num: " + instrument_num);
     track.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: instrument_num }));
+    track.setTempo(bpm);
+    track.setTimeSignature(timeSignature.split('/')[0], timeSignature.split('/')[1]);
+    console.log("bpm: " + bpm + ", timeSignatureNumerator " + timeSignature.split('/')[0] + ", timeSignatureDenominator " + timeSignature.split('/')[1]);
 
     if (musicGenerationModel == 1) {
         // TODO: Move this into mapAggregateBandPowerToRandomProbability 
@@ -175,7 +179,7 @@ function mod(n, m) {
     return ((n % m) + m) % m;
 }
 
-async function lstmDriver(track, eegDataQueue, scaleNoteArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond, instrument_num) {
+async function lstmDriver(track, eegDataQueue, scaleNoteArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond, instrument_num, bpm, timeSignature) {
     let outputTrack;
     console.log("Music Generation Model 4: LSTM");
     try {
@@ -186,6 +190,9 @@ async function lstmDriver(track, eegDataQueue, scaleNoteArray, octaveRangeArray,
         let updatedTrack = await getLSTMPrediction(track, lstmInput, scaleNoteArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond, instrument_num)
             .then((result) => {
                 outputTrack = result;
+                outputTrack.setTempo(bpm);
+                outputTrack.setTimeSignature(timeSignature.split('/')[0], timeSignature.split('/')[1]);
+                console.log("bpm: " + bpm + ", timeSignatureNumerator " + timeSignature.split('/')[0] + ", timeSignatureDenominator " + timeSignature.split('/')[1]);
             });
     } catch (e) {
         console.log("that failed", e);
@@ -706,9 +713,9 @@ function getBeatsPerSec(bpm) {
     return bpm / 60;
 }
 
-function getNoteDurationsPerBeatPerSecond(bpm, time_signature) {
+function getNoteDurationsPerBeatPerSecond(bpm, timeSignature) {
     beatsPerSecond = getBeatsPerSec(bpm);
-    beatValue = time_signature.split('/')[1];
+    beatValue = timeSignature.split('/')[1];
 
     var noteDurationsPerBeatPerSecond = [];
     for (var i = 0; i < commonNoteDurations.length; i++) {
