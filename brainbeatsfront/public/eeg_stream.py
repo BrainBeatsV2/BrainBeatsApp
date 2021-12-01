@@ -201,15 +201,21 @@ def main():
     #                       'start sleeping in the main thread')
 
     print_debug(' Preparing board to stream EEG data...')
-    while True: 
-        try:
-            board.prepare_session()
-            board.start_stream(45000, eeg_args.streamer_params)
-            BoardShim.log_message(LogLevels.LEVEL_INFO.value,
-                                'start sleeping in the main thread')
-            break
-        except BrainFlowError: 
-            print_debug("Brainflow failed to connect to the board")
+    if (eeg_args.board_id == 1):
+        while True: 
+            try:
+                board.prepare_session()
+                board.start_stream(45000, eeg_args.streamer_params)
+                BoardShim.log_message(LogLevels.LEVEL_INFO.value,
+                                    'start sleeping in the main thread')
+                break
+            except BrainFlowError: 
+                print_debug("Brainflow failed to connect to the board")
+    else: 
+        board.prepare_session()
+        board.start_stream(45000, eeg_args.streamer_params)
+        BoardShim.log_message(LogLevels.LEVEL_INFO.value,
+                    'start sleeping in the main thread')
 
     # Brainflow recommends waiting at least collectively 4 seconds for the first EEG reading
     time.sleep(2.7)

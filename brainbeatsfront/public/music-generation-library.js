@@ -50,6 +50,7 @@ function buildMarkovModel(track, eegDataQueue, noteDurationsPerBeatPerSecond, se
 
         // 3. Build track!
         track = addNotesToTrack(track, finalNotes);
+
     });
 
     return track;
@@ -111,6 +112,8 @@ function getMarkovBluesModelNotes(noteEvents, eegDataPoint, noteDurationsPerBeat
         }
     }
 
+    console.log("getMarkovBluesModelNotes note events: ")
+    console.log(noteEvents)
     return noteEvents;
 }
 
@@ -161,13 +164,15 @@ function getNextMarkovNote(noteEvents, eegDataPoint) {
     } else if (selector == 6) {
         nextNoteIndex = lastNoteIndex - 4;
     }
-
-    if (nextNoteIndex > bluesScale.length) {
-        nextNoteIndex = nextNoteIndex % bluesScale.length;
-    }
+    nextNoteIndex = mod(nextNoteIndex, bluesScale.length);
     nextNote = bluesScale[nextNoteIndex];
+    console.log("nextNoteIndex: " + nextNoteIndex + " nextNote " + nextNote)
 
     return [nextNote];
+}
+
+function mod(n, m) {
+    return ((n % m) + m) % m;
 }
 
 async function lstmDriver(track, eegDataQueue, scaleNoteArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond, instrument_num) {
