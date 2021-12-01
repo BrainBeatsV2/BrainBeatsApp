@@ -5,6 +5,8 @@ const bodyParser = require('body-parser');
 app.use(bodyParser.json());
 const jwt = require('jsonwebtoken');
 const Timidity = require('timidity')
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 
 const PORT = 4000;
 
@@ -50,32 +52,37 @@ app.post(devPath + '/api/user', function (req, res) {
     var body = req.body;
     var username = body.username;
     var password = body.password;
-    const result = [];
+    const userData = [];
 
     User.findOne({ "username": username }).then(function (doc) {
         if (doc == null) {
             User.findOne({ "email": username }).then(function (doc) {
                 if (doc == null) {
-                    res.status(400).send("Invalid username or password");
-                } else if (doc.password != password) {
-                    res.status(400).send("Invalid username or password");
-                }
-                else if (doc.password == password) {
-                    result[0] = doc.username;
-                    result[1] = doc.email;
-                    result[2] = doc.password;
-                    res.status(200).send(result);
+                    res.status(400).send("User does not exist");
+                } else {
+                    bcrypt.compare(password, doc.password, function (err, result) {
+                        if (result == true) {
+                            userData[0] = doc.username;
+                            userData[1] = doc.email;
+                            userData[2] = password;
+                            res.status(200).send(userData);
+                        } else {
+                            res.status(400).send("Invalid email or password");
+                        }
+                    });
                 }
             });
-        }
-        else if (doc.password != password) {
-            res.status(400).send("Invalid username or password");
-        }
-        else if (doc.password == password) {
-                result[0] = doc.username;
-                result[1] = doc.email;
-                result[2] = doc.password;
-                res.status(200).send(result);
+        } else {
+            bcrypt.compare(password, doc.password, function (err, result) {
+                if (result == true) {
+                    userData[0] = doc.username;
+                    userData[1] = doc.email;
+                    userData[2] = password;
+                    res.status(200).send(userData);
+                } else {
+                    res.status(400).send("Invalid username or password");
+                }
+            });
         }
     });
 
@@ -145,10 +152,14 @@ app.post(devPath + '/api/resetpassword', function (req, res) {
         } else if (doc.tokenExpires < Date.now()) {
             res.status(401).send("Token expired.");
         } else {
-            doc.password = new_password;
-            doc.token = "";
-            doc.tokenExpires = Date.now();
-            doc.save();
+            bcrypt.hash(new_password, saltRounds, function (err, hash) {
+                new_password = hash;
+                doc.password = new_password;
+                doc.token = "";
+                doc.tokenExpires = Date.now();
+                doc.save();
+            });
+
             res.status(200).send("Password successfully reset.");
         }
     });
@@ -170,19 +181,24 @@ app.post(devPath + '/api/login', function (req, res) {
             User.findOne({ "email": username }).then(function (doc) {
                 if (doc == null) {
                     res.status(400).send("Invalid username or password");
-                } else if (doc.password != password) {
-                    res.status(400).send("Invalid username or password");
-                }
-                else if (doc.password == password) {
-                    res.status(200).send("login successful");
+                } else {
+                    bcrypt.compare(password, doc.password, function (err, result) {
+                        if (result == true) {
+                            res.status(200).send("login successful");
+                        } else {
+                            res.status(400).send("Invalid username or password");
+                        }
+                    });
                 }
             });
-        }
-        else if (doc.password != password) {
-            res.status(400).send("Invalid username or password");
-        }
-        else if (doc.password == password) {
-            res.status(200).send("login successful");
+        } else {
+            bcrypt.compare(password, doc.password, function (err, result) {
+                if (result == true) {
+                    res.status(200).send("login successful");
+                } else {
+                    res.status(400).send("Invalid username or password");
+                }
+            });
         }
     });
 });
@@ -216,13 +232,16 @@ app.post(devPath + '/api/register', function (req, res) {
             // mongoose validation error
             return res.status(400).json(errors);
         } else {
-            const postUser = new User({
-                "username": username,
-                "email": email,
-                "password": password,
+            bcrypt.hash(password, saltRounds, function (err, hash) {
+                password = hash;
+                const postUser = new User({
+                    "username": username,
+                    "email": email,
+                    "password": hash,
+                });
+                postUser.save();
             });
             res.status(200).send("Successful Register");
-            postUser.save();
             return res.status(200).json("Successful Register");
         }
     })
@@ -335,7 +354,7 @@ app.post(devPath + '/api/midis/mine', async function (req, res) {
     var body = req.body;
     var email = body.email;
     var password = body.password;
-    
+
     var skip = 0;
     var limit = 10;
 
@@ -350,12 +369,18 @@ app.post(devPath + '/api/midis/mine', async function (req, res) {
 
     // check credentials
     User.findOne({ "email": email }).then(function (doc) {
-        if (doc == null || doc.password != password) {
-            res.status(401).send("Incorrect account credentials.");
+        if (doc == null) {
+            res.status(401).send("User does not exist");
         } else {
-            // send all midi data
-            Midi.find({ "username": email }).skip(skip).limit(limit).then(function (doc) {
-                res.status(200).send(doc);
+            bcrypt.compare(password, doc.password, function (err, result) {
+                if (result == false) {
+                    res.status(401).send("Incorrect account credentials.");
+                } else {
+                    // send all midi data
+                    Midi.find({ "username": email }).skip(skip).limit(limit).then(function (doc) {
+                        res.status(200).send(doc);
+                    });
+                }
             });
         }
     });
@@ -403,30 +428,35 @@ app.post(devPath + '/api/midis/create', async function (req, res) {
     }
 
     // check credentials
+
     User.findOne({ "email": email }).then(function (doc) {
         if (doc == null) {
-            res.status(401).send("Incorrect account username.");
-        } else if (doc.password != password) {
-            res.status(401).send("Incorrect account password.");
+            res.status(401).send("User does not exist.");
         } else {
-            // create new midi
-            var newMidi = Midi({
-                "username": email,
-                "modelId": midi_model_id,
-                "name": midi_name,
-                "midiData": midi_data,
-                "privacy": midi_privacy,
-                "notes": midi_notes,
-                "bpm": midi_bpm,
-                "timeSignature": midi_time_signature,
-                "scale": midi_scale,
-                "key": midi_key
-            });
+            bcrypt.compare(password, doc.password, function (err, result) {
+                if (result == false) {
+                    res.status(401).send("Incorrect account username.");
+                } else {
+                    // create new midi
+                    var newMidi = Midi({
+                        "username": email,
+                        "modelId": midi_model_id,
+                        "name": midi_name,
+                        "midiData": midi_data,
+                        "privacy": midi_privacy,
+                        "notes": midi_notes,
+                        "bpm": midi_bpm,
+                        "timeSignature": midi_time_signature,
+                        "scale": midi_scale,
+                        "key": midi_key
+                    });
 
-            newMidi.save();
-            res.status(200).send({
-                "message": "MIDI uploaded successfully!",
-                "id": newMidi._id
+                    newMidi.save();
+                    res.status(200).send({
+                        "message": "MIDI uploaded successfully!",
+                        "id": newMidi._id
+                    });
+                }
             });
         }
     });
@@ -456,15 +486,22 @@ app.post(devPath + '/api/midis/:midi_id', async function (req, res) {
             var password = body.password;
 
             User.findOne({ "email": email }).then(function (doc) {
-                if (doc == null || doc.password != password || midi_doc.username != email) {
+                if (doc == null || midi_doc.username != email) {
                     res.status(401).send("Incorrect account credentials.");
                 } else {
-                    // send midi data
-                    res.status(200).send(midi_doc);
+                    bcrypt.compare(password, doc.password, function (err, result) {
+                        if (result == false) {
+                            res.status(401).send("Incorrect account credentials.");
+                        } else {
+                            // send midi data
+                            res.status(200).send(midi_doc);
+                        }
+                    });
+
                 }
             });
-        }
 
+        }
     });
 })
 
@@ -491,17 +528,22 @@ app.post(devPath + '/download/midi/:midi_id', async function (req, res) {
             var body = req.body;
             var email = body.email;
             var password = body.password;
-
             User.findOne({ "email": email }).then(function (doc) {
-                if (doc == null || doc.password != password || midi_doc.username != email) {
+                if (doc == null || midi_doc.username != email) {
                     res.status(401).send("Incorrect account credentials.");
                 } else {
-                    // send midi data
-                    res.status(200).send(midi_doc['midiData']);
+                    bcrypt.compare(password, doc.password, function (err, result) {
+                        if (result == false) {
+                            res.status(401).send("Incorrect account credentials.");
+                        } else {
+                            // send midi data
+                            res.status(200).send(midi_doc['midiData']);
+                        }
+                    });
+
                 }
             });
         }
-
     });
 })
 
@@ -554,32 +596,37 @@ app.post(devPath + '/api/midis/:midi_id/update', async function (req, res) {
     User.findOne({ "email": email }).then(function (doc) {
         if (doc == null) {
             res.status(401).send("Incorrect account username.");
-        } else if (doc.password != password) {
-            res.status(401).send("Incorrect account password.");
         } else {
-            // update midi
-            var newMidiValues = {};
-
-            if (midi_name != null) {
-                newMidiValues["name"] = midi_name;
-            }
-            if (midi_privacy != null) {
-                newMidiValues["privacy"] = midi_privacy;
-            }
-            if (midi_notes != null) {
-                newMidiValues["notes"] = midi_notes;
-            }
-
-            Midi.updateOne({ "_id": midi_id }, newMidiValues).then(function (err) {
-                if (err.ok != 1) {
-                    res.status(400).send("bad request");
+            bcrypt.compare(password, doc.password, function (err, result) {
+                if (result == false) {
+                    res.status(401).send("Incorrect account password.");
                 } else {
-                    res.status(200).send({
-                        "message": "MIDI updated successfully!",
-                        "id": midi_id
+                    // update midi
+                    var newMidiValues = {};
+
+                    if (midi_name != null) {
+                        newMidiValues["name"] = midi_name;
+                    }
+                    if (midi_privacy != null) {
+                        newMidiValues["privacy"] = midi_privacy;
+                    }
+                    if (midi_notes != null) {
+                        newMidiValues["notes"] = midi_notes;
+                    }
+
+                    Midi.updateOne({ "_id": midi_id }, newMidiValues).then(function (err) {
+                        if (err.ok != 1) {
+                            res.status(400).send("bad request");
+                        } else {
+                            res.status(200).send({
+                                "message": "MIDI updated successfully!",
+                                "id": midi_id
+                            });
+                        }
                     });
                 }
             });
+
         }
     });
 });
@@ -600,23 +647,28 @@ app.post('/api/midis/:midi_id/delete', async function (req, res) {
     var password = body.password;
 
     // check credentials
+
     User.findOne({ "email": email }).then(function (doc) {
         if (doc == null) {
             res.status(401).send("Incorrect account username.");
-        } else if (doc.password != password) {
-            res.status(401).send("Incorrect account password.");
         } else {
-
-            Midi.deleteOne({ "_id": midi_id },).then(function (err) {
-                if (err.ok != 1) {
-                    res.status(400).send("bad request");
+            bcrypt.compare(password, doc.password, function (err, result) {
+                if (result == false) {
+                    res.status(401).send("Incorrect account username.");
                 } else {
-                    res.status(200).send({
-                        "message": "MIDI deleted successfully!",
-                        "id": midi_id
+                    Midi.deleteOne({ "_id": midi_id },).then(function (err) {
+                        if (err.ok != 1) {
+                            res.status(400).send("bad request");
+                        } else {
+                            res.status(200).send({
+                                "message": "MIDI deleted successfully!",
+                                "id": midi_id
+                            });
+                        }
                     });
                 }
             });
+
         }
     });
 });
