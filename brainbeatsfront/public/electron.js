@@ -83,10 +83,11 @@ function stopEEGScript() {
 
 ipcMain.on('start_eeg_script', (event, arguments) => {
   clearMidiWriter();
-
+  const args = arguments.data.split(" ");
+  console.log(args)
   // Start recording time and python script with user arguments
   startTime = new Date();
-  pyshell = new PythonShell(filePath, { pythonOptions: ['-u'], args: arguments.data });
+  pyshell = new PythonShell(filePath, { pythonOptions: ['-u'], args: args });
 
   console.log('Python script started & track started');
   pyshell.on('message', function (message) {
@@ -105,24 +106,30 @@ ipcMain.on('start_eeg_script', (event, arguments) => {
 });
 
 
-ipcMain.on('end_eeg_script', (event, musicGenerationModel, key, scale, minRange, maxRange, BPM, timeSignature, instrument_num) => {
+ipcMain.on('end_eeg_script', (event, musicGenerationModel, key, scale, minRange, maxRange, instrument_num, bpm, timeSignature) => {
   if (pyshell == null || pyshell == undefined) return;
-
   stopEEGScript();
+
+  console.log("bpm: " + bpm + " , timeSignature " + timeSignature);
+  timeSignature = String(timeSignature);
+  bpm = Number(bpm);
 
   // Time Tracking: 
   var totalSeconds = getMaxTimeRecorded(new Date());
-  var secondsPerEEGSnapShot = roundTwoDecimalPoints(totalSeconds / eegDataQueue.length);
+  var secondsPerEEGSnapShot = eegDataQueue.length > 0 ? roundTwoDecimalPoints(totalSeconds / eegDataQueue.length) : 0;
   console.log("totalSeconds: " + totalSeconds + " , secondsPerEEGSnapShot " + secondsPerEEGSnapShot);
-  var noteDurationsPerBeatPerSecond = getNoteDurationsPerBeatPerSecond(BPM, timeSignature);
+  console.log("bpm: " + bpm + " , timeSignature " + timeSignature);
+
+  var noteDurationsPerBeatPerSecond = getNoteDurationsPerBeatPerSecond(bpm, timeSignature);
   var scaleArray = getScaleNotes(key, scale, minRange, maxRange);
   var scaleMap = getScaleMap(key, scale, minRange, maxRange);
   var octaveRangeArray = getOctaveRangeArray(minRange, maxRange);
 
+  console.log(noteDurationsPerBeatPerSecond)
 
   if (musicGenerationModel == 4) {
     // Handles the async nature of the LSTM predictions
-    let tempPromise = lstmDriver(track, eegDataQueue, scaleArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond, instrument_num)
+    let tempPromise = lstmDriver(track, eegDataQueue, scaleArray, octaveRangeArray, secondsPerEEGSnapShot, totalSeconds, noteDurationsPerBeatPerSecond, instrument_num, bpm, timeSignature)
       .then((tempTrack) => {
         track = tempTrack;
         midiString = parseMIDIStringFromTrack(track);
@@ -130,7 +137,7 @@ ipcMain.on('end_eeg_script', (event, musicGenerationModel, key, scale, minRange,
       });
   } else {
     // Rest of the music generation functions that aren't async:
-    track = musicGenerationDriver(eegDataQueue, musicGenerationModel, scaleArray, scaleMap, octaveRangeArray, totalSeconds, secondsPerEEGSnapShot, noteDurationsPerBeatPerSecond, instrument_num);
+    track = musicGenerationDriver(eegDataQueue, musicGenerationModel, scaleArray, scaleMap, octaveRangeArray, totalSeconds, secondsPerEEGSnapShot, noteDurationsPerBeatPerSecond, instrument_num, bpm, timeSignature);
     midiString = parseMIDIStringFromTrack(track);
     event.sender.send('end_eeg_script', midiString);
   }
@@ -138,11 +145,15 @@ ipcMain.on('end_eeg_script', (event, musicGenerationModel, key, scale, minRange,
 
 
 function parseMIDIStringFromTrack(track) {
-  write = new MidiWriter.Writer(track);
-  urlMIDI = write.dataUri();
-  player.loadDataUri(urlMIDI);
-  midiString = getMidiString(write);
-  return midiString;
+  try {
+    write = new MidiWriter.Writer(track);
+    urlMIDI = write.dataUri();
+    player.loadDataUri(urlMIDI);
+    midiString = getMidiString(write);
+    return midiString;
+  } catch (e) {
+    console.log(e)
+  }
 }
 
 function getMaxTimeRecorded(endTime) {

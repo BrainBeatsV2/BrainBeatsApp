@@ -20,7 +20,7 @@ from brainflow.exit_codes import *
 # TODO: Potentially add plotting with plt.plot https://brainflow.readthedocs.io/en/stable/notebooks/band_power.html
 
 
-def configure_eeg_headset(headset_type_name):
+def configure_eeg_headset():
     """ Configures EEG Headset board specifications for Ganglion and synthetic boards """
     parser = argparse.ArgumentParser()
 
@@ -39,28 +39,19 @@ def configure_eeg_headset(headset_type_name):
                         help='serial number', required=False, default='')
     parser.add_argument('--file', type=str, help='file',
                         required=False, default='')
-    parser.add_argument('-m', type=str, required=False, default='1')
-    parser.add_argument('-eeg', type=str, required=False, default='synthetic')
 
-    if headset_type_name == 'ganglion':
-        print_debug('EEG Headset determined to be Ganglion')
-        parser.add_argument('--serial-port', type=str,
-                            help='serial port', required=False, default='COM3')  # COM3
-        parser.add_argument('--mac-address', type=str, help='mac address',
-                            required=False, default='d2:a0:57:70:bd:01')  # d2:a0:57:70:bd:01
-        parser.add_argument('--board-id', type=int, help='board id, check docs to get a list of supported boards',
-                            required=False, default=1)  # 1
-        parser.add_argument('--timeout', type=int, help='timeout for device discovery or connection', required=False,
-                            default=15)  # 15
-    else:
-        parser.add_argument('--serial-port', type=str,
-                            help='serial port', required=False, default='')
-        parser.add_argument('--mac-address', type=str,
-                            help='mac address', required=False, default='')
-        parser.add_argument('--board-id', type=int, help='board id, check docs to get a list of supported boards',
-                            required=False, default=-1)
-        parser.add_argument('--timeout', type=int, help='timeout for device discovery or connection', required=False,
-                            default=0)
+    # print_debug('EEG Headset determined to be Ganglion')
+    parser.add_argument('--serial-port', type=str,
+                        help='serial port', required=False, default='COM3')  # COM3
+    parser.add_argument('--mac-address', type=str, help='mac address',
+                        required=False, default='')  # d2:a0:57:70:bd:01
+    parser.add_argument('--board-id', type=int, help='board id, check docs to get a list of supported boards',
+                        required=False, default=1)  # 1
+    parser.add_argument('--timeout', type=int, help='timeout for device discovery or connection', required=False,
+                        default=30)  # 15
+
+    for arg, value in sorted(vars(parser.parse_args()).items()):
+            print_debug("Argument " + str(arg) + " val: " + str(value))
 
     return parser
 
@@ -147,30 +138,30 @@ def get_relaxation_percent(data, eeg_channels_count, sampling_rate):
 
 def main():
 
-    # Process script arguments.
-    argumentList = sys.argv[1:]
-    print_debug(argumentList)
-    user_music_generation_model = 1
-    user_headset = 'synthetic'
+    # # Process script arguments.
+    # argumentList = sys.argv[1:]
+    # print_debug(argumentList)
+    # user_music_generation_model = 1
+    # user_headset = 'synthetic'
 
-    # checking each argument
-    for i in range(len(argumentList)):
+    # # checking each argument
+    # for i in range(len(argumentList)):
 
-        # Music Generation Models Mappings:
-        # 1 = Map Aggregate Band Power to Random Probability
-        # 2 = Map EEG Channels to Music Characteristics
-        # 3 = Complexity Relationship with BPM
-        # 4 = Blue Improvisation
-        # 5 = Chord Progression & Melody Improvisation (LSTM)
-        if (argumentList[i] == "-m" or argumentList[i] == "--model") and i+1 < len(argumentList):
-            if int(argumentList[i+1]) > 0 and int(argumentList[i+1]) < 6:
-                user_music_generation_model = int(argumentList[i+1])
+    #     # Music Generation Models Mappings:
+    #     # 1 = Map Aggregate Band Power to Random Probability
+    #     # 2 = Map EEG Channels to Music Characteristics
+    #     # 3 = Complexity Relationship with BPM
+    #     # 4 = Blue Improvisation
+    #     # 5 = Chord Progression & Melody Improvisation (LSTM)
+    #     if (argumentList[i] == "-m" or argumentList[i] == "--model") and i+1 < len(argumentList):
+    #         if int(argumentList[i+1]) > 0 and int(argumentList[i+1]) < 6:
+    #             user_music_generation_model = int(argumentList[i+1])
 
-        if (argumentList[i] == "-eeg" or argumentList[i] == "--headset") and i+1 < len(argumentList):
-            user_headset = argumentList[i+1]
+    #     if (argumentList[i] == "-eeg" or argumentList[i] == "--headset") and i+1 < len(argumentList):
+    #         user_headset = argumentList[i+1]
 
-    print_debug(str(("usermodel: " + str(user_music_generation_model) +
-                     " userheadset: " + user_headset)))
+    # print_debug(str(("usermodel: " + str(user_music_generation_model) +
+    #                  " userheadset: " + user_headset)))
 
     # Enable loggers
     BoardShim.enable_board_logger()
@@ -178,7 +169,7 @@ def main():
     MLModel.enable_ml_logger()
 
     # Determine EEG Params:
-    parser = configure_eeg_headset(user_headset)
+    parser = configure_eeg_headset()
     eeg_args = parser.parse_args()
 
     # Set configured data within BrainFlowInputParams
@@ -203,18 +194,36 @@ def main():
         f'Board ID: {master_board_id}, Sampling rate: {sampling_rate}, Total Channels: {eeg_channels_count}')
 
     # Starting the streamming session with a buffer of 450000, pausing the script to get the EEG readings
-    board.prepare_session()
-    print_debug('Preparing to log EEG data')
-    board.start_stream(45000, eeg_args.streamer_params)
-    BoardShim.log_message(LogLevels.LEVEL_INFO.value,
-                          'start sleeping in the main thread')
+    # board.prepare_session()
+    # print_debug('Preparing to log EEG data')
+    # board.start_stream(45000, eeg_args.streamer_params)
+    # BoardShim.log_message(LogLevels.LEVEL_INFO.value,
+    #                       'start sleeping in the main thread')
+
+    print_debug(' Preparing board to stream EEG data...')
+    if (eeg_args.board_id == 1):
+        while True: 
+            try:
+                board.prepare_session()
+                board.start_stream(45000, eeg_args.streamer_params)
+                BoardShim.log_message(LogLevels.LEVEL_INFO.value,
+                                    'start sleeping in the main thread')
+                break
+            except BrainFlowError: 
+                print_debug("Brainflow failed to connect to the board")
+    else: 
+        board.prepare_session()
+        board.start_stream(45000, eeg_args.streamer_params)
+        BoardShim.log_message(LogLevels.LEVEL_INFO.value,
+                    'start sleeping in the main thread')
 
     # Brainflow recommends waiting at least collectively 4 seconds for the first EEG reading
     time.sleep(2.7)
-
+    nfft = DataFilter.get_nearest_power_of_two(int(sampling_rate))
+    waitTime = 1.3
     while(True):
         # Wait the smallest amount of time between each snapshot!
-        time.sleep(1.3)
+        time.sleep(waitTime)
 
         # TODO This is using only the eeg data from the second channel, in the future it'd be best to average the values between all of the channels
         first_channel = eeg_channels_count[0]
@@ -223,27 +232,36 @@ def main():
         fourth_channel = eeg_channels_count[3]
         eeg_channel = eeg_channels_count[1]
         data = board.get_board_data()
-        band_values = get_band_values(data, sampling_rate, eeg_channel)
-        first_values= get_band_values(data, sampling_rate, first_channel)
-        second_values = get_band_values(data, sampling_rate, second_channel)
-        third_values = get_band_values(data, sampling_rate, third_channel)
-        fourth_values = get_band_values(data, sampling_rate, fourth_channel)
-        concentration_percent = get_concentration_percent(
-            data, eeg_channels_count, sampling_rate)
-        relaxation_percent = get_relaxation_percent(
-            data, eeg_channels_count, sampling_rate)
-        eeg_data = {"band_values": band_values, "first_values": first_values, "second_values": second_values, "third_values": third_values, "fourth_values": fourth_values,
-                    "concentration": concentration_percent, "relaxation": relaxation_percent}
-        print(str(json.dumps(eeg_data)))
-        # Required to flush output for python to allow for python to output script!!!
-        sys.stdout.flush()
+        data_len = len(np.transpose(data))
+
+        if (data_len > nfft): 
+            band_values = get_band_values(data, sampling_rate, eeg_channel)
+            first_values= get_band_values(data, sampling_rate, first_channel)
+            second_values = get_band_values(data, sampling_rate, second_channel)
+            third_values = get_band_values(data, sampling_rate, third_channel)
+            fourth_values = get_band_values(data, sampling_rate, fourth_channel)
+            concentration_percent = get_concentration_percent(
+                data, eeg_channels_count, sampling_rate)
+            relaxation_percent = get_relaxation_percent(
+                data, eeg_channels_count, sampling_rate)
+            eeg_data = {"band_values": band_values, "first_values": first_values, "second_values": second_values, "third_values": third_values, "fourth_values": fourth_values,
+                        "concentration": concentration_percent, "relaxation": relaxation_percent}
+            print(str(json.dumps(eeg_data)))
+            # Required to flush output for python to allow for python to output script!!!
+            sys.stdout.flush()
         # time.sleep(1)
+        else: 
+            waitTime = waitTime + 1
 
 
 def print_debug(string):
     debug = 1
     # print(string)
-    # sys.stderr.write(string)
+    file1 = open("myfile.txt", "a")  
+    file1.write(str(string))
+    file1.write(str("\n"))
+    file1.close()   
+
 
 
 if __name__ == "__main__":

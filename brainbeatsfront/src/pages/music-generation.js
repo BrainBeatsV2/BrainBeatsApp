@@ -26,7 +26,7 @@ class MusicGeneration extends Component {
             instrument: 1,
             key: "C",
             scale: "pentatonic",
-            timing: "4/4",
+            timeSignature: "4/4",
             bpm: 120,
             minRange: 3,
             maxRange: 3,
@@ -50,8 +50,10 @@ class MusicGeneration extends Component {
             eegMAC: '',
             eegSerial: '',
             recievedData: false,
-            statusText: 'INITIALIZING'
+            statusText: 'INITIALIZING',
+            eegBoardID: '-1'
         };
+      
         this.onStartRecording = this.onStartRecording.bind(this);
         this.onStopRecording = this.onStopRecording.bind(this);
         this.onShowMenu = this.onShowMenu.bind(this);
@@ -77,6 +79,8 @@ class MusicGeneration extends Component {
         this.onDownloadMIDI = this.onDownloadMIDI.bind(this);
         this.onCancelEEGMode = this.onCancelEEGMode.bind(this);
         this.onOpenEEGMode = this.onOpenEEGMode.bind(this);
+        this.changeTimeSignature = this.changeTimeSignature.bind(this);
+        this.changeBPM = this.changeBPM.bind(this);
     }
     // Start MIDI Recording
     onStartRecording() {
@@ -91,10 +95,29 @@ class MusicGeneration extends Component {
         if (!this.state.isEEGScriptRunning) {
             console.log('Started recording!');
 
+            console.log(this.state.headsetMode)
+            console.log(this.state.eegBoardID)
+            console.log(this.state.eegMAC)
+            console.log(this.state.eegSerial)
+
             // Starts EEG script
-            window.ipcRenderer.send('start_eeg_script', {
-                data: "-eeg " + this.state.headsetMode
-            });
+            if (this.state.headsetMode == 'Synthetic') {
+                window.ipcRenderer.send('start_eeg_script', {
+                    data: "--board-id " + this.state.eegBoardID
+
+                });
+            } else if (this.state.headsetMode == 'EEG') {
+                if (this.state.eegMAC != '') {
+                    window.ipcRenderer.send('start_eeg_script', {
+                        data: "--board-id " + this.state.eegBoardID + " --serial-port " + this.state.eegSerial + " --mac-address " + this.state.eegMAC
+                    });
+                } else {
+                    window.ipcRenderer.send('start_eeg_script', {
+                        data: "--board-id " + this.state.eegBoardID + " --serial-port " + this.state.eegSerial
+
+                    });
+                }
+            }
 
             // Opens a channel between the EEG script & recieves the output from the EEG script as args
             window.ipcRenderer.on('start_eeg_script', (event, args) => {
@@ -120,7 +143,8 @@ class MusicGeneration extends Component {
         if (this.state.isEEGScriptRunning) {
             console.log('Ended recording!')
             // Parameters: key,scale
-            window.ipcRenderer.send('end_eeg_script', this.state.model, this.state.key, this.state.scale, this.state.minRange, this.state.maxRange, this.state.bpm, this.state.timing, this.state.instrument);
+            console.log("BPM: " + this.state.bpm + " timeSignature: " + this.state.timeSignature)
+            window.ipcRenderer.send('end_eeg_script', this.state.model, this.state.key, this.state.scale, this.state.minRange, this.state.maxRange, this.state.instrument, this.state.bpm, this.state.timeSignature);
             window.ipcRenderer.on('end_eeg_script', (event, args) => {
                 console.log(args)
                 this.setState({ midiString: 'data:audio/midi;base64,' + args });
@@ -176,8 +200,7 @@ class MusicGeneration extends Component {
     }
     // Range : Decreased Min
     onDecreaseMin() {
-        if (!this.state.recording)
-        {
+        if (!this.state.recording) {
             if (this.state.minRange > 1) {
                 this.setState({
                     minRange: (this.state.minRange - 1)
@@ -189,8 +212,7 @@ class MusicGeneration extends Component {
     // Range : Decreased Max
     onDecreaseMax() {
         // Decrease max as long as max >= min
-        if (!this.state.recording)
-        {
+        if (!this.state.recording) {
             if (this.state.maxRange > this.state.minRange) {
                 this.setState({
                     maxRange: (this.state.maxRange - 1)
@@ -201,8 +223,7 @@ class MusicGeneration extends Component {
     // Range : Increase Min
     onIncreaseMin() {
         // Increase min as long as min <= max
-        if (!this.state.recording)
-        {
+        if (!this.state.recording) {
             if (this.state.minRange < this.state.maxRange) {
                 this.setState({
                     minRange: (this.state.minRange + 1)
@@ -212,8 +233,7 @@ class MusicGeneration extends Component {
     }
     // Range : Increase Max
     onIncreaseMax() {
-        if (!this.state.recording)
-        {
+        if (!this.state.recording) {
             if (this.state.maxRange < 7) {
                 this.setState({
                     maxRange: (this.state.maxRange + 1)
@@ -228,7 +248,7 @@ class MusicGeneration extends Component {
             password: '',
             email: '',
         });
-      }
+    }
 
 
     updateRange() {
@@ -238,7 +258,8 @@ class MusicGeneration extends Component {
     onSynthetic() {
         if (this.state.headsetMode == "EEG") {
             this.setState({
-                headsetMode: 'Synthetic'
+                headsetMode: 'Synthetic',
+                eegBoardID: '-1'
             })
         }
 
@@ -247,7 +268,8 @@ class MusicGeneration extends Component {
     onEEG() {
         if (this.state.headsetMode == "Synthetic") {
             this.setState({
-                headsetMode: 'EEG'
+                headsetMode: 'EEG',
+                eegBoardID: '1'
             })
         }
     }
@@ -256,15 +278,13 @@ class MusicGeneration extends Component {
             saveModalOpen: !this.state.saveModalOpen
         })
     }
-    onOpenEEGMode()
-    {
+    onOpenEEGMode() {
         this.setState({
             saveEEGOpen: !this.state.saveEEGOpen,
             headsetMode: 'EEG'
         })
     }
-    onCancelEEGMode()
-    {
+    onCancelEEGMode() {
         this.setState({
             saveEEGOpen: !this.state.saveEEGOpen,
             headsetMode: 'Synthetic'
@@ -304,15 +324,15 @@ class MusicGeneration extends Component {
             midi_bpm: this.state.bpm,
             midi_scale: this.state.scale,
             midi_key: this.state.key,
-            midi_time_signature: this.state.timing,
+            midi_time_signature: this.state.timeSignature,
         };
 
         axios.post('/api/midis/create', midiObject, options)
             .then((res) => {
                 if (res.data.message === "MIDI uploaded successfully!") {
                     console.log("Successful MIDI creation");
-                    this.setState({trackLink: this.state.trackLink + res.data.id});
-                    this.setState({midiID: res.data.id});
+                    this.setState({ trackLink: this.state.trackLink + res.data.id });
+                    this.setState({ midiID: res.data.id });
                     console.log(this.state.midiID);
                 }
             }).catch((error) => {
@@ -323,10 +343,10 @@ class MusicGeneration extends Component {
 
     // Download midi file
     onDownloadMIDI() {
-      //  window.ipcRenderer.send('download_midi_file', this.state.rawMidiString);
+        //  window.ipcRenderer.send('download_midi_file', this.state.rawMidiString);
     }
     // Changing MAC/Serial Ports
-    onChangeEEGPorts(){
+    onChangeEEGPorts() {
         this.setState({
             saveEEGOpen: !this.state.saveEEGOpen,
             headsetMode: 'EEG'
@@ -357,8 +377,8 @@ class MusicGeneration extends Component {
             .then((res) => {
                 if (res.data.message === "MIDI updated successfully!") {
                     console.log("Successful MIDI updating");
-                    this.setState({trackLink: this.state.trackLink + res.data.id});
-                    this.setState({midiID: res.data.id});
+                    this.setState({ trackLink: this.state.trackLink + res.data.id });
+                    this.setState({ midiID: res.data.id });
                     console.log(this.state.midiID);
                 }
             }).catch((error) => {
@@ -367,15 +387,13 @@ class MusicGeneration extends Component {
     }
     handleTrackName = (e) => {
         this.setState({ trackName: e.target.value });
-        if (e.target.value.length == 0)
-        {
-            
+        if (e.target.value.length == 0) {
+
             this.setState({ canSave: false });
         }
-        else
-        {
+        else {
             this.setState({ canSave: true });
-            
+
         }
     };
     componentDidMount() {
@@ -393,7 +411,7 @@ class MusicGeneration extends Component {
             else {
                 this.setState({ loggedin: 0 });
             }
-          } catch (e) {
+        } catch (e) {
             this.setState({ loggedin: 0 });
             console.log(e);
         }
@@ -418,16 +436,19 @@ class MusicGeneration extends Component {
     changeKey(event) { this.setState({ key: event.target.value }); }
     changeScale(event) { this.setState({ scale: event.target.value }); }
     changePrivacy = (e, { value }) => this.setState({ privacySettings: value });
-    handleEEGMac = (e) => {
-		this.setState({ eegMAC: e.target.value });
-	};
-    handleBPMChange = (e) => {
-		this.setState({ bpm: e.target.value });
-	};
+    changeTimeSignature(event) { this.setState({ timeSignature: event.target.value }); }
+    changeBPM = (e) => {
+        this.setState({ bpm: e.target.value });
+    };
+    changeEEGMac = (e) => {
+        this.setState({ eegMAC: e.target.value });
+    };
 
-	handleEEGSerial = (e) => {
-		this.setState({ eegSerial: e.target.value });
-	};
+    changeEEGSerial = (e) => {
+        this.setState({ eegSerial: e.target.value });
+    };
+
+
     render() {
         if (!isElectron()) {
             return <Redirect to={{
@@ -467,39 +488,39 @@ class MusicGeneration extends Component {
                 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
                 <script src="https://cdn.jsdelivr.net/combine/npm/tone@14.7.58,npm/@magenta/music@1.22.1/es6/core.js,npm/focus-visible@5,npm/html-midi-player@1.4.0"></script>
 
-                <a id="back" style={{display: ((this.state.recording || this.state.saveOptions) && (!this.state.saved && this.state.loggedin)) ? 'none' : 'inline-block'}}class="showmenu" href="#" onMouseEnter={this.onShowMenu}><i class="material-icons" >menu</i> <span>MENU</span></a>
+                <a id="back" style={{ display: ((this.state.recording || this.state.saveOptions) && (!this.state.saved && this.state.loggedin)) ? 'none' : 'inline-block' }} class="showmenu" href="#" onMouseEnter={this.onShowMenu}><i class="material-icons" >menu</i> <span>MENU</span></a>
 
                 <div id="headset_selection" class="">
                     <p>{this.state.headsetMode} Mode</p>
                     <i class="material-icons" onClick={this.onSynthetic} style={{ color: (this.state.headsetMode == 'Synthetic') ? 'white' : 'rgba(48,50,54)' }}>memory</i>
                     <Modal
-                    onClose={this.onOpenEEGMode}
-                    onOpen={this.onOpenEEGMode}
-                    open={this.state.saveEEGOpen}
-                    trigger={<i class="material-icons" onClick={this.onEEG} style={{ color: (this.state.headsetMode == 'EEG') ? 'white' : 'rgba(48,50,54)' }}>headset</i>}
-                    closeOnDimmerClick={false} >
-                    <Modal.Header>EEG Settings</Modal.Header>
-                    <Modal.Content text>
-                        <Modal.Description>
-                            <Header>Connected MAC Address</Header>
-                            <input className="modal_input" defaultValue={this.state.eegMAC} type="text" onChange={this.handleEEGMac} />
-                            <Header>Connected Serial Port</Header>
-                            <input className="modal_input" defaultValue={this.state.eegSerial} type="text" onChange={this.handleEEGSerial} />
-                        </Modal.Description>
-                    </Modal.Content>
-                    <Modal.Actions>
-                        <Button color='black' onClick={this.onCancelEEGMode}>
-                            Cancel
-                        </Button>
-                        <Button
-                            content="Adjust EEG Settings"
-                            labelPosition='right'
-                            icon='checkmark'
-                            onClick={this.onChangeEEGPorts}
-                            positive
-                        />
-                    </Modal.Actions>
-                </Modal>
+                        onClose={this.onOpenEEGMode}
+                        onOpen={this.onOpenEEGMode}
+                        open={this.state.saveEEGOpen}
+                        trigger={<i class="material-icons" onClick={this.onEEG} style={{ color: (this.state.headsetMode == 'EEG') ? 'white' : 'rgba(48,50,54)' }}>headset</i>}
+                        closeOnDimmerClick={false} >
+                        <Modal.Header>EEG Settings</Modal.Header>
+                        <Modal.Content text>
+                            <Modal.Description>
+                                <Header>Connected MAC Address</Header>
+                                <input className="modal_input" defaultValue={this.state.eegMAC} type="text" onChange={this.changeEEGMac} />
+                                <Header>Connected Serial Port</Header>
+                                <input className="modal_input" defaultValue={this.state.eegSerial} type="text" onChange={this.changeEEGSerial} />
+                            </Modal.Description>
+                        </Modal.Content>
+                        <Modal.Actions>
+                            <Button color='black' onClick={this.onCancelEEGMode}>
+                                Cancel
+                            </Button>
+                            <Button
+                                content="Adjust EEG Settings"
+                                labelPosition='right'
+                                icon='checkmark'
+                                onClick={this.onChangeEEGPorts}
+                                positive
+                            />
+                        </Modal.Actions>
+                    </Modal>
                 </div>
 
                 <div class="stream">
@@ -521,18 +542,18 @@ class MusicGeneration extends Component {
                     <div class="column">
                         <div id="rerecord" style={{ display: this.state.saveOptions ? 'inline-block' : 'none', width: '100%' }}>
 
-                            <table  style={{width: '100%' }}>
+                            <table style={{ width: '100%' }}>
                                 <tr>
-                                <td ><i style={{ display: this.state.saved ? 'none' : 'block' }} class="material-icons" onClick={this.onReRecord}>replay</i></td>
-                                  
-                                    <td><a href={'data:audio/midi;base64,'+this.state.rawMidiString} download={ (this.state.loggedin && this.state.trackName != "" )? (this.state.trackName + ".mid"): "untitled.mid"}><i class="material-icons test">file_download</i></a></td>
-                                   
+                                    <td ><i style={{ display: this.state.saved ? 'none' : 'block' }} class="material-icons" onClick={this.onReRecord}>replay</i></td>
+
+                                    <td><a href={'data:audio/midi;base64,' + this.state.rawMidiString} download={(this.state.loggedin && this.state.trackName != "") ? (this.state.trackName + ".mid") : "untitled.mid"}><i class="material-icons test">file_download</i></a></td>
+
                                 </tr>
                                 <tr>
 
-                                <th ><span style={{ display: this.state.saved ? 'none' : 'block' }}>Record Again</span></th>
+                                    <th ><span style={{ display: this.state.saved ? 'none' : 'block' }}>Record Again</span></th>
                                     <th>Download MIDI </th> {/* TODO: This needs to be made a button, putting this here for now?   */}
-                                  
+
                                 </tr>
                             </table>
                         </div>
@@ -592,9 +613,9 @@ class MusicGeneration extends Component {
                         <div id="saveoptions" style={{ display: this.state.saveOptions ? 'block' : 'none' }}>
                             <table class="save_options">
                                 <tr>
-                                <td ><input class="input100 midi_name" placeholder="Untitled" type="text" name="TrackName" style={{border: this.state.saved ? 'none' : '1px solid gray',cursor: this.state.saved ? 'pointer' : 'cursor'}} value={this.state.trackName} onChange={this.handleTrackName} readOnly={this.state.saved ? 'readonly' : ''} required /></td>
-                                
-                                     <td style={{ display: (this.state.saved || !this.state.loggedin || !this.state.canSave ) ? 'none' : 'block' }}><i class="material-icons" onClick={this.onSaveRecording} >cloud_upload</i></td>
+                                    <td ><input class="input100 midi_name" placeholder="Untitled" type="text" name="TrackName" style={{ border: this.state.saved ? 'none' : '1px solid gray', cursor: this.state.saved ? 'pointer' : 'cursor' }} value={this.state.trackName} onChange={this.handleTrackName} readOnly={this.state.saved ? 'readonly' : ''} required /></td>
+
+                                    <td style={{ display: (this.state.saved || !this.state.loggedin || !this.state.canSave) ? 'none' : 'block' }}><i class="material-icons" onClick={this.onSaveRecording} >cloud_upload</i></td>
                                     <Modal
                                         onClose={this.setOpen}
                                         onOpen={this.setOpen}
@@ -612,7 +633,7 @@ class MusicGeneration extends Component {
                                                 <Checkbox onChange={this.changePrivacy} value='private' checked={this.state.privacySettings == "private"} radio label='Track is only visible to me' />
                                                 <br />
                                                 <br />
-                                               <span className="black_text">MIDI Link:</span> <input className="modal_input" value={this.state.trackLink} type="text" readOnly={true} />
+                                                <span className="black_text">MIDI Link:</span> <input className="modal_input" value={this.state.trackLink} type="text" readOnly={true} />
                                             </Modal.Description>
                                         </Modal.Content>
                                         <Modal.Actions>
@@ -628,14 +649,14 @@ class MusicGeneration extends Component {
                                             />
                                         </Modal.Actions>
                                     </Modal>
-                                   
+
                                 </tr>
                                 <tr>
-                                <th class="leftText"><span >Track Name</span></th>
-                                  
-                                    <th style={{ display: (this.state.saved || !this.state.loggedin || !this.state.canSave)  ? 'none' : 'block' }}>Save and Upload</th>
+                                    <th class="leftText"><span >Track Name</span></th>
+
+                                    <th style={{ display: (this.state.saved || !this.state.loggedin || !this.state.canSave) ? 'none' : 'block' }}>Save and Upload</th>
                                     <th style={{ display: this.state.saved ? 'block' : 'none' }}>Share</th>
-                                 
+
                                 </tr>
                             </table>
                         </div>
@@ -674,15 +695,14 @@ class MusicGeneration extends Component {
                                         </select>
                                     </td>
                                     <td>
-                                        <select id="parameter_timing" disabled={this.state.recording}>
-                                            <option>4/4</option>
-                                            <option>2/4</option>
-                                            <option>2/2</option>
-                                            <option>6/8</option>
-
+                                        <select id="parameter_timing" disabled={this.state.recording} value={this.state.timeSignature} onChange={this.changeTimeSignature} >
+                                            <option value="4/4">4/4</option>
+                                            <option value="2/4">2/4</option>
+                                            <option value="2/2">2/2</option>
+                                            <option value="6/8">6/8</option>
                                         </select>
                                     </td>
-                                    <td><input id="parameter_bpm" type="text" class="border-input bpm" defaultValue="120" disabled={this.state.recording} onChange={this.handleBPMChange} /></td>
+                                    <td><input id="parameter_bpm" type="text" class="border-input bpm" defaultValue="120" disabled={this.state.recording} value={this.state.bpm} onChange={this.changeBPM} /></td>
                                 </tr>
                             </table>
                         </div>
