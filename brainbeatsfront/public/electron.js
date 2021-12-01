@@ -83,10 +83,11 @@ function stopEEGScript() {
 
 ipcMain.on('start_eeg_script', (event, arguments) => {
   clearMidiWriter();
-
+  const args = arguments.data.split(" ");
+  console.log(args)
   // Start recording time and python script with user arguments
   startTime = new Date();
-  pyshell = new PythonShell(filePath, { pythonOptions: ['-u'], args: arguments.data });
+  pyshell = new PythonShell(filePath, { pythonOptions: ['-u'], args: args });
 
   console.log('Python script started & track started');
   pyshell.on('message', function (message) {
